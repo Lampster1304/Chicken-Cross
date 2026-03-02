@@ -1,0 +1,452 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-[#12141d] text-gray-100;
+    margin: 0;
+    font-family: 'Outfit', 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+}
+
+/* CARTOON UI ELEMENTS */
+.cartoon-panel {
+  @apply bg-[#1e212b] border-[3px] border-[#2d3245] rounded-3xl shadow-[0_8px_0_0_#0f1118];
+}
+
+.cartoon-card {
+  @apply bg-[#252a3a] border-2 border-[#333a4f] rounded-2xl;
+}
+
+/* Pressable Buttons (3D Cartoon Style) */
+.btn-cartoon-red {
+  @apply bg-[#ff3e5e] hover:bg-[#ff5a71] active:bg-[#ff3e5e] text-white border-b-[6px] border-[#c2203e] active:border-b-0 active:translate-y-[6px] transition-all;
+}
+
+.btn-cartoon-emerald {
+  @apply bg-[#00d4aa] hover:bg-[#10e6b5] active:bg-[#00d4aa] text-[#0a2e26] border-b-[6px] border-[#009b7c] active:border-b-0 active:translate-y-[6px] transition-all;
+}
+
+.btn-cartoon-indigo {
+  @apply bg-[#6366f1] hover:bg-[#7e81ff] active:bg-[#6366f1] text-white border-b-[6px] border-[#434190] active:border-b-0 active:translate-y-[6px] transition-all;
+}
+
+/* ROAD DESIGN */
+.cartoon-road-lane {
+  @apply relative w-[110px] flex-shrink-0 flex items-center justify-center bg-[#1a1c24] border-x border-[#222731] transition-all duration-300;
+  height: 100%;
+}
+
+.cartoon-road-lane-active {
+  @apply bg-[#21242e] border-x-[#2d3245];
+}
+
+.road-stripe {
+  @apply absolute top-0 bottom-0 w-0.5 bg-white/10 border-l border-dashed border-white/20;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* SCROLLBAR */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0f1118;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2d3245;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3c4154;
+}
+
+/* CARTOON ANIMATIONS */
+@keyframes hop-cartoon {
+  0% {
+    transform: translateX(0) scale(1, 1);
+  }
+
+  30% {
+    transform: translateX(15px) scale(1.2, 0.9);
+  }
+
+  50% {
+    transform: translateX(12px) scale(0.9, 1.1);
+  }
+
+  100% {
+    transform: translateX(0) scale(1, 1);
+  }
+}
+
+@keyframes car-wobble {
+
+  0%,
+  100% {
+    transform: translateX(-50%) rotate(0deg);
+  }
+
+  25% {
+    transform: translateX(-52%) rotate(-1deg);
+  }
+
+  75% {
+    transform: translateX(-48%) rotate(1deg);
+  }
+}
+
+@keyframes bubble-pop {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+
+  70% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes big-shake {
+
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+
+  10% {
+    transform: translate(-8px, -8px);
+  }
+
+  20% {
+    transform: translate(8px, 8px);
+  }
+
+  30% {
+    transform: translate(-8px, 8px);
+  }
+
+  40% {
+    transform: translate(8px, -8px);
+  }
+
+  50% {
+    transform: translate(-4px, -4px);
+  }
+
+  60% {
+    transform: translate(4px, 4px);
+  }
+}
+
+@keyframes car-pass-ltr {
+  from {
+    top: -60px;
+  }
+
+  to {
+    top: 100%;
+  }
+}
+
+@keyframes car-pass-rtl {
+  from {
+    top: 100%;
+  }
+
+  to {
+    top: -60px;
+  }
+}
+
+/* ─── CRASH: car crosses FULL lane rapidly (hit and run style) ─── */
+@keyframes crash-pass-down {
+  0% {
+    top: -120px;
+    transform: translateX(-50%);
+  }
+
+  100% {
+    top: 110%;
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes crash-pass-up {
+  0% {
+    top: 110%;
+    transform: translateX(-50%) rotate(180deg);
+  }
+
+  100% {
+    top: -120px;
+    transform: translateX(-50%) rotate(180deg);
+  }
+}
+
+.animate-crash-from-left {
+  animation: crash-pass-down 0.4s cubic-bezier(0.45, 0, 0.55, 1) forwards;
+}
+
+.animate-crash-from-right {
+  animation: crash-pass-up 0.4s cubic-bezier(0.45, 0, 0.55, 1) forwards;
+}
+
+/* Fire appears exactly when the car is over the chicken (middle of 0.4s animation) */
+@keyframes crash-fire-appear {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.3);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.2);
+  }
+}
+
+.animate-crash-fire {
+  opacity: 0;
+  animation: crash-fire-appear 0.2s 0.2s ease-out forwards;
+}
+
+/* ─── SAFE PASS: car crosses the whole lane quickly (near miss) ─── */
+@keyframes safe-pass-ltr {
+  0% {
+    top: -60px;
+  }
+
+  100% {
+    top: 100%;
+  }
+}
+
+@keyframes safe-pass-rtl {
+  0% {
+    top: 100%;
+  }
+
+  100% {
+    top: -60px;
+  }
+}
+
+@keyframes emergency-brake-ltr {
+  0% {
+    top: -120px;
+  }
+
+  100% {
+    top: 30%;
+  }
+}
+
+@keyframes emergency-brake-rtl {
+  0% {
+    top: 110%;
+  }
+
+  100% {
+    top: 60%;
+  }
+}
+
+.animate-emergency-brake-down {
+  animation: emergency-brake-ltr 0.4s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+}
+
+.animate-emergency-brake-up {
+  animation: emergency-brake-rtl 0.4s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+}
+
+.animate-safe-pass-ltr {
+  animation: safe-pass-ltr 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+.animate-safe-pass-rtl {
+  animation: safe-pass-rtl 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+.animate-hop {
+  animation: hop-cartoon 0.5s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+}
+
+.animate-wobble {
+  animation: car-wobble 0.2s infinite ease-in-out;
+}
+
+.animate-pop {
+  animation: bubble-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.animate-shake-hard {
+  animation: big-shake 0.4s ease-in-out;
+}
+
+/* ─── VISUAL JUICE ANIMATIONS ─── */
+
+/* Light shake (safe risky crossing — "whew!") */
+@keyframes light-shake {
+
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+
+  25% {
+    transform: translate(-2px, -1px);
+  }
+
+  50% {
+    transform: translate(2px, 1px);
+  }
+
+  75% {
+    transform: translate(-1px, 2px);
+  }
+}
+
+.animate-shake-light {
+  animation: light-shake 0.3s ease-in-out;
+}
+
+/* Lane flash green (safe reveal on risky lane) */
+@keyframes lane-flash-green {
+  0% {
+    background-color: rgba(16, 185, 129, 0.4);
+  }
+
+  100% {
+    background-color: transparent;
+  }
+}
+
+.animate-lane-flash-green {
+  animation: lane-flash-green 0.6s ease-out;
+}
+
+/* Lane flash red (hit reveal) */
+@keyframes lane-flash-red {
+  0% {
+    background-color: rgba(239, 68, 68, 0.5);
+  }
+
+  100% {
+    background-color: rgba(239, 68, 68, 0.2);
+  }
+}
+
+.animate-lane-flash-red {
+  animation: lane-flash-red 0.4s ease-out;
+}
+
+/* Screen flash white-to-red (hit explosion) */
+@keyframes screen-flash-hit {
+  0% {
+    opacity: 0.7;
+    background: white;
+  }
+
+  30% {
+    opacity: 0.5;
+    background: #ff3e5e;
+  }
+
+  100% {
+    opacity: 0;
+    background: transparent;
+  }
+}
+
+.animate-screen-flash-hit {
+  animation: screen-flash-hit 0.5s ease-out forwards;
+}
+
+/* Chicken dodge/duck on safe risky crossing */
+@keyframes chicken-dodge {
+  0% {
+    transform: scale(1) rotate(0deg);
+  }
+
+  30% {
+    transform: scale(0.8, 1.2) rotate(-8deg) translateY(4px);
+  }
+
+  60% {
+    transform: scale(1.15, 0.9) rotate(5deg) translateY(-3px);
+  }
+
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+.animate-dodge {
+  animation: chicken-dodge 0.5s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+}
+
+/* Safe zone sparkle burst */
+@keyframes sparkle-burst {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+
+  50% {
+    transform: scale(1.5);
+    opacity: 0.8;
+  }
+
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+.animate-sparkle-burst {
+  animation: sparkle-burst 0.8s ease-out forwards;
+}
+
+/* Multiplier HUD pulse */
+@keyframes mult-pulse {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.12);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+.animate-mult-pulse {
+  animation: mult-pulse 0.3s ease-out;
+}
+
+/* Bubbly Multiplier */
+.multiplier-bubble-cartoon {
+  @apply flex flex-col items-center justify-center rounded-2xl font-black text-xs border-[3px] shadow-lg transition-all duration-300;
+  width: 40px;
+  height: 40px;
+
+  @screen sm {
+    width: 48px;
+    height: 48px;
+  }
+}

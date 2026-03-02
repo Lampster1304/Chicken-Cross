@@ -1,0 +1,353 @@
+================================================================================
+  CHICKEN CROSS - PLAN DE TAREAS DE DESARROLLO
+  Juego tipo Crash/Multiplier Game (clon de Chicken Cross de Rainbet)
+  Fecha: 26 de febrero de 2026
+================================================================================
+
+DESCRIPCION GENERAL DEL PROYECTO:
+  Chicken Cross es un juego de apuestas tipo "crash game" donde:
+  - El jugador apuesta antes de que inicie la ronda.
+  - Un pollo cruza una carretera paso a paso.
+  - Cada paso exitoso incrementa un multiplicador de payout.
+  - El jugador debe hacer "cash out" antes de que el pollo sea atropellado (crash).
+  - Si no hace cash out a tiempo, pierde toda la apuesta.
+  - House Edge objetivo: ~3% (RTP 97%).
+
+STACK TECNOLOGICO DEFINIDO:
+  Frontend: React.js, Redux, WebSockets (cliente), Canvas/WebGL, TailwindCSS, Vite
+  Backend: Node.js + Express, Socket.io, PostgreSQL, Redis, JWT
+  DevOps: Docker, Nginx, Prometheus + Grafana
+
+================================================================================
+FASE 1: MVP
+================================================================================
+
+TAREA 1.1 - Inicializar proyecto y estructura base
+  Descripcion: Crear la estructura de carpetas del monorepo con dos paquetes:
+    "client" (React + Vite + TailwindCSS) y "server" (Node.js + Express).
+    Configurar package.json raiz con scripts para correr ambos.
+    Inicializar TypeScript en ambos paquetes.
+  Archivos a crear:
+    - /client/ (React app con Vite)
+    - /server/ (Express app)
+    - package.json raiz con workspaces
+    - tsconfig.json en ambos paquetes
+  Criterio de aceptacion: Correr "npm run dev" levanta ambos servidores.
+
+TAREA 1.2 - Implementar sistema Provably Fair RNG
+  Descripcion: Crear el modulo de generacion de crash points usando el sistema
+    Provably Fair. Debe usar SHA-256 con server seed + client seed + nonce.
+    El crash point se determina ANTES de que inicie la ronda y su hash se
+    publica para que los jugadores puedan verificar despues.
+  Logica:
+    - Generar server_seed aleatorio por cadena de juegos.
+    - Combinar: HMAC-SHA256(server_seed, client_seed + ":" + nonce).
+    - Convertir hash a crash point con distribucion exponencial decreciente.
+    - Formula: max(1, floor((2^52 / (hash_value + 1)) * 100) / 100)
+    - Aplicar house edge del 3%: if (crash_point > 100/3) => 1% chance de crash instantaneo.
+  Archivos a crear:
+    - /server/src/game/provablyFair.ts
+    - /server/src/game/provablyFair.test.ts (tests unitarios)
+  Criterio de aceptacion: Tests pasan. Dado un seed y nonce, el crash point
+    es determinista y verificable. La distribucion promedio arroja ~97% RTP
+    sobre 100,000 simulaciones.
+
+TAREA 1.3 - Disenar e implementar esquema de base de datos
+  Descripcion: Crear el esquema PostgreSQL con las siguientes tablas:
+    - users: id, username, email, password_hash, balance, total_wagered,
+      total_won, created_at, updated_at
+    - games: id, server_seed, hashed_server_seed, client_seed, nonce,
+      crash_point, started_at, crashed_at, status (waiting/running/crashed)
+    - bets: id, game_id, user_id, amount, auto_cash_out_at, cash_out_at,
+      cash_out_multiplier, profit, status (active/cashed_out/lost), created_at
+    - transactions: id, user_id, type (deposit/withdraw/bet/win), amount,
+      reference_id, balance_after, created_at
+  Usar migraciones (ej: node-pg-migrate o Knex migrations).
+  Criterio de aceptacion: Migraciones corren sin error. Esquema soporta
+    todas las relaciones necesarias con foreign keys e indices apropiados.
+
+TAREA 1.4 - Implementar sistema de autenticacion de usuarios
+  Descripcion: Crear endpoints de registro, login y manejo de sesion con JWT.
+    - POST /api/auth/register (username, email, password)
+    - POST /api/auth/login (email, password)
+    - POST /api/auth/refresh (refresh token rotation)
+    - GET /api/auth/me (obtener usuario actual)
+    - Middleware de autenticacion para proteger rutas.
+    - Hashear passwords con bcrypt (salt rounds: 12).
+    - JWT access token (15 min) + refresh token (7 dias).
+    - Dar balance inicial de prueba (ej: 1000 creditos) a usuarios nuevos.
+  Archivos a crear:
+    - /server/src/auth/authController.ts
+    - /server/src/auth/authMiddleware.ts
+    - /server/src/auth/authService.ts
+  Criterio de aceptacion: Usuario puede registrarse, hacer login, y acceder
+    a rutas protegidas. Tokens se renuevan correctamente.
+
+TAREA 1.5 - Implementar motor del juego (Game Engine) en el servidor
+  Descripcion: Crear la logica central del game loop que maneja las rondas:
+    1. ESTADO "waiting" (5-10 seg): Jugadores colocan apuestas.
+    2. ESTADO "running": El multiplicador sube desde 1.00x.
+       - Incremento suave: multiplicador = e^(elapsed * speed_factor).
+       - Emitir actualizacion del multiplicador cada 100ms via WebSocket.
+    3. ESTADO "crashed": Cuando multiplicador alcanza el crash_point pre-generado.
+       - Todas las apuestas sin cash out se marcan como perdidas.
+       - Se revela el server_seed para verificacion.
+    4. Volver al estado "waiting" tras 3 segundos.
+  Manejo de apuestas:
+    - Validar balance suficiente antes de aceptar apuesta.
+    - Descontar balance al apostar (atomico con transaccion DB).
+    - Cash out: acreditar balance = apuesta * multiplicador_actual.
+    - Auto cash-out: el servidor ejecuta cash out automatico cuando el
+      multiplicador alcanza el valor configurado por el jugador.
+  Archivos a crear:
+    - /server/src/game/gameEngine.ts
+    - /server/src/game/gameState.ts
+    - /server/src/game/betManager.ts
+  Criterio de aceptacion: Rondas corren en loop continuo. Apuestas se
+    procesan correctamente. Balances se actualizan atomicamente. Auto cash-out
+    funciona. El crash point coincide con el pre-generado.
+
+TAREA 1.6 - Implementar comunicacion WebSocket (servidor)
+  Descripcion: Configurar Socket.io en el servidor para comunicacion real-time.
+  Eventos que el servidor EMITE:
+    - "game:state" -> estado actual al conectarse (waiting/running + data)
+    - "game:start" -> nueva ronda inicia, incluye hashed_server_seed
+    - "game:tick" -> actualizacion del multiplicador cada 100ms
+    - "game:crash" -> ronda termino, incluye crash_point y server_seed
+    - "bet:placed" -> confirmacion de apuesta al jugador
+    - "bet:cashout" -> confirmacion de cash out con multiplicador y ganancia
+    - "player:cashout" -> broadcast a todos: un jugador hizo cash out
+    - "players:bets" -> lista de apuestas activas en la ronda actual
+  Eventos que el servidor ESCUCHA:
+    - "bet:place" -> jugador quiere apostar {amount, autoCashOut?}
+    - "bet:cashout" -> jugador quiere hacer cash out
+  Autenticar conexiones WebSocket via token JWT en el handshake.
+  Criterio de aceptacion: Multiples clientes reciben actualizaciones en
+    tiempo real. Latencia < 100ms para acciones criticas (cash out).
+
+TAREA 1.7 - Crear interfaz frontend base del juego
+  Descripcion: Implementar la UI principal del juego con React + TailwindCSS.
+  Componentes a crear:
+    - GameArea: area central que muestra el multiplicador actual en grande.
+      Fondo oscuro estilo casino. El multiplicador cambia de color:
+      blanco (1x-2x), verde (2x-5x), amarillo (5x-10x), rojo (>10x).
+    - BetPanel: panel inferior/lateral con:
+      - Input numerico para monto de apuesta (con botones 1/2, x2, max).
+      - Input para auto cash-out (opcional).
+      - Boton "APOSTAR" (visible en estado waiting).
+      - Boton "CASH OUT" (visible en estado running, grande y prominente).
+    - GameHistory: barra horizontal mostrando ultimos 20 crash points.
+      Colores: rojo (<2x), naranja (2x-5x), verde (5x-10x), dorado (>10x).
+    - BetsList: tabla mostrando apuestas de la ronda actual
+      (usuario, monto, estado, multiplicador de cash out).
+    - Navbar: logo, balance del usuario, boton de perfil/logout.
+  Criterio de aceptacion: UI funcional conectada al WebSocket. Se ve el
+    multiplicador subir en tiempo real. Se puede apostar y hacer cash out.
+
+TAREA 1.8 - Integrar frontend con backend (flujo completo)
+  Descripcion: Conectar todos los componentes para un flujo jugable completo:
+    1. Usuario se registra/logea -> ve la pantalla del juego.
+    2. En estado "waiting" -> coloca apuesta -> ve confirmacion.
+    3. Ronda inicia -> multiplicador sube en pantalla.
+    4. Hace click en "CASH OUT" -> ve ganancia acreditada al balance.
+    5. Si no hace cash out -> ve "CRASHED at X.XXx" -> pierde apuesta.
+    6. Historial se actualiza con el resultado.
+    7. Nueva ronda inicia automaticamente.
+  Implementar:
+    - Context/Redux store para estado del juego y usuario.
+    - Hook personalizado useGameSocket() para manejar conexion WebSocket.
+    - Paginas: /login, /register, /game.
+    - Proteccion de rutas (redirect a /login si no autenticado).
+  Criterio de aceptacion: Un usuario puede completar multiples rondas
+    sin errores. El balance se actualiza correctamente en cada accion.
+
+================================================================================
+FASE 2: MOBILE & UX
+================================================================================
+
+TAREA 2.1 - Implementar responsive design (mobile-first)
+  Descripcion: Adaptar toda la UI para funcionar perfectamente en moviles.
+    - Reorganizar layout: en mobile, BetPanel va debajo del GameArea.
+    - Botones grandes (min 48px touch target) para facilidad de tap.
+    - El boton "CASH OUT" debe ocupar todo el ancho en mobile.
+    - Funcional en portrait y landscape.
+    - Breakpoints: mobile (<640px), tablet (640-1024px), desktop (>1024px).
+    - Probar en iOS Safari y Chrome Android.
+  Criterio de aceptacion: La app es completamente usable en un telefono.
+    No hay scroll horizontal. Todos los botones son facilmente presionables.
+
+TAREA 2.2 - Implementar animacion del pollo cruzando la carretera
+  Descripcion: Crear la animacion visual del pollo usando Canvas o CSS.
+    - Carretera con carriles visibles (lineas punteadas).
+    - Pollo sprite que avanza un paso por cada incremento significativo
+      del multiplicador.
+    - Vehiculos pasando como indicadores de peligro/tension.
+    - Al crash: animacion de impacto (pollo atropellado).
+    - Al cash out: animacion de celebracion (pollo llega al otro lado).
+    - Efectos de tension: pantalla vibra/tiembla conforme sube el multiplicador.
+    - Sonidos opcionales: pasos, claxon, cash out exitoso.
+  Criterio de aceptacion: Animacion fluida a 60fps. Sincronizada con el
+    multiplicador del servidor. Visualmente atractiva y clara.
+
+TAREA 2.3 - Implementar funcionalidades avanzadas de apuestas
+  Descripcion: Agregar features para jugadores recurrentes:
+    - Auto-bet: checkbox + configuracion para repetir la misma apuesta
+      automaticamente cada ronda. Opciones: stop on loss, stop on win,
+      increase/decrease bet on loss/win (martingale, etc).
+    - Auto cash-out: ya existe basico; mejorar UI con slider y presets
+      (1.5x, 2x, 3x, 5x, 10x).
+    - Multiple bets: permitir al jugador colocar hasta 2 apuestas por ronda
+      con diferentes montos y auto cash-out.
+    - Hotkeys: Espacio = apostar/cash out, 1-5 = presets de apuesta.
+  Criterio de aceptacion: Auto-bet corre multiples rondas sin intervencion.
+    Multiple bets funcionan independientemente.
+
+TAREA 2.4 - Implementar features sociales basicas
+  Descripcion: Agregar elementos sociales para engagement:
+    - Chat en vivo: panel lateral (desktop) o tab (mobile) con chat global.
+      Mensajes en tiempo real via WebSocket. Limite: 200 caracteres.
+      Anti-spam: 1 mensaje cada 3 segundos.
+    - Lista de jugadores en la ronda actual con sus apuestas y estado.
+    - Notificaciones de grandes ganancias (ej: "Player X gano 500x!").
+  Archivos a crear:
+    - /server/src/chat/chatController.ts
+    - /client/src/components/Chat.tsx
+  Criterio de aceptacion: Chat funcional en tiempo real. Se ven las
+    apuestas de otros jugadores. Grandes ganancias se notifican.
+
+TAREA 2.5 - Mejorar animaciones y feedback visual
+  Descripcion: Pulir la experiencia visual general:
+    - Transiciones suaves entre estados del juego (waiting -> running -> crashed).
+    - Contador regresivo animado antes de que inicie la ronda.
+    - Efecto de "pulso" en el multiplicador conforme sube.
+    - Particulas/confetti al hacer cash out exitoso.
+    - Shake de pantalla al crash.
+    - Sonidos: ambiente, cash out, crash, apuesta colocada.
+    - Loading skeleton mientras se conecta al WebSocket.
+  Criterio de aceptacion: La experiencia se siente fluida y pulida.
+    Feedback inmediato en cada accion del jugador (<100ms percibido).
+
+================================================================================
+FASE 3: ESCALA & SEGURIDAD
+================================================================================
+
+TAREA 3.1 - Configurar infraestructura de produccion
+  Descripcion: Preparar el despliegue para produccion.
+    - Dockerfile para client (build estatico con Nginx).
+    - Dockerfile para server (Node.js optimizado).
+    - docker-compose.yml con: client, server, postgres, redis.
+    - Nginx como reverse proxy con SSL/TLS (Let's Encrypt).
+    - Variables de entorno via .env (nunca hardcoded).
+    - Health check endpoints: GET /api/health.
+    - Graceful shutdown del game engine.
+  Criterio de aceptacion: "docker-compose up" levanta todo el stack.
+    La app es accesible via HTTPS.
+
+TAREA 3.2 - Implementar medidas de seguridad avanzadas
+  Descripcion: Fortalecer la seguridad de la aplicacion.
+    - Rate limiting: max 100 req/min por IP, max 10 login attempts/hora.
+    - Input validation/sanitization en todos los endpoints (ej: Joi/Zod).
+    - Helmet.js para headers de seguridad HTTP.
+    - CORS configurado estrictamente para el dominio de produccion.
+    - Proteccion contra inyeccion SQL (queries parametrizadas, ya cubiertas
+      si se usa un ORM, pero verificar).
+    - Anti-cheat server-side: toda logica critica se ejecuta en el servidor.
+      El cliente NUNCA decide el resultado. Validar que cash out ocurrio
+      antes del crash con timestamp del servidor.
+    - Prevencion de doble-gasto: transacciones atomicas en DB.
+  Criterio de aceptacion: Penetration test basico no revela vulnerabilidades
+    criticas. Rate limiting funciona. No hay forma de manipular resultados
+    desde el cliente.
+
+TAREA 3.3 - Implementar sistema de pagos basico
+  Descripcion: Integrar depositos y retiros (iniciar con crypto).
+    - Pagina de deposito/retiro en el frontend.
+    - Integracion con un payment gateway de crypto (ej: NOWPayments API).
+    - Flujo de deposito: generar direccion -> usuario envia crypto ->
+      webhook confirma pago -> acreditar balance.
+    - Flujo de retiro: usuario solicita retiro -> validar balance ->
+      procesar pago -> descontar balance.
+    - Tabla de transacciones visible para el usuario.
+    - Montos minimos/maximos configurables.
+  Criterio de aceptacion: Deposito y retiro funcionan end-to-end con
+    al menos una criptomoneda. Balances se actualizan correctamente.
+
+TAREA 3.4 - Implementar analytics y monitoring
+  Descripcion: Agregar observabilidad al sistema.
+    - Metricas con Prometheus: rondas por minuto, apuestas por ronda,
+      revenue, jugadores activos, latencia WebSocket.
+    - Dashboard Grafana con las metricas clave.
+    - Logging estructurado (Winston/Pino) con niveles (info, warn, error).
+    - Error tracking (ej: Sentry) para capturar errores en produccion.
+    - Panel de admin basico: ver estadisticas del juego, gestionar usuarios.
+  Criterio de aceptacion: Dashboard muestra metricas en tiempo real.
+    Errores se capturan y notifican. Logs son consultables.
+
+TAREA 3.5 - Implementar verificacion Provably Fair en el frontend
+  Descripcion: Permitir que los jugadores verifiquen la equidad del juego.
+    - Pagina /fairness con explicacion del sistema.
+    - Herramienta de verificacion: el usuario ingresa server_seed,
+      client_seed, y nonce -> ve el crash point calculado.
+    - En el historial de cada ronda, mostrar link para verificar.
+    - Mostrar hashed_server_seed ANTES de la ronda.
+    - Revelar server_seed DESPUES de la ronda.
+    - Permitir al jugador cambiar su client_seed.
+  Criterio de aceptacion: Cualquier ronda pasada puede ser verificada
+    independientemente. El hash pre-publicado coincide con el seed revelado.
+
+================================================================================
+FASE 4: FEATURES AVANZADOS (post-lanzamiento)
+================================================================================
+
+TAREA 4.1 - Implementar sistema de leaderboards
+  Descripcion: Crear tablas de clasificacion para engagement.
+    - Leaderboard diario, semanal, mensual, all-time.
+    - Categorias: mayor ganancia (multiplicador), mas ganado (monto),
+      mas apostado, racha mas larga.
+    - Pagina /leaderboard con tabs por periodo y categoria.
+    - Actualizacion en tiempo real o cada minuto.
+  Criterio de aceptacion: Leaderboards muestran data correcta.
+    Se actualizan automaticamente. Son visibles para todos.
+
+TAREA 4.2 - Implementar programa VIP / niveles
+  Descripcion: Sistema de fidelizacion basado en volumen apostado.
+    - Niveles: Bronce, Plata, Oro, Platino, Diamante.
+    - Beneficios por nivel: rakeback (devolucion de house edge parcial),
+      limites de apuesta mayores, retiros mas rapidos.
+    - Barra de progreso visible al jugador mostrando XP hacia siguiente nivel.
+    - XP = total apostado (ej: $1 apostado = 1 XP).
+  Criterio de aceptacion: Jugadores suben de nivel al apostar.
+    Beneficios se aplican correctamente segun nivel.
+
+TAREA 4.3 - Implementar sistema de afiliados
+  Descripcion: Permitir que usuarios refieran a otros y ganen comision.
+    - Cada usuario tiene un link de referido unico (/ref/CODIGO).
+    - El referidor gana un % de las apuestas del referido (ej: 0.5%).
+    - Dashboard de afiliado: referidos, ganancias, historial.
+    - Pagos automaticos o manuales de comisiones.
+  Criterio de aceptacion: Link de referido funciona. Comisiones se
+    calculan y acreditan correctamente.
+
+TAREA 4.4 - Implementar sistema de torneos
+  Descripcion: Crear torneos periodicos para engagement.
+    - Torneos por tiempo (ej: 1 hora) o por rondas (ej: 50 rondas).
+    - Ranking por: mayor multiplicador, mayor ganancia total, etc.
+    - Pool de premios (fijo o porcentaje de buy-in).
+    - Lobby de torneos: ver torneos activos, proximos, y pasados.
+    - Registro y participacion automatica.
+  Criterio de aceptacion: Torneo completo funciona end-to-end.
+    Premios se distribuyen correctamente al finalizar.
+
+================================================================================
+NOTAS PARA AGENTES DE IA:
+================================================================================
+
+- Seguir el orden de las tareas. Cada fase depende de la anterior.
+- Dentro de cada fase, las tareas 1.1-1.3 deben completarse antes que las demas.
+- Priorizar siempre la logica server-side. El cliente NUNCA decide resultados.
+- Toda operacion de dinero debe ser atomica (usar transacciones de PostgreSQL).
+- Usar TypeScript estricto en todo el proyecto.
+- Escribir tests para la logica critica (RNG, apuestas, balances).
+- Latencia de cash out < 100ms es critico para la experiencia.
+- La seguridad no es opcional: validar TODO en el servidor.
+- Referirse al PDF original (ChickenCross.pdf) para detalles adicionales.
