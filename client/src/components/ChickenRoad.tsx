@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
 
-const VISIBLE_LANES = 8;
+const VISIBLE_LANES = 6;
 const SAFE_ZONE_INTERVAL = 5;
 
 function isSafeZoneLane(lane: number): boolean {
@@ -140,14 +140,16 @@ export default function ChickenRoad() {
 
   return (
     <div
-      className={`relative w-full overflow-hidden transition-all duration-500 h-full min-h-[300px] bg-[#12141d] ${status === 'hit' || justHit ? 'animate-shake-hard bg-red-900/10' : ''}`}
+      className={`relative w-full overflow-hidden transition-all duration-500 h-full min-h-[220px] bg-[#1a1c24] ${status === 'hit' || justHit ? 'animate-shake-hard bg-red-900/10' : ''}`}
     >
       <div className="flex flex-row h-full gap-1 p-2">
-        {/* Start Station — left column */}
+        {/* Start Station — Sidewalk */}
         {viewStart <= 0 && (
-          <div className="w-24 flex-shrink-0 flex items-center justify-center border-r-2 border-[#2d3245] bg-[#1a1c24] rounded-xl overflow-hidden relative">
+          <div className="sidewalk-station">
             <div className="absolute inset-0 opacity-[0.05] pattern-dots" />
-            <span className="relative z-10 text-[10px] font-black tracking-widest text-[#4a5568] uppercase" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}>Deployment Area</span>
+            <div className="absolute right-[-24px] top-1/2 -translate-y-1/2 z-10 opacity-20 transform rotate-[-90deg]">
+              <span className="text-[8px] font-black tracking-widest text-white uppercase whitespace-nowrap">SIDEWALK</span>
+            </div>
           </div>
         )}
 
@@ -194,16 +196,14 @@ export default function ChickenRoad() {
                   </div>
                 )}
 
-                {/* Next Multiplier Target */}
+                {/* Next Multiplier Target (Manhole Cover style) */}
                 {isNextLane && activeGame?.nextMultiplier && !isChickenHere && (
-                  <div className="multiplier-bubble-cartoon bg-[#ffcc00] border-[#cca300] text-[#665200] animate-pop z-40 cursor-pointer hover:scale-110 active:scale-95 group">
-                    <span className="text-[8px] font-black uppercase leading-none opacity-60">NEXT</span>
-                    <span className="text-xs font-black leading-none">{activeGame.nextMultiplier.toFixed(2)}x</span>
+                  <div className="manhole-cover animate-pop z-40 cursor-pointer hover:scale-105 active:scale-95 group">
+                    <span className="text-[10px] font-black leading-none text-white/90 drop-shadow-md">{activeGame.nextMultiplier.toFixed(2)}x</span>
                   </div>
                 )}
 
-                {/* ─── PHASE 1: CROSSING ANIMATION (lane not yet revealed) ─── */}
-                {/* Crossing + HIT: car crosses rapidly over the chicken */}
+                {/* ─── PHASE 1: CROSSING ANIMATION ─── */}
                 {isCrossingThisLane && !crossingLane.safe && (
                   <div className="absolute inset-0 z-50 pointer-events-none overflow-hidden">
                     <div
@@ -213,37 +213,19 @@ export default function ChickenRoad() {
                         src={carImage}
                         className="w-full h-full object-contain"
                         style={{ transform: `rotate(${goingDown ? 90 : -90}deg) scale(${totalScale})` }}
-                        alt="Car"
+                        alt="Crash"
                       />
                     </div>
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[55] animate-crash-fire">
                       <img
                         src="/assets/fire.png"
                         className="w-16 h-16 sm:w-20 sm:h-20 object-contain drop-shadow-[0_4px_0_rgba(255,0,0,0.4)] animate-shake-hard"
-                        alt="Crash"
                       />
                     </div>
                   </div>
                 )}
 
-                {/* Crossing + SAFE: chicken hops through (no car passing over) */}
-
-                {/* ─── PHASE 2: REVEALED LANES (after crossing animation) ─── */}
-                {/* Revealed + Safe: checkmark */}
-                {isRevealed && !revealed.hasCar && (
-                  <div className="relative z-50 animate-pop">
-                    <div className="multiplier-bubble-cartoon bg-emerald-500 border-emerald-700 text-white shadow-[#00000033]">
-                      <span className="text-lg font-black">✓</span>
-                    </div>
-                  </div>
-                )}
-                {/* Safe zone sparkle burst */}
-                {isRevealed && revealed.isSafeZone && (
-                  <div className="absolute inset-0 z-30 pointer-events-none flex items-center justify-center">
-                    <div className="w-24 h-24 rounded-full bg-emerald-400/30 animate-sparkle-burst" />
-                  </div>
-                )}
-                {/* Revealed + Hit: static car + fire (no slide-in animation) */}
+                {/* ─── PHASE 2: REVEALED STATES ─── */}
                 {isRevealed && revealed.hasCar && (
                   <div className="absolute inset-0 z-50 pointer-events-none overflow-hidden">
                     <div
@@ -253,27 +235,30 @@ export default function ChickenRoad() {
                         src={carImage}
                         className="w-full h-full object-contain"
                         style={{ transform: `rotate(${goingDown ? 90 : -90}deg) scale(${totalScale})` }}
-                        alt="Car"
                       />
                     </div>
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[55]">
-                      <img
-                        src="/assets/fire.png"
-                        className="w-16 h-16 sm:w-20 sm:h-20 object-contain drop-shadow-[0_4px_0_rgba(255,0,0,0.4)] animate-shake-hard"
-                        alt="Crash"
-                      />
+                      <img src="/assets/fire.png" className="w-16 h-16 sm:w-20 sm:h-20 object-contain drop-shadow-[0_4px_0_rgba(255,0,0,0.4)] animate-shake-hard" />
                     </div>
                   </div>
                 )}
 
-                {/* Decorative traffic (UNREVEALED) */}
+                {/* Checkmark bubble */}
+                {isRevealed && !revealed.hasCar && (
+                  <div className="relative z-50 animate-pop">
+                    <div className="multiplier-bubble-cartoon bg-emerald-500 border-emerald-700 text-white shadow-[#00000033]">
+                      <span className="text-lg font-black">✓</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Decorative Traffic (only if not revealed and not crossing) */}
                 {!isRevealed && !isCrossingThisLane && !safeZone && (
                   <AnimatedCars laneNum={laneNum} difficulty={difficulty} />
                 )}
 
-                {/* Stopped car (CROSSING SAFE OR REVEALED SAFE)
-                    75% chance to show it per lane (1/4 times skip) */}
-                {((isCrossingThisLane && crossingLane?.safe) || (isRevealed && !revealed?.hasCar)) && !safeZone && showStoppedCar && (
+                {/* Emergency Brake Car (if safe) */}
+                {((isCrossingThisLane && crossingLane.safe) || (isRevealed && !revealed.hasCar)) && !safeZone && showStoppedCar && (
                   <AnimatedCars laneNum={laneNum} difficulty={difficulty} stop={true} />
                 )}
 
@@ -282,19 +267,23 @@ export default function ChickenRoad() {
                   const chickenAnim = (isCrossingThisLane && crossingLane?.safe && !crossingLane?.isSafeZone)
                     ? 'animate-dodge'
                     : 'animate-hop';
+                  const isHit = status === 'hit' || justHit;
+                  const chickenSrc = isHit ? '/assets/chicken_hit.png' : '/assets/chicken.png';
+
                   return (
                     <div
-                      className={`absolute z-[60] transition-all duration-300 ${status === 'hit' || justHit ? 'scale-150 grayscale' : chickenAnim}`}
+                      className={`absolute z-[60] transition-all duration-300 ${isHit ? 'scale-150 grayscale' : chickenAnim}`}
                       style={{
                         filter: streakIntensity > 0
                           ? `drop-shadow(0 0 ${8 + streakIntensity * 16}px rgba(16, 185, 129, ${0.3 + streakIntensity * 0.5}))`
                           : undefined,
                       }}
                     >
-                      <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)] bg-[#12141d]">
+                      <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)]">
                         <img
-                          src="/assets/chicken.png"
-                          className="absolute max-w-none w-[200%] h-[200%] left-[0%] top-[-25%] object-contain"
+                          src={chickenSrc}
+                          className={`absolute max-w-none ${isHit ? 'w-[140%] h-[140%] left-[-20%] top-[-20%]' : 'w-[200%] h-[200%] left-[0%] top-[-25%]'}`}
+                          style={{ objectFit: 'contain' }}
                           alt="Chicken"
                         />
                       </div>

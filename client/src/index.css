@@ -36,8 +36,12 @@
 
 /* ROAD DESIGN */
 .cartoon-road-lane {
-  @apply relative w-[110px] flex-shrink-0 flex items-center justify-center bg-[#1a1c24] border-x border-[#222731] transition-all duration-300;
+  @apply relative w-[140px] sm:w-[160px] flex-shrink-0 flex items-center justify-center bg-[#252830] border-x border-white/5 transition-all duration-300;
   height: 100%;
+  background-image:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 20px 20px;
 }
 
 .cartoon-road-lane-active {
@@ -45,9 +49,35 @@
 }
 
 .road-stripe {
-  @apply absolute top-0 bottom-0 w-0.5 bg-white/10 border-l border-dashed border-white/20;
-  left: 50%;
+  @apply absolute top-0 bottom-0 w-1 bg-white/10;
+  left: 100%;
   transform: translateX(-50%);
+  background-image: linear-gradient(to bottom, white 50%, transparent 50%);
+  background-size: 4px 40px;
+  opacity: 0.3;
+}
+
+.sidewalk-station {
+  @apply w-32 flex-shrink-0 flex items-center justify-center relative bg-[#4a5061];
+  background-image:
+    linear-gradient(90deg, #3a4051 2px, transparent 2px),
+    linear-gradient(#3a4051 2px, transparent 2px);
+  background-size: 40px 40px;
+  border-right: 8px solid #2d3245;
+}
+
+.manhole-cover {
+  @apply relative rounded-full flex flex-col items-center justify-center border-[4px] border-[#1a1c22];
+  width: 70px;
+  height: 70px;
+  background: radial-gradient(circle, #2d3245 0%, #1a1c22 100%);
+  box-shadow: inset 0 4px 8px rgba(0, 0, 0, 0.6), 0 2px 4px rgba(255, 255, 255, 0.1);
+}
+
+.manhole-cover::before {
+  content: '';
+  @apply absolute inset-2 rounded-full border border-white/5;
+  background-image: repeating-conic-gradient(from 0deg, transparent 0deg 10deg, rgba(0, 0, 0, 0.2) 10deg 20deg);
 }
 
 /* SCROLLBAR */
