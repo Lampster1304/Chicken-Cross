@@ -27,8 +27,8 @@ interface LeaderboardEntry {
 }
 
 const statusColors: Record<string, string> = {
-  active: 'bg-casino-green/20 text-casino-green',
-  upcoming: 'bg-casino-accent/20 text-casino-accent',
+  active: 'bg-accent-green/20 text-accent-green',
+  upcoming: 'bg-brand/20 text-brand',
   finished: 'bg-gray-600/20 text-gray-400',
 };
 
@@ -90,11 +90,11 @@ export default function TournamentsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-casino-dark text-white">
-      <div className="bg-casino-card border-b border-casino-border px-4 py-3">
+    <div className="min-h-screen bg-surface text-white">
+      <div className="bg-surface-50 border-b border-surface-200/50 px-4 py-3">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <h1 className="text-lg sm:text-xl font-bold">Tournaments</h1>
-          <Link to="/game" className="text-casino-accent hover:underline text-sm">
+          <Link to="/game" className="text-brand hover:underline text-sm">
             Back to Game
           </Link>
         </div>
@@ -111,12 +111,12 @@ export default function TournamentsPage() {
           tournaments.map(t => (
             <div
               key={t.id}
-              className="bg-casino-card border border-casino-border rounded-xl overflow-hidden"
+              className="bg-surface-50 border border-surface-200/50 rounded-xl overflow-hidden"
             >
               {/* Tournament Header */}
               <button
                 onClick={() => loadDetails(t.id)}
-                className="w-full p-4 text-left hover:bg-casino-darker/30 transition"
+                className="w-full p-4 text-left hover:bg-surfaceer/30 transition"
               >
                 <div className="flex items-start justify-between">
                   <div>
@@ -134,7 +134,7 @@ export default function TournamentsPage() {
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-casino-gold font-bold text-lg">
+                    <p className="text-brand font-bold text-lg">
                       ${t.prizePool.toFixed(2)}
                     </p>
                     <p className="text-xs text-gray-500">Prize Pool</p>
@@ -148,13 +148,13 @@ export default function TournamentsPage() {
 
               {/* Expanded Details */}
               {selectedId === t.id && (
-                <div className="border-t border-casino-border">
+                <div className="border-t border-surface-200/50">
                   {(t.status === 'active' || t.status === 'upcoming') && (
-                    <div className="p-4 border-b border-casino-border">
+                    <div className="p-4 border-b border-surface-200/50">
                       <button
                         onClick={() => joinTournament(t.id)}
                         disabled={joining}
-                        className="w-full bg-casino-green hover:bg-casino-green/80 disabled:opacity-50 text-white py-2 rounded-lg font-bold text-sm transition"
+                        className="w-full bg-accent-green hover:bg-accent-green/80 disabled:opacity-50 text-white py-2 rounded-lg font-bold text-sm transition"
                       >
                         {joining ? 'Joining...' : `Join Tournament${t.entryFee > 0 ? ` ($${t.entryFee.toFixed(2)})` : ' (Free)'}`}
                       </button>
@@ -168,7 +168,7 @@ export default function TournamentsPage() {
                   ) : (
                     <table className="w-full text-sm">
                       <thead>
-                        <tr className="text-gray-500 bg-casino-darker text-xs">
+                        <tr className="text-gray-500 bg-surfaceer text-xs">
                           <th className="text-left py-2 px-4">#</th>
                           <th className="text-left py-2 px-4">Player</th>
                           <th className="text-right py-2 px-4">Score</th>
@@ -178,14 +178,14 @@ export default function TournamentsPage() {
                       </thead>
                       <tbody>
                         {leaderboard.map(e => (
-                          <tr key={e.rank} className="border-t border-casino-border/30">
+                          <tr key={e.rank} className="border-t border-surface-200/50/30">
                             <td className="py-2 px-4 font-bold text-gray-500">#{e.rank}</td>
                             <td className="py-2 px-4 text-white">{e.username}</td>
                             <td className="py-2 px-4 text-right font-mono">{e.score.toFixed(2)}</td>
-                            <td className="py-2 px-4 text-right font-mono text-casino-accent">
+                            <td className="py-2 px-4 text-right font-mono text-brand">
                               {e.bestMultiplier.toFixed(2)}x
                             </td>
-                            <td className="py-2 px-4 text-right font-mono text-casino-gold">
+                            <td className="py-2 px-4 text-right font-mono text-brand">
                               {e.prizeWon !== null ? `$${e.prizeWon.toFixed(2)}` : '-'}
                             </td>
                           </tr>

@@ -6,15 +6,34 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+      },
       colors: {
-        casino: {
-          dark: '#0f0f23',
-          darker: '#0a0a1a',
-          card: '#1a1a2e',
-          border: '#2a2a4a',
-          accent: '#e94560',
-          gold: '#ffd700',
-          green: '#00d4aa',
+        surface: {
+          DEFAULT: '#0d1117',
+          50: '#161b22',
+          100: '#1c2333',
+          200: '#21293a',
+          300: '#2d3748',
+          400: '#3d4a5c',
+        },
+        brand: {
+          DEFAULT: '#f0b429',
+          light: '#f7c948',
+          dark: '#de911d',
+          muted: '#f0b429',
+        },
+        accent: {
+          green: '#34d399',
+          red: '#f87171',
+          blue: '#60a5fa',
+          purple: '#a78bfa',
+        },
+        txt: {
+          DEFAULT: '#e2e8f0',
+          muted: '#8b95a8',
+          dim: '#4a5568',
         },
       },
       animation: {

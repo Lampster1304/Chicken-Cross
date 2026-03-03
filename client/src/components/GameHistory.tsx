@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
+import { Loader2 } from 'lucide-react';
 
 interface GameRecord {
   id: number;
@@ -19,75 +20,71 @@ export default function GameHistory() {
   const [loading, setLoading] = useState(false);
   const gameStatus = useSelector((state: RootState) => state.game.status);
 
-  // Reload history when a game ends
   useEffect(() => {
     if (!user) return;
     if (gameStatus === 'idle' || gameStatus === 'hit' || gameStatus === 'cashed_out') {
       setLoading(true);
       fetch(`/api/games/history?userId=${user.id}`)
         .then(res => res.json())
-        .then(data => setHistory((data.games || []).slice(0, 10)))
-        .catch(() => {})
+        .then(data => setHistory((data.games || []).slice(0, 15)))
+        .catch(() => { })
         .finally(() => setLoading(false));
     }
   }, [user, gameStatus]);
 
   if (!user) return null;
 
+  if (loading && history.length === 0) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <Loader2 size={16} className="text-txt-dim animate-spin" />
+      </div>
+    );
+  }
+
+  if (history.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-txt-dim">
+        <p className="text-xs">No games yet</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="bg-casino-card border border-casino-border rounded-xl p-3 sm:p-4">
-      <h3 className="text-gray-400 text-xs sm:text-sm font-bold mb-2 sm:mb-3">
-        Your History
-      </h3>
+    <div className="space-y-px max-h-[320px] overflow-y-auto">
+      {history.map(game => {
+        const profit = game.profit ? parseFloat(game.profit) : 0;
+        const isWin = game.status === 'cashed_out' || game.status === 'completed';
+        const multiplier = game.final_multiplier ? parseFloat(game.final_multiplier) : null;
 
-      {loading && history.length === 0 ? (
-        <p className="text-gray-600 text-xs text-center py-3">Loading...</p>
-      ) : history.length === 0 ? (
-        <p className="text-gray-600 text-xs sm:text-sm text-center py-4">
-          No games yet
-        </p>
-      ) : (
-        <div className="space-y-1 max-h-[200px] sm:max-h-[250px] overflow-y-auto scrollbar-thin">
-          {history.map((game) => {
-            const profit = game.profit ? parseFloat(game.profit) : 0;
-            const isWin = game.status === 'cashed_out' || game.status === 'completed';
-            const multiplier = game.final_multiplier ? parseFloat(game.final_multiplier) : null;
-
-            return (
-              <div
-                key={game.id}
-                className={`flex items-center justify-between px-2.5 py-1.5 rounded text-xs ${
-                  isWin ? 'bg-green-900/10' : 'bg-red-900/10'
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <span className={`w-1.5 h-1.5 rounded-full ${isWin ? 'bg-green-400' : 'bg-red-400'}`} />
-                  <span className="text-gray-400 font-mono">#{game.id}</span>
-                  <span className={`px-1 py-0.5 rounded text-[10px] font-bold ${
-                    game.difficulty === 1 ? 'bg-green-900/40 text-green-400' :
-                    game.difficulty === 2 ? 'bg-yellow-900/40 text-yellow-400' :
-                    game.difficulty === 3 ? 'bg-orange-900/40 text-orange-400' :
-                    'bg-red-900/40 text-red-400'
-                  }`}>
-                    {game.difficulty}🚗
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  {multiplier && (
-                    <span className={`font-mono font-bold ${isWin ? 'text-casino-green' : 'text-gray-500'}`}>
-                      {multiplier.toFixed(2)}x
-                    </span>
-                  )}
-                  <span className={`font-mono ${profit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                    {profit >= 0 ? '+' : ''}{profit.toFixed(2)}
-                  </span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
+        return (
+          <div key={game.id} className="flex items-center justify-between px-2.5 py-2 rounded-lg text-[12px] hover:bg-surface-100/80 transition-colors">
+            <div className="flex items-center gap-2">
+              <div className={`w-1.5 h-1.5 rounded-full ${isWin ? 'bg-accent-green' : 'bg-accent-red'}`} />
+              <span className="text-txt-dim font-mono text-[10px]">#{game.id}</span>
+              <DiffBadge value={game.difficulty} />
+            </div>
+            <div className="flex items-center gap-3">
+              {multiplier && (
+                <span className={`font-mono font-semibold ${isWin ? 'text-accent-green' : 'text-txt-dim'}`}>
+                  {multiplier.toFixed(2)}×
+                </span>
+              )}
+              <span className={`font-mono font-semibold ${profit >= 0 ? 'text-accent-green' : 'text-accent-red'}`}>
+                {profit >= 0 ? '+' : ''}{profit.toFixed(2)}
+              </span>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
+}
+
+function DiffBadge({ value }: { value: number }) {
+  const c = value === 1 ? 'bg-emerald-500/15 text-emerald-400'
+    : value === 2 ? 'bg-amber-500/15 text-amber-400'
+      : value === 3 ? 'bg-orange-500/15 text-orange-400'
+        : 'bg-red-500/15 text-red-400';
+  return <span className={`w-4 h-4 rounded flex items-center justify-center text-[9px] font-bold ${c}`}>{value}</span>;
 }

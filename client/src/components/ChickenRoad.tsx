@@ -1,8 +1,11 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
+import CarSvg from './svg/CarSvg';
+import ChickenSvg from './svg/ChickenSvg';
+import ExplosionSvg from './svg/ExplosionSvg';
 
-const VISIBLE_LANES = 6;
+const CAR_COLORS = ['#ef4444', '#eab308', '#3b82f6', '#8b5cf6'];
 const SAFE_ZONE_INTERVAL = 5;
 
 function isSafeZoneLane(lane: number): boolean {
@@ -23,8 +26,8 @@ function seededRandom(seed: number): number {
 }
 
 /** Single animated car with random pause (0.3–4.0s) between each pass */
-function AnimatedCar({ goingDown, carImage, speed, initialDelay, scale, stop }: {
-  goingDown: boolean; carImage: string; speed: number; initialDelay: number; scale: number; stop?: boolean;
+function AnimatedCar({ goingDown, carColor, speed, initialDelay, stop }: {
+  goingDown: boolean; carColor: string; speed: number; initialDelay: number; stop?: boolean;
 }) {
   const [cycle, setCycle] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
@@ -48,20 +51,13 @@ function AnimatedCar({ goingDown, carImage, speed, initialDelay, scale, stop }: 
   return (
     <div
       key={`${cycle}-${stop}`}
-      className={`absolute left-1/2 -translate-x-1/2 w-14 h-24 rounded-2xl overflow-hidden bg-[#161821] shadow-2xl border-2 border-white/5 ${stop ? animClass : ''}`}
+      className={`absolute left-1/2 -translate-x-1/2 w-20 h-32 drop-shadow-lg ${stop ? animClass : ''}`}
       style={{
         animation: !stop ? `${animClass} ${speed}s linear ${cycle === 0 ? initialDelay : 0}s forwards` : undefined,
       }}
       onAnimationEnd={!stop ? handleAnimationEnd : undefined}
     >
-      <img
-        src={carImage}
-        className="w-full h-full object-contain animate-wobble"
-        style={{
-          transform: `rotate(${goingDown ? 90 : -90}deg) scale(${scale * 2.5})`,
-        }}
-        alt="Car"
-      />
+      <CarSvg color={carColor} direction={goingDown ? 'down' : 'up'} className="animate-wobble" />
     </div>
   );
 }
@@ -70,22 +66,20 @@ function AnimatedCar({ goingDown, carImage, speed, initialDelay, scale, stop }: 
  *  Always 1 car per lane — higher difficulty = faster speed. */
 function AnimatedCars({ laneNum, difficulty, stop }: { laneNum: number; difficulty: number; stop?: boolean }) {
   const goingDown = laneNum % 2 === 0;
-  const carImage = laneNum % 3 === 0 ? '/assets/car_red.png' : '/assets/car_taxi.png';
+  const carColor = CAR_COLORS[laneNum % 4];
 
   const rand = seededRandom(laneNum * 100);
   // Synchronized with the 0.4s crash animation speed
   const speed = 0.4;
   const delay = -rand * speed;
-  const scale = 0.85 + seededRandom(laneNum * 50 + 7) * 0.3;
 
   return (
     <div className="absolute inset-0 pointer-events-none z-20 overflow-hidden">
       <AnimatedCar
         goingDown={goingDown}
-        carImage={carImage}
+        carColor={carColor}
         speed={speed}
         initialDelay={delay}
-        scale={scale}
         stop={stop}
       />
     </div>
@@ -94,6 +88,20 @@ function AnimatedCars({ laneNum, difficulty, stop }: { laneNum: number; difficul
 
 export default function ChickenRoad() {
   const { status, activeGame, crossingLane } = useSelector((state: RootState) => state.game);
+  const [visibleLanes, setVisibleLanes] = useState(6);
+
+  // Dynamic lanes based on width
+  useEffect(() => {
+    const handleResize = () => {
+      const width = window.innerWidth;
+      if (width < 640) setVisibleLanes(3);
+      else if (width < 1024) setVisibleLanes(4);
+      else setVisibleLanes(6);
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const difficulty = activeGame?.difficulty ?? 1;
   const currentLane = activeGame?.currentLane ?? 0;
@@ -101,7 +109,7 @@ export default function ChickenRoad() {
   const isGameOver = status === 'hit' || status === 'cashed_out';
   const isActive = status === 'active';
 
-  // Detect "just hit" state: during crossing animation (hit) OR last revealed lane has a car
+  // Detect "just hit" state
   const lastRevealed = revealedLanes.length > 0 ? revealedLanes[revealedLanes.length - 1] : null;
   const justHit = isActive && (
     (crossingLane !== null && !crossingLane.safe) ||
@@ -111,14 +119,14 @@ export default function ChickenRoad() {
   // Streak glow intensity based on risky lanes crossed
   const streakIntensity = Math.min((activeGame?.riskyLanesCrossed ?? 0) / 8, 1);
 
-  // Determine which lanes to show in viewport
+  // Determine which lanes to show in viewport using dynamic visibleLanes
   let viewStart: number;
-  if (currentLane <= 3) {
+  if (currentLane <= Math.floor(visibleLanes / 2)) {
     viewStart = 0;
   } else {
-    viewStart = currentLane - 3;
+    viewStart = currentLane - Math.floor(visibleLanes / 2);
   }
-  const viewEnd = viewStart + VISIBLE_LANES;
+  const viewEnd = viewStart + visibleLanes;
 
   // Build lane data from left (viewStart+1) to right (viewEnd) — columns left to right
   const lanes: Array<{
@@ -140,9 +148,32 @@ export default function ChickenRoad() {
 
   return (
     <div
-      className={`relative w-full overflow-hidden transition-all duration-500 h-full min-h-[220px] bg-[#1a1c24] ${status === 'hit' || justHit ? 'animate-shake-hard bg-red-900/10' : ''}`}
+      className={`relative w-full overflow-hidden transition-all duration-500 h-full min-h-[220px] bg-[#1a1c24] flex flex-col ${status === 'hit' || justHit ? 'animate-shake-hard bg-red-900/10' : ''}`}
     >
-      <div className="flex flex-row h-full gap-1 p-2">
+      {/* ─── STRUCTURED HUD BAR ─── */}
+      <div className="game-hud-bar">
+        <div key={activeGame?.currentMultiplier ?? 0} className="flex gap-2 items-center animate-mult-pulse">
+          <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]" />
+          <div className="flex flex-col">
+            <span className="text-[8px] font-black text-emerald-500 uppercase tracking-widest leading-none">Multiplier</span>
+            <span className="text-sm sm:text-lg font-black text-white font-mono leading-none">
+              {activeGame?.currentMultiplier?.toFixed(2) ?? '1.00'}x
+            </span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <div className="hidden sm:flex flex-col items-end">
+            <span className="text-[8px] font-bold text-gray-500 uppercase tracking-widest leading-none">Hazard Level</span>
+            <span className="text-[10px] font-black text-red-400 uppercase italic leading-none">{difficultyLabels[difficulty]}</span>
+          </div>
+          <div className={`px-3 py-1 rounded-full border-2 text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all ${isActive ? 'border-yellow-500/50 text-yellow-500 bg-yellow-500/5' : 'border-white/10 text-gray-400'}`}>
+            {status.toUpperCase().replace('_', ' ')}
+          </div>
+        </div>
+      </div>
+
+      <div className="flex flex-row flex-1 overflow-hidden p-2 gap-1">
         {/* Start Station — Sidewalk */}
         {viewStart <= 0 && (
           <div className="sidewalk-station">
@@ -150,6 +181,13 @@ export default function ChickenRoad() {
             <div className="absolute right-[-24px] top-1/2 -translate-y-1/2 z-10 opacity-20 transform rotate-[-90deg]">
               <span className="text-[8px] font-black tracking-widest text-white uppercase whitespace-nowrap">SIDEWALK</span>
             </div>
+            {currentLane === 0 && isActive && (
+              <div className="relative z-20 animate-idle-bounce">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)]">
+                  <ChickenSvg />
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -159,13 +197,7 @@ export default function ChickenRoad() {
           const isRevealed = !!revealed;
           const isHitLane = (status === 'hit' || justHit) && (revealed?.hasCar || (isCrossingThisLane && !crossingLane.safe));
           const goingDown = laneNum % 2 === 0;
-          const carImage = laneNum % 3 === 0 ? '/assets/car_red.png' : '/assets/car_taxi.png';
-
-          // Size consistency: use same scale logic as AnimatedCars
-          const scaleFactor = 0.85 + seededRandom(laneNum * 50 + 7) * 0.3;
-          const totalScale = scaleFactor * 2.5;
-
-          // Probability: ~66% chance to show a stopped car on safe reveal (1 in 3 times NO car)
+          const carColor = CAR_COLORS[laneNum % 4];
           const showStoppedCar = seededRandom(laneNum * 777) < 0.66;
 
           return (
@@ -179,7 +211,7 @@ export default function ChickenRoad() {
 
               {/* Lane Designator — top of column */}
               <div className="absolute top-2 left-1/2 -translate-x-1/2 z-0 opacity-10">
-                <span className="text-xs font-black text-white italic">L{laneNum}</span>
+                <span className="text-[10px] sm:text-xs font-black text-white italic">L{laneNum}</span>
               </div>
 
               {/* Lane Content Container */}
@@ -199,7 +231,7 @@ export default function ChickenRoad() {
                 {/* Next Multiplier Target (Manhole Cover style) */}
                 {isNextLane && activeGame?.nextMultiplier && !isChickenHere && (
                   <div className="manhole-cover animate-pop z-40 cursor-pointer hover:scale-105 active:scale-95 group">
-                    <span className="text-[10px] font-black leading-none text-white/90 drop-shadow-md">{activeGame.nextMultiplier.toFixed(2)}x</span>
+                    <span className="text-[9px] sm:text-[10px] font-black leading-none text-white/90 drop-shadow-md">{activeGame.nextMultiplier.toFixed(2)}x</span>
                   </div>
                 )}
 
@@ -207,38 +239,24 @@ export default function ChickenRoad() {
                 {isCrossingThisLane && !crossingLane.safe && (
                   <div className="absolute inset-0 z-50 pointer-events-none overflow-hidden">
                     <div
-                      className={`absolute left-1/2 w-14 h-24 rounded-2xl overflow-hidden bg-[#161821] shadow-2xl border-2 border-red-500/60 ${goingDown ? 'animate-crash-from-left' : 'animate-crash-from-right'}`}
+                      className={`absolute left-1/2 w-20 h-32 drop-shadow-lg ${goingDown ? 'animate-crash-from-left' : 'animate-crash-from-right'}`}
                     >
-                      <img
-                        src={carImage}
-                        className="w-full h-full object-contain"
-                        style={{ transform: `rotate(${goingDown ? 90 : -90}deg) scale(${totalScale})` }}
-                        alt="Crash"
-                      />
+                      <CarSvg color={carColor} direction={goingDown ? 'down' : 'up'} />
                     </div>
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[55] animate-crash-fire">
-                      <img
-                        src="/assets/fire.png"
-                        className="w-16 h-16 sm:w-20 sm:h-20 object-contain drop-shadow-[0_4px_0_rgba(255,0,0,0.4)] animate-shake-hard"
-                      />
+                      <ExplosionSvg className="w-16 h-16 sm:w-20 sm:h-20 drop-shadow-[0_4px_0_rgba(255,0,0,0.4)] animate-shake-hard" />
                     </div>
                   </div>
                 )}
 
                 {/* ─── PHASE 2: REVEALED STATES ─── */}
-                {isRevealed && revealed.hasCar && (
+                {isRevealed && revealed.hasCar && !isChickenHere && (
                   <div className="absolute inset-0 z-50 pointer-events-none overflow-hidden">
-                    <div
-                      className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-14 h-24 rounded-2xl overflow-hidden bg-[#161821] shadow-2xl border-2 border-red-500/60"
-                    >
-                      <img
-                        src={carImage}
-                        className="w-full h-full object-contain"
-                        style={{ transform: `rotate(${goingDown ? 90 : -90}deg) scale(${totalScale})` }}
-                      />
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-32 drop-shadow-lg">
+                      <CarSvg color={carColor} direction={goingDown ? 'down' : 'up'} />
                     </div>
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[55]">
-                      <img src="/assets/fire.png" className="w-16 h-16 sm:w-20 sm:h-20 object-contain drop-shadow-[0_4px_0_rgba(255,0,0,0.4)] animate-shake-hard" />
+                      <ExplosionSvg className="w-16 h-16 sm:w-20 sm:h-20 drop-shadow-[0_4px_0_rgba(255,0,0,0.4)] animate-shake-hard" />
                     </div>
                   </div>
                 )}
@@ -268,55 +286,45 @@ export default function ChickenRoad() {
                     ? 'animate-dodge'
                     : 'animate-hop';
                   const isHit = status === 'hit' || justHit;
-                  const chickenSrc = isHit ? '/assets/chicken_hit.png' : '/assets/chicken.png';
 
                   return (
-                    <div
-                      className={`absolute z-[60] transition-all duration-300 ${isHit ? 'scale-150 grayscale' : chickenAnim}`}
-                      style={{
-                        filter: streakIntensity > 0
-                          ? `drop-shadow(0 0 ${8 + streakIntensity * 16}px rgba(16, 185, 129, ${0.3 + streakIntensity * 0.5}))`
-                          : undefined,
-                      }}
-                    >
-                      <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)]">
-                        <img
-                          src={chickenSrc}
-                          className={`absolute max-w-none ${isHit ? 'w-[140%] h-[140%] left-[-20%] top-[-20%]' : 'w-[200%] h-[200%] left-[0%] top-[-25%]'}`}
-                          style={{ objectFit: 'contain' }}
-                          alt="Chicken"
-                        />
+                    <>
+                      <div
+                        className={`absolute z-[60] transition-all duration-300 ${isHit ? 'animate-squish' : chickenAnim}`}
+                        style={{
+                          filter: !isHit && streakIntensity > 0
+                            ? `drop-shadow(0 0 ${8 + streakIntensity * 16}px rgba(16, 185, 129, ${0.3 + streakIntensity * 0.5}))`
+                            : undefined,
+                        }}
+                      >
+                        <div className="w-14 h-14 sm:w-16 sm:h-16 drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)]">
+                          <ChickenSvg hit={isHit} />
+                        </div>
                       </div>
-                    </div>
+                      {/* Feather particles on hit */}
+                      {isHit && (
+                        <div className="absolute z-[61] pointer-events-none">
+                          {[1, 2, 3, 4].map((n) => (
+                            <svg
+                              key={n}
+                              className={`absolute animate-feather-${n}`}
+                              width="10"
+                              height="6"
+                              viewBox="0 0 10 6"
+                              style={{ top: '-4px', left: '-2px' }}
+                            >
+                              <ellipse cx="5" cy="3" rx="5" ry="3" fill={n % 2 === 0 ? '#f5f5f5' : '#fbbf24'} opacity="0.9" />
+                            </svg>
+                          ))}
+                        </div>
+                      )}
+                    </>
                   );
                 })()}
               </div>
             </div>
           );
         })}
-      </div>
-
-      {/* Floating UI HUD (Cartoon Style) */}
-      <div className="absolute top-3 left-3 right-3 flex justify-between items-start pointer-events-none z-[100]">
-        <div key={activeGame?.currentMultiplier ?? 0} className="cartoon-panel px-4 py-2 border-emerald-500/50 flex flex-col items-center animate-mult-pulse">
-          <span className="text-[8px] font-black text-emerald-500 uppercase tracking-widest">Multiplier</span>
-          <span className="text-xl font-black text-white font-mono leading-none">
-            {activeGame?.currentMultiplier?.toFixed(2) ?? '1.00'}x
-          </span>
-        </div>
-
-        <div className="flex flex-col items-end gap-2">
-          <div className={`cartoon-panel px-3 py-1 border-2 ${isActive ? 'border-yellow-500 bg-yellow-500/10' : 'border-gray-500'}`}>
-            <span className="text-[10px] font-black text-white uppercase italic">
-              {status.toUpperCase().replace('_', ' ')}
-            </span>
-          </div>
-          <div className="bg-[#0f1118]/80 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">
-            <span className="text-[10px] font-bold text-gray-400 uppercase">
-              Hazard: <span className="text-red-400 font-black">{difficultyLabels[difficulty]}</span>
-            </span>
-          </div>
-        </div>
       </div>
     </div>
   );

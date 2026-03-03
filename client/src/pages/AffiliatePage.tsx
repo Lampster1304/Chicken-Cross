@@ -40,11 +40,11 @@ export default function AffiliatePage() {
   };
 
   return (
-    <div className="min-h-screen bg-casino-dark text-white">
-      <div className="bg-casino-card border-b border-casino-border px-4 py-3">
+    <div className="min-h-screen bg-surface text-white">
+      <div className="bg-surface-50 border-b border-surface-200/50 px-4 py-3">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <h1 className="text-lg sm:text-xl font-bold">Affiliate Program</h1>
-          <Link to="/game" className="text-casino-accent hover:underline text-sm">
+          <Link to="/game" className="text-brand hover:underline text-sm">
             Back to Game
           </Link>
         </div>
@@ -60,15 +60,15 @@ export default function AffiliatePage() {
         ) : (
           <>
             {/* Referral Code */}
-            <div className="bg-casino-card border border-casino-border rounded-xl p-6 text-center">
+            <div className="bg-surface-50 border border-surface-200/50 rounded-xl p-6 text-center">
               <p className="text-gray-400 text-sm mb-2">Your Referral Code</p>
               <div className="flex items-center justify-center gap-3">
-                <code className="bg-casino-darker px-6 py-3 rounded-lg border border-casino-border text-2xl font-bold text-casino-gold tracking-widest">
+                <code className="bg-surfaceer px-6 py-3 rounded-lg border border-surface-200/50 text-2xl font-bold text-brand tracking-widest">
                   {stats.referralCode}
                 </code>
                 <button
                   onClick={copyCode}
-                  className="bg-casino-accent hover:bg-casino-accent/80 text-white px-4 py-3 rounded-lg text-sm font-medium transition"
+                  className="bg-brand hover:bg-brand/80 text-white px-4 py-3 rounded-lg text-sm font-medium transition"
                 >
                   {copied ? 'Copied!' : 'Copy'}
                 </button>
@@ -80,18 +80,18 @@ export default function AffiliatePage() {
 
             {/* Stats Grid */}
             <div className="grid grid-cols-3 gap-3">
-              <div className="bg-casino-card border border-casino-border rounded-xl p-4 text-center">
-                <p className="text-2xl font-bold text-casino-green">
+              <div className="bg-surface-50 border border-surface-200/50 rounded-xl p-4 text-center">
+                <p className="text-2xl font-bold text-accent-green">
                   ${stats.totalEarnings.toFixed(2)}
                 </p>
                 <p className="text-xs text-gray-500 mt-1">Total Earnings</p>
               </div>
-              <div className="bg-casino-card border border-casino-border rounded-xl p-4 text-center">
+              <div className="bg-surface-50 border border-surface-200/50 rounded-xl p-4 text-center">
                 <p className="text-2xl font-bold text-white">{stats.totalReferrals}</p>
                 <p className="text-xs text-gray-500 mt-1">Referrals</p>
               </div>
-              <div className="bg-casino-card border border-casino-border rounded-xl p-4 text-center">
-                <p className="text-2xl font-bold text-casino-accent">
+              <div className="bg-surface-50 border border-surface-200/50 rounded-xl p-4 text-center">
+                <p className="text-2xl font-bold text-brand">
                   {stats.commissionRate}%
                 </p>
                 <p className="text-xs text-gray-500 mt-1">Commission Rate</p>
@@ -99,8 +99,8 @@ export default function AffiliatePage() {
             </div>
 
             {/* Recent Commissions */}
-            <div className="bg-casino-card border border-casino-border rounded-xl overflow-hidden">
-              <div className="px-4 py-3 border-b border-casino-border">
+            <div className="bg-surface-50 border border-surface-200/50 rounded-xl overflow-hidden">
+              <div className="px-4 py-3 border-b border-surface-200/50">
                 <h3 className="font-bold text-sm">Recent Commissions</h3>
               </div>
               {stats.recentCommissions.length === 0 ? (
@@ -110,7 +110,7 @@ export default function AffiliatePage() {
               ) : (
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="text-gray-500 border-b border-casino-border bg-casino-darker">
+                    <tr className="text-gray-500 border-b border-surface-200/50 bg-surfaceer">
                       <th className="text-left py-2 px-4">Player</th>
                       <th className="text-right py-2 px-4">Commission</th>
                       <th className="text-right py-2 px-4">Date</th>
@@ -118,9 +118,9 @@ export default function AffiliatePage() {
                   </thead>
                   <tbody>
                     {stats.recentCommissions.map((c, i) => (
-                      <tr key={i} className="border-b border-casino-border/30">
+                      <tr key={i} className="border-b border-surface-200/50/30">
                         <td className="py-2 px-4 text-white">{c.referredUser}</td>
-                        <td className="py-2 px-4 text-right text-casino-green font-mono">
+                        <td className="py-2 px-4 text-right text-accent-green font-mono">
                           +${c.amount.toFixed(2)}
                         </td>
                         <td className="py-2 px-4 text-right text-gray-500">

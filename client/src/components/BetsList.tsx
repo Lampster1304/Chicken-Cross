@@ -4,63 +4,50 @@ import { RootState } from '../store';
 export default function BetsList() {
   const feed = useSelector((state: RootState) => state.game.feed);
 
+  if (feed.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-txt-dim">
+        <p className="text-xs">Waiting for bets...</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="bg-casino-card border border-casino-border rounded-xl p-3 sm:p-4">
-      <h3 className="text-gray-400 text-xs sm:text-sm font-bold mb-2 sm:mb-3">
-        Activity Feed
-      </h3>
-
-      {feed.length === 0 ? (
-        <p className="text-gray-600 text-xs sm:text-sm text-center py-4">
-          No activity yet
-        </p>
-      ) : (
-        <div className="space-y-1.5 max-h-[280px] sm:max-h-[350px] overflow-y-auto scrollbar-thin">
-          {feed.map((entry) => (
-            <div
-              key={entry.id}
-              className={`flex items-center justify-between px-2.5 py-2 rounded-lg text-xs sm:text-sm transition-colors ${
-                entry.type === 'win'
-                  ? 'bg-green-900/10 border border-green-500/20'
-                  : 'bg-red-900/10 border border-red-500/20'
-              } ${entry.id === feed[0]?.id ? 'animate-fade-in' : ''}`}
-            >
-              <div className="flex items-center gap-2 min-w-0">
-                <span>{entry.type === 'win' ? '💰' : '💥'}</span>
-                <span className="text-white truncate max-w-[80px] sm:max-w-[120px]">
-                  {entry.username}
-                </span>
-              </div>
-
-              <div className="flex items-center gap-2 flex-shrink-0">
-                {entry.type === 'win' ? (
-                  <>
-                    <span className="text-casino-green font-bold font-mono">
-                      {entry.multiplier?.toFixed(2)}x
-                    </span>
-                    <span className="text-green-400 text-[10px] sm:text-xs">
-                      +${entry.profit?.toFixed(2)}
-                    </span>
-                  </>
-                ) : (
-                  <span className="text-casino-accent">
-                    Lane {entry.lane}
-                  </span>
-                )}
-
-                <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
-                  entry.difficulty === 1 ? 'bg-green-900/40 text-green-400' :
-                  entry.difficulty === 2 ? 'bg-yellow-900/40 text-yellow-400' :
-                  entry.difficulty === 3 ? 'bg-orange-900/40 text-orange-400' :
-                  'bg-red-900/40 text-red-400'
-                }`}>
-                  {entry.difficulty}🚗
-                </span>
-              </div>
+    <div className="space-y-px max-h-[320px] overflow-y-auto">
+      {feed.map((entry, i) => {
+        const isWin = entry.type === 'win';
+        return (
+          <div
+            key={entry.id}
+            className={`flex items-center justify-between px-2.5 py-2 rounded-lg text-[12px] hover:bg-surface-100/80 transition-colors ${i === 0 ? 'animate-fade-in' : ''
+              }`}
+          >
+            <div className="flex items-center gap-2 min-w-0">
+              <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${isWin ? 'bg-accent-green' : 'bg-accent-red'}`} />
+              <span className="text-txt/80 truncate max-w-[100px] font-medium">{entry.username}</span>
             </div>
-          ))}
-        </div>
-      )}
+            <div className="flex items-center gap-2 shrink-0">
+              {isWin ? (
+                <>
+                  <span className="text-accent-green font-semibold font-mono">{entry.multiplier?.toFixed(2)}×</span>
+                  <span className="text-accent-green/60 text-[11px] font-mono">+${entry.profit?.toFixed(2)}</span>
+                </>
+              ) : (
+                <span className="text-accent-red/70 font-mono">L{entry.lane}</span>
+              )}
+              <DiffBadge value={entry.difficulty} />
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
+}
+
+function DiffBadge({ value }: { value: number }) {
+  const c = value === 1 ? 'bg-emerald-500/15 text-emerald-400'
+    : value === 2 ? 'bg-amber-500/15 text-amber-400'
+      : value === 3 ? 'bg-orange-500/15 text-orange-400'
+        : 'bg-red-500/15 text-red-400';
+  return <span className={`w-4 h-4 rounded flex items-center justify-center text-[9px] font-bold ${c}`}>{value}</span>;
 }

@@ -6,107 +6,104 @@ import GameHistory from '../components/GameHistory';
 import BetsList from '../components/BetsList';
 import Chat from '../components/Chat';
 import { useGameSocket } from '../hooks/useGameSocket';
+import { Radio, History, MessageCircle } from 'lucide-react';
+
+const TABS = [
+  { key: 'feed' as const, label: 'Live', icon: Radio },
+  { key: 'history' as const, label: 'History', icon: History },
+  { key: 'chat' as const, label: 'Chat', icon: MessageCircle },
+];
 
 export default function GamePage() {
   useGameSocket();
   const [activeTab, setActiveTab] = useState<'feed' | 'history' | 'chat'>('feed');
 
   return (
-    <div className="min-h-screen min-h-[100dvh] bg-[#08090d] text-white flex flex-col font-sans selection:bg-indigo-500/30">
+    <div className="min-h-screen min-h-[100dvh] bg-surface text-txt flex flex-col font-sans">
       <Navbar />
 
-      {/* Background Ambient Glows */}
-      <div className="fixed top-0 left-0 w-full h-full overflow-hidden pointer-events-none -z-10">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-600/10 rounded-full blur-[120px]" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-emerald-600/5 rounded-full blur-[120px]" />
-      </div>
-
-      <main className="flex-1 p-3 sm:p-6 max-w-[1600px] mx-auto w-full flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-1000">
-
-        {/* Top Section: Dashboard Header (Optional but good for premium feel) */}
-        <div className="flex justify-between items-center sm:hidden">
-          <h1 className="text-xl font-black italic tracking-tighter uppercase italic">Chicken Cross</h1>
-          <div className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
-            <span className="text-[10px] font-bold">HQ</span>
-          </div>
-        </div>
-
-        {/* Main Grid: Game + Bet Panel */}
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6 items-start">
-          <div className="xl:col-span-2 order-1 h-full min-h-[400px]">
+      <main className="flex-1 p-3 sm:p-5 lg:p-6 max-w-[1600px] mx-auto w-full flex flex-col gap-5">
+        {/* Game + Controls */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] xl:grid-cols-[1fr_380px] gap-4 items-start">
+          <div className="h-full min-h-[400px]">
             <GameArea />
           </div>
-          <div className="order-2 sticky top-6">
+          <div className="lg:sticky lg:top-[72px]">
             <BetPanel />
           </div>
         </div>
 
-        {/* Secondary Section: Activity / History / Chat */}
-        <div className="flex-1 min-h-[300px]">
-          {/* Mobile Tab Control */}
-          <div className="flex p-1 gap-1 mb-4 lg:hidden glass-panel rounded-xl">
-            {(['feed', 'history', 'chat'] as const).map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`flex-1 py-3 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${activeTab === tab
-                  ? 'bg-white/10 text-white shadow-lg'
-                  : 'text-gray-500 hover:text-gray-300'
-                  }`}
-              >
-                {tab}
-              </button>
-            ))}
+        {/* Bottom Panels */}
+        <div>
+          {/* Mobile tabs */}
+          <div className="flex bg-surface-50 rounded-xl p-1 gap-0.5 mb-4 lg:hidden border border-surface-200/50">
+            {TABS.map(tab => {
+              const Icon = tab.icon;
+              const active = activeTab === tab.key;
+              return (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveTab(tab.key)}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-medium transition-all ${active ? 'bg-surface-200 text-brand shadow-sm' : 'text-txt-muted hover:text-txt'
+                    }`}
+                >
+                  <Icon size={13} />
+                  {tab.label}
+                </button>
+              );
+            })}
           </div>
 
-          {/* Desktop Layout: Multi-column activity feed */}
-          <div className="hidden lg:grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="glass-panel rounded-2xl p-4 min-h-[400px] flex flex-col">
-              <div className="flex items-center gap-2 mb-4 px-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                <h3 className="text-xs font-black uppercase tracking-widest text-gray-400">Live Activity</h3>
-              </div>
-              <div className="flex-1 overflow-auto scrollbar-hide">
-                <BetsList />
-              </div>
-            </div>
-
-            <div className="glass-panel rounded-2xl p-4 min-h-[400px] flex flex-col">
-              <div className="flex items-center gap-2 mb-4 px-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
-                <h3 className="text-xs font-black uppercase tracking-widest text-gray-400">Your History</h3>
-              </div>
-              <div className="flex-1 overflow-auto scrollbar-hide">
-                <GameHistory />
-              </div>
-            </div>
-
-            <div className="glass-panel rounded-2xl p-4 min-h-[400px] flex flex-col">
-              <div className="flex items-center gap-2 mb-4 px-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-white/20" />
-                <h3 className="text-xs font-black uppercase tracking-widest text-gray-400">HQ Communications</h3>
-              </div>
-              <div className="flex-1 overflow-auto scrollbar-hide">
-                <Chat />
-              </div>
-            </div>
+          {/* Desktop 3-col */}
+          <div className="hidden lg:grid lg:grid-cols-3 gap-4">
+            <Panel title="Live Feed" icon={Radio} live>
+              <BetsList />
+            </Panel>
+            <Panel title="Your History" icon={History}>
+              <GameHistory />
+            </Panel>
+            <Panel title="Chat" icon={MessageCircle}>
+              <Chat />
+            </Panel>
           </div>
 
-          {/* Mobile Tab Content */}
-          <div className="lg:hidden animate-in fade-in duration-300">
-            {activeTab === 'feed' && <BetsList />}
-            {activeTab === 'history' && <GameHistory />}
-            {activeTab === 'chat' && <Chat />}
+          {/* Mobile content */}
+          <div className="lg:hidden">
+            {activeTab === 'feed' && <Panel title="Live Feed" icon={Radio} live><BetsList /></Panel>}
+            {activeTab === 'history' && <Panel title="Your History" icon={History}><GameHistory /></Panel>}
+            {activeTab === 'chat' && <Panel title="Chat" icon={MessageCircle}><Chat /></Panel>}
           </div>
         </div>
       </main>
 
-      {/* Footer / Legal Bar (Minimal) */}
-      <footer className="p-6 text-center opacity-20 hover:opacity-100 transition-opacity">
-        <p className="text-[10px] font-bold uppercase tracking-[0.5em] text-gray-400">
-          CHICKEN CROSS // ADVANCED GAMING PROTOCOL v1.0.4
+      <footer className="py-3 text-center">
+        <p className="text-[10px] text-txt-dim font-medium">
+          Chicken Cross · Provably Fair
         </p>
       </footer>
+    </div>
+  );
+}
+
+function Panel({
+  title,
+  icon: Icon,
+  live,
+  children,
+}: {
+  title: string;
+  icon: React.ElementType;
+  live?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="bg-surface-50 border border-surface-200/50 rounded-2xl overflow-hidden flex flex-col min-h-[320px]">
+      <div className="flex items-center gap-2 px-4 py-3 border-b border-surface-200/40">
+        <Icon size={13} className="text-txt-dim" />
+        <span className="text-[13px] font-medium text-txt-muted">{title}</span>
+        {live && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-accent-green animate-pulse" />}
+      </div>
+      <div className="flex-1 overflow-auto p-3">{children}</div>
     </div>
   );
 }

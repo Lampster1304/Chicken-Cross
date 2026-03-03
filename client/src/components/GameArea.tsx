@@ -1,6 +1,8 @@
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
 import ChickenRoad from './ChickenRoad';
+import ChickenSvg from './svg/ChickenSvg';
+import ExplosionSvg from './svg/ExplosionSvg';
 
 export default function GameArea() {
   const { status, activeGame, lastResult } = useSelector(
@@ -12,18 +14,17 @@ export default function GameArea() {
   const isWin = status === 'cashed_out';
 
   const currentLane = activeGame?.currentLane ?? 0;
-  const lanesToSafeZone = currentLane > 0 ? 5 - (currentLane % 5) : 5;
 
   return (
     <div
-      className={`glass-panel rounded-3xl overflow-hidden relative transition-all duration-700 h-full ${isActive ? 'shadow-[0_0_50px_rgba(16,185,129,0.1)]' : ''
-        } ${isHit ? 'shadow-[0_0_50px_rgba(239,68,68,0.2)]' : ''} ${isWin ? 'shadow-[0_0_50px_rgba(245,158,11,0.2)]' : ''}`}
+      className={`bg-surface-50 border border-surface-200/50 rounded-2xl overflow-hidden relative transition-all duration-700 h-full ${isActive ? 'shadow-[0_0_40px_rgba(52,211,153,0.08)]' : ''
+        } ${isHit ? 'shadow-[0_0_40px_rgba(248,113,113,0.12)]' : ''} ${isWin ? 'shadow-[0_0_40px_rgba(240,180,41,0.12)]' : ''
+        }`}
     >
       <ChickenRoad />
 
       {/* Status Overlays */}
       <div className="absolute inset-0 pointer-events-none z-50">
-
         {/* Hit Flash */}
         {isHit && (
           <div className="absolute inset-0 z-[200] pointer-events-none animate-screen-flash-hit" />
@@ -31,18 +32,14 @@ export default function GameArea() {
 
         {/* Idle State */}
         {status === 'idle' && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-[2px] animate-in fade-in duration-700">
-            <div className="text-center space-y-4">
-              <div className="relative inline-block w-16 h-16 rounded-full overflow-hidden border-4 border-white/5 bg-[#12141d] shadow-2xl">
-                <img
-                  src="/assets/chicken.png"
-                  className="absolute max-w-none w-[200%] h-[200%] left-[0%] top-[-25%] object-contain"
-                  alt="Chicken"
-                />
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 backdrop-blur-[2px]">
+            <div className="text-center space-y-3">
+              <div className="relative inline-block w-14 h-14 drop-shadow-2xl">
+                <ChickenSvg />
               </div>
-              <div className="space-y-1">
-                <h2 className="text-lg font-black text-white tracking-widest uppercase italic">Chicken Cross</h2>
-                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.3em]">Initialize Mission</p>
+              <div>
+                <h2 className="text-base font-bold text-txt tracking-tight">Chicken Cross</h2>
+                <p className="text-[11px] text-txt-muted mt-0.5">Place a bet to start</p>
               </div>
             </div>
           </div>
@@ -50,14 +47,11 @@ export default function GameArea() {
 
         {/* Hit State */}
         {isHit && (
-          <div className="absolute inset-0 flex items-center justify-center bg-red-950/20 animate-in fade-in duration-300">
-            <div className="text-center space-y-4">
-              <div className="relative">
-                <img src="/assets/fire.png" className="w-16 h-16 object-contain animate-shake" alt="Hit" />
-                <div className="absolute inset-0 bg-red-500/20 blur-2xl rounded-full -z-10 animate-pulse" />
-              </div>
-              <div className="glass-panel px-6 py-2 rounded-full border-red-500/40">
-                <p className="text-red-400 font-black tracking-widest uppercase">Mission Failed</p>
+          <div className="absolute inset-0 flex items-center justify-center bg-red-950/20">
+            <div className="text-center space-y-3">
+              <ExplosionSvg className="w-14 h-14 animate-shake mx-auto" />
+              <div className="bg-surface-50/90 backdrop-blur-sm px-5 py-2 rounded-full border border-accent-red/30">
+                <p className="text-accent-red font-bold text-sm">Crashed!</p>
               </div>
             </div>
           </div>
@@ -65,20 +59,25 @@ export default function GameArea() {
 
         {/* Win State */}
         {isWin && lastResult && (
-          <div className="absolute inset-0 flex items-center justify-center bg-emerald-950/10 animate-in zoom-in-95 duration-500">
-            <div className="text-center space-y-4">
+          <div className="absolute inset-0 flex items-center justify-center bg-emerald-950/10">
+            <div className="text-center space-y-2">
               <div className="relative">
-                <img src="/assets/egg.png" className="w-14 h-14 object-contain animate-glow" alt="Reward" />
-                <div className="absolute inset-0 bg-yellow-400/20 blur-2xl rounded-full -z-10" />
+                <svg viewBox="0 0 48 64" className="w-12 h-12 mx-auto" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <radialGradient id="egg-grad" cx="40%" cy="35%" r="60%">
+                      <stop offset="0%" stopColor="#fef08a" />
+                      <stop offset="40%" stopColor="#fbbf24" />
+                      <stop offset="100%" stopColor="#d97706" />
+                    </radialGradient>
+                  </defs>
+                  <ellipse cx="24" cy="36" rx="18" ry="24" fill="url(#egg-grad)" />
+                  <ellipse cx="18" cy="28" rx="6" ry="10" fill="white" opacity="0.25" />
+                </svg>
               </div>
-              <div className="space-y-1">
-                <p className="text-2xl font-black text-white font-mono drop-shadow-[0_0_20px_rgba(255,255,255,0.3)]">
-                  {lastResult.multiplier.toFixed(2)}x
-                </p>
-                <div className="inline-block glass-panel px-4 py-1 rounded-full border-emerald-500/40">
-                  <p className="text-emerald-400 font-black text-sm tracking-widest">
-                    +${lastResult.profit.toFixed(2)}
-                  </p>
+              <div>
+                <p className="text-xl font-bold text-txt font-mono">{lastResult.multiplier.toFixed(2)}×</p>
+                <div className="inline-block bg-surface-50/90 backdrop-blur-sm px-4 py-1 rounded-full border border-accent-green/30 mt-1">
+                  <p className="text-accent-green font-bold text-sm font-mono">+${lastResult.profit.toFixed(2)}</p>
                 </div>
               </div>
             </div>
@@ -86,10 +85,10 @@ export default function GameArea() {
         )}
       </div>
 
-      {/* Ambient Vignette — intensifies with streak progress */}
+      {/* Vignette */}
       <div
         className="absolute inset-0 pointer-events-none z-20"
-        style={{ boxShadow: `inset 0 0 100px rgba(0,0,0,${isActive ? Math.min(0.5 + (activeGame?.riskyLanesCrossed ?? 0) * 0.05, 0.9) : 0.5})` }}
+        style={{ boxShadow: `inset 0 0 80px rgba(0,0,0,${isActive ? Math.min(0.4 + (activeGame?.riskyLanesCrossed ?? 0) * 0.04, 0.8) : 0.4})` }}
       />
     </div>
   );

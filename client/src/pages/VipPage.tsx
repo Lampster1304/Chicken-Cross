@@ -33,11 +33,11 @@ export default function VipPage() {
     : 100;
 
   return (
-    <div className="min-h-screen bg-casino-dark text-white">
-      <div className="bg-casino-card border-b border-casino-border px-4 py-3">
+    <div className="min-h-screen bg-surface text-white">
+      <div className="bg-surface-50 border-b border-surface-200/50 px-4 py-3">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <h1 className="text-lg sm:text-xl font-bold">VIP Program</h1>
-          <Link to="/game" className="text-casino-accent hover:underline text-sm">
+          <Link to="/game" className="text-brand hover:underline text-sm">
             Back to Game
           </Link>
         </div>
@@ -45,7 +45,7 @@ export default function VipPage() {
 
       <div className="max-w-4xl mx-auto p-4 space-y-6">
         {/* Current Status */}
-        <div className="bg-casino-card border border-casino-border rounded-xl p-6 text-center">
+        <div className="bg-surface-50 border border-surface-200/50 rounded-xl p-6 text-center">
           <p className="text-gray-400 text-sm mb-2">Your VIP Level</p>
           <h2
             className="text-3xl font-bold mb-1"
@@ -63,7 +63,7 @@ export default function VipPage() {
                 <span>${totalWagered.toLocaleString()} wagered</span>
                 <span>${nextTier.minWagered.toLocaleString()} for {nextTier.name}</span>
               </div>
-              <div className="w-full bg-casino-darker rounded-full h-3 border border-casino-border">
+              <div className="w-full bg-surfaceer rounded-full h-3 border border-surface-200/50">
                 <div
                   className="h-full rounded-full transition-all duration-500"
                   style={{
@@ -88,10 +88,10 @@ export default function VipPage() {
             return (
               <div
                 key={tier.name}
-                className={`bg-casino-card border rounded-xl p-4 flex items-center justify-between transition ${
+                className={`bg-surface-50 border rounded-xl p-4 flex items-center justify-between transition ${
                   isCurrentTier
                     ? 'border-casino-accent shadow-lg shadow-casino-accent/10'
-                    : 'border-casino-border'
+                    : 'border-surface-200/50'
                 } ${!isUnlocked ? 'opacity-50' : ''}`}
               >
                 <div className="flex items-center gap-4">
@@ -117,7 +117,7 @@ export default function VipPage() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-bold text-casino-green">{tier.rakebackRate}%</p>
+                  <p className="font-bold text-accent-green">{tier.rakebackRate}%</p>
                   <p className="text-xs text-gray-500">Rakeback</p>
                 </div>
               </div>

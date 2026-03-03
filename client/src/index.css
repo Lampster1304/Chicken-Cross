@@ -36,7 +36,7 @@
 
 /* ROAD DESIGN */
 .cartoon-road-lane {
-  @apply relative w-[140px] sm:w-[160px] flex-shrink-0 flex items-center justify-center bg-[#252830] border-x border-white/5 transition-all duration-300;
+  @apply relative w-[110px] sm:w-[130px] lg:w-[160px] flex-shrink-0 flex items-center justify-center bg-[#252830] border-x border-white/5 transition-all duration-300;
   height: 100%;
   background-image:
     linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
@@ -58,7 +58,7 @@
 }
 
 .sidewalk-station {
-  @apply w-32 flex-shrink-0 flex items-center justify-center relative bg-[#4a5061];
+  @apply w-20 sm:w-32 flex-shrink-0 flex items-center justify-center relative bg-[#4a5061];
   background-image:
     linear-gradient(90deg, #3a4051 2px, transparent 2px),
     linear-gradient(#3a4051 2px, transparent 2px);
@@ -67,11 +67,16 @@
 }
 
 .manhole-cover {
-  @apply relative rounded-full flex flex-col items-center justify-center border-[4px] border-[#1a1c22];
-  width: 70px;
-  height: 70px;
+  @apply relative rounded-full flex flex-col items-center justify-center border-[3px] sm:border-[4px] border-[#1a1c22];
+  width: 55px;
+  height: 55px;
+  @apply sm:w-[70px] sm:h-[70px];
   background: radial-gradient(circle, #2d3245 0%, #1a1c22 100%);
   box-shadow: inset 0 4px 8px rgba(0, 0, 0, 0.6), 0 2px 4px rgba(255, 255, 255, 0.1);
+}
+
+.game-hud-bar {
+  @apply sticky top-0 left-0 right-0 z-[100] flex justify-between items-center px-4 py-2 bg-[#1a1c24]/90 backdrop-blur-md border-b-2 border-white/5;
 }
 
 .manhole-cover::before {
@@ -99,21 +104,29 @@
 }
 
 /* CARTOON ANIMATIONS */
-@keyframes hop-cartoon {
+@keyframes hop-crossy {
   0% {
-    transform: translateX(0) scale(1, 1);
+    transform: translateX(-144px) translateY(0) scaleX(1) scaleY(1) rotate(0deg);
   }
 
-  30% {
-    transform: translateX(15px) scale(1.2, 0.9);
+  15% {
+    transform: translateX(-108px) translateY(4px) scaleX(1.15) scaleY(0.8) rotate(0deg);
   }
 
-  50% {
-    transform: translateX(12px) scale(0.9, 1.1);
+  40% {
+    transform: translateX(-50px) translateY(-24px) scaleX(0.85) scaleY(1.2) rotate(5deg);
+  }
+
+  65% {
+    transform: translateX(-12px) translateY(-10px) scaleX(0.9) scaleY(1.1) rotate(2deg);
+  }
+
+  85% {
+    transform: translateX(2px) translateY(3px) scaleX(1.1) scaleY(0.85) rotate(0deg);
   }
 
   100% {
-    transform: translateX(0) scale(1, 1);
+    transform: translateX(0) translateY(0) scaleX(1) scaleY(1) rotate(0deg);
   }
 }
 
@@ -218,12 +231,12 @@
 @keyframes crash-pass-up {
   0% {
     top: 110%;
-    transform: translateX(-50%) rotate(180deg);
+    transform: translateX(-50%);
   }
 
   100% {
     top: -120px;
-    transform: translateX(-50%) rotate(180deg);
+    transform: translateX(-50%);
   }
 }
 
@@ -233,24 +246,6 @@
 
 .animate-crash-from-right {
   animation: crash-pass-up 0.4s cubic-bezier(0.45, 0, 0.55, 1) forwards;
-}
-
-/* Fire appears exactly when the car is over the chicken (middle of 0.4s animation) */
-@keyframes crash-fire-appear {
-  0% {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(0.3);
-  }
-
-  100% {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1.2);
-  }
-}
-
-.animate-crash-fire {
-  opacity: 0;
-  animation: crash-fire-appear 0.2s 0.2s ease-out forwards;
 }
 
 /* ─── SAFE PASS: car crosses the whole lane quickly (near miss) ─── */
@@ -277,20 +272,24 @@
 @keyframes emergency-brake-ltr {
   0% {
     top: -120px;
+    transform: translateX(-50%);
   }
 
   100% {
-    top: 30%;
+    top: 50%;
+    transform: translateX(-50%) translateY(-50%);
   }
 }
 
 @keyframes emergency-brake-rtl {
   0% {
     top: 110%;
+    transform: translateX(-50%);
   }
 
   100% {
-    top: 60%;
+    top: 50%;
+    transform: translateX(-50%) translateY(-50%);
   }
 }
 
@@ -311,7 +310,7 @@
 }
 
 .animate-hop {
-  animation: hop-cartoon 0.5s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+  animation: hop-crossy 0.45s cubic-bezier(0.18, 0.89, 0.32, 1.28);
 }
 
 .animate-wobble {
@@ -408,24 +407,142 @@
 /* Chicken dodge/duck on safe risky crossing */
 @keyframes chicken-dodge {
   0% {
-    transform: scale(1) rotate(0deg);
+    transform: translateX(-144px) scale(1) rotate(0deg);
   }
 
-  30% {
-    transform: scale(0.8, 1.2) rotate(-8deg) translateY(4px);
+  25% {
+    transform: translateX(-80px) scale(0.8, 1.2) rotate(-8deg) translateY(4px);
   }
 
-  60% {
-    transform: scale(1.15, 0.9) rotate(5deg) translateY(-3px);
+  55% {
+    transform: translateX(-20px) scale(1.15, 0.9) rotate(5deg) translateY(-3px);
   }
 
   100% {
-    transform: scale(1) rotate(0deg);
+    transform: translateX(0) scale(1) rotate(0deg);
   }
 }
 
 .animate-dodge {
   animation: chicken-dodge 0.5s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+}
+
+/* ─── CHICKEN SQUISH (hit by car) ─── */
+@keyframes chicken-squish {
+  0% {
+    transform: translateX(-144px) scaleX(1) scaleY(1) rotate(0deg);
+  }
+
+  10% {
+    transform: translateX(-60px) scaleX(0.9) scaleY(1.1) rotate(-3deg);
+  }
+
+  30% {
+    transform: translateX(0) scaleX(1) scaleY(1) rotate(0deg);
+  }
+
+  45% {
+    transform: translateX(0) scaleX(1.8) scaleY(0.2) rotate(2deg);
+  }
+
+  70% {
+    transform: translateX(0) scaleX(1.5) scaleY(0.3) rotate(0deg);
+  }
+
+  100% {
+    transform: translateX(0) scaleX(1.3) scaleY(0.4) rotate(0deg);
+    opacity: 0.8;
+  }
+}
+
+.animate-squish {
+  animation: chicken-squish 0.5s ease-out forwards;
+}
+
+/* ─── FEATHER FLY-OUT (4 directions on hit) ─── */
+@keyframes feather-fly-1 {
+  0% {
+    transform: translate(0, 0) rotate(0deg) scale(1);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate(-30px, -40px) rotate(-180deg) scale(0.3);
+    opacity: 0;
+  }
+}
+
+@keyframes feather-fly-2 {
+  0% {
+    transform: translate(0, 0) rotate(0deg) scale(1);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate(35px, -35px) rotate(200deg) scale(0.3);
+    opacity: 0;
+  }
+}
+
+@keyframes feather-fly-3 {
+  0% {
+    transform: translate(0, 0) rotate(0deg) scale(1);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate(-25px, 30px) rotate(160deg) scale(0.4);
+    opacity: 0;
+  }
+}
+
+@keyframes feather-fly-4 {
+  0% {
+    transform: translate(0, 0) rotate(0deg) scale(1);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate(28px, 25px) rotate(-200deg) scale(0.4);
+    opacity: 0;
+  }
+}
+
+.animate-feather-1 {
+  animation: feather-fly-1 0.6s 0.15s ease-out forwards;
+  opacity: 0;
+}
+
+.animate-feather-2 {
+  animation: feather-fly-2 0.6s 0.17s ease-out forwards;
+  opacity: 0;
+}
+
+.animate-feather-3 {
+  animation: feather-fly-3 0.6s 0.19s ease-out forwards;
+  opacity: 0;
+}
+
+.animate-feather-4 {
+  animation: feather-fly-4 0.6s 0.22s ease-out forwards;
+  opacity: 0;
+}
+
+/* ─── CHICKEN IDLE BOUNCE (sidewalk) ─── */
+@keyframes chicken-idle-bounce {
+
+  0%,
+  100% {
+    transform: translateY(0) scaleX(1) scaleY(1);
+  }
+
+  50% {
+    transform: translateY(-4px) scaleX(0.97) scaleY(1.04);
+  }
+}
+
+.animate-idle-bounce {
+  animation: chicken-idle-bounce 1.2s ease-in-out infinite;
 }
 
 /* Safe zone sparkle burst */
