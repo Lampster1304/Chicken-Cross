@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { RootState } from '../store';
+import Navbar from '../components/Navbar';
 
 interface Tournament {
   id: number;
@@ -27,9 +28,9 @@ interface LeaderboardEntry {
 }
 
 const statusColors: Record<string, string> = {
-  active: 'bg-accent-green/20 text-accent-green',
-  upcoming: 'bg-brand/20 text-brand',
-  finished: 'bg-gray-600/20 text-gray-400',
+  active: 'bg-success/20 text-success border border-success/30',
+  upcoming: 'bg-brand/20 text-brand border border-brand/30',
+  finished: 'bg-txt-dim/20 text-txt-dim border border-txt-dim/30',
 };
 
 export default function TournamentsPage() {
@@ -90,45 +91,47 @@ export default function TournamentsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-surface text-white">
-      <div className="bg-surface-50 border-b border-surface-200/50 px-4 py-3">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
+    <div className="min-h-screen bg-gradient-to-b from-bg-primary via-bg-secondary to-bg-primary text-txt">
+      <Navbar />
+
+      <div className="max-w-4xl mx-auto p-4 space-y-4">
+        <div className="flex items-center justify-between">
           <h1 className="text-lg sm:text-xl font-bold">Tournaments</h1>
-          <Link to="/game" className="text-brand hover:underline text-sm">
+          <Link to="/game" className="text-brand hover:text-brand-light text-sm font-medium transition-colors">
             Back to Game
           </Link>
         </div>
-      </div>
 
-      <div className="max-w-4xl mx-auto p-4 space-y-3">
         {loading ? (
-          <div className="text-center py-12 text-gray-500">Loading...</div>
+          <div className="text-center py-12 text-txt-dim">Loading...</div>
         ) : tournaments.length === 0 ? (
-          <div className="text-center py-12 text-gray-500">
+          <div className="text-center py-12 text-txt-dim">
             No tournaments available right now. Check back later!
           </div>
         ) : (
           tournaments.map(t => (
             <div
               key={t.id}
-              className="bg-surface-50 border border-surface-200/50 rounded-xl overflow-hidden"
+              className={`game-panel overflow-hidden ${
+                t.status === 'active' ? 'border-success/30' : t.status === 'upcoming' ? 'border-brand/30' : ''
+              }`}
             >
               {/* Tournament Header */}
               <button
                 onClick={() => loadDetails(t.id)}
-                className="w-full p-4 text-left hover:bg-surfaceer/30 transition"
+                className="w-full p-4 text-left hover:bg-bg-surfaceHover/30 transition"
               >
                 <div className="flex items-start justify-between">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-bold text-white">{t.name}</h3>
+                      <h3 className="font-bold text-txt">{t.name}</h3>
                       <span
-                        className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColors[t.status]}`}
+                        className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[t.status]}`}
                       >
                         {t.status}
                       </span>
                     </div>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-txt-dim">
                       {t.playerCount}/{t.maxPlayers} players
                       {t.entryFee > 0 && ` · $${t.entryFee.toFixed(2)} entry`}
                     </p>
@@ -137,10 +140,10 @@ export default function TournamentsPage() {
                     <p className="text-brand font-bold text-lg">
                       ${t.prizePool.toFixed(2)}
                     </p>
-                    <p className="text-xs text-gray-500">Prize Pool</p>
+                    <p className="text-xs text-txt-dim">Prize Pool</p>
                   </div>
                 </div>
-                <div className="flex gap-4 mt-2 text-xs text-gray-500">
+                <div className="flex gap-4 mt-2 text-xs text-txt-dim">
                   <span>Starts: {new Date(t.startsAt).toLocaleDateString()}</span>
                   <span>Ends: {new Date(t.endsAt).toLocaleDateString()}</span>
                 </div>
@@ -148,13 +151,13 @@ export default function TournamentsPage() {
 
               {/* Expanded Details */}
               {selectedId === t.id && (
-                <div className="border-t border-surface-200/50">
+                <div className="border-t border-[#3d3f7a]/40">
                   {(t.status === 'active' || t.status === 'upcoming') && (
-                    <div className="p-4 border-b border-surface-200/50">
+                    <div className="p-4 border-b border-[#3d3f7a]/40">
                       <button
                         onClick={() => joinTournament(t.id)}
                         disabled={joining}
-                        className="w-full bg-accent-green hover:bg-accent-green/80 disabled:opacity-50 text-white py-2 rounded-lg font-bold text-sm transition"
+                        className="w-full py-2.5 rounded-2xl btn-3d-primary text-sm"
                       >
                         {joining ? 'Joining...' : `Join Tournament${t.entryFee > 0 ? ` ($${t.entryFee.toFixed(2)})` : ' (Free)'}`}
                       </button>
@@ -162,13 +165,13 @@ export default function TournamentsPage() {
                   )}
 
                   {lbLoading ? (
-                    <div className="p-4 text-center text-gray-500 text-sm">Loading leaderboard...</div>
+                    <div className="p-4 text-center text-txt-dim text-sm">Loading leaderboard...</div>
                   ) : leaderboard.length === 0 ? (
-                    <div className="p-4 text-center text-gray-500 text-sm">No entries yet.</div>
+                    <div className="p-4 text-center text-txt-dim text-sm">No entries yet.</div>
                   ) : (
                     <table className="w-full text-sm">
                       <thead>
-                        <tr className="text-gray-500 bg-surfaceer text-xs">
+                        <tr className="text-txt-dim border-b border-[#3d3f7a]/30 text-xs">
                           <th className="text-left py-2 px-4">#</th>
                           <th className="text-left py-2 px-4">Player</th>
                           <th className="text-right py-2 px-4">Score</th>
@@ -178,9 +181,9 @@ export default function TournamentsPage() {
                       </thead>
                       <tbody>
                         {leaderboard.map(e => (
-                          <tr key={e.rank} className="border-t border-surface-200/50/30">
-                            <td className="py-2 px-4 font-bold text-gray-500">#{e.rank}</td>
-                            <td className="py-2 px-4 text-white">{e.username}</td>
+                          <tr key={e.rank} className="border-t border-[#3d3f7a]/20 hover:bg-bg-surfaceHover transition-colors">
+                            <td className="py-2 px-4 font-bold text-txt-dim">#{e.rank}</td>
+                            <td className="py-2 px-4 text-txt">{e.username}</td>
                             <td className="py-2 px-4 text-right font-mono">{e.score.toFixed(2)}</td>
                             <td className="py-2 px-4 text-right font-mono text-brand">
                               {e.bestMultiplier.toFixed(2)}x

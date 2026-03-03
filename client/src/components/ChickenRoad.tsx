@@ -19,6 +19,13 @@ const difficultyLabels: Record<number, string> = {
   4: 'Hardcore',
 };
 
+const difficultyColors: Record<number, string> = {
+  1: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+  2: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+  3: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
+  4: 'bg-red-500/20 text-red-400 border-red-500/30',
+};
+
 /** Simple seeded pseudo-random (deterministic per lane+index, so no flicker on re-render) */
 function seededRandom(seed: number): number {
   const x = Math.sin(seed * 9301 + 49297) * 49297;
@@ -57,7 +64,7 @@ function AnimatedCar({ goingDown, carColor, speed, initialDelay, stop }: {
       }}
       onAnimationEnd={!stop ? handleAnimationEnd : undefined}
     >
-      <CarSvg color={carColor} direction={goingDown ? 'down' : 'up'} className="animate-wobble" />
+      <CarSvg color={carColor} direction={goingDown ? 'up' : 'down'} className="animate-wobble" />
     </div>
   );
 }
@@ -148,26 +155,30 @@ export default function ChickenRoad() {
 
   return (
     <div
-      className={`relative w-full overflow-hidden transition-all duration-500 h-full min-h-[220px] bg-[#1a1c24] flex flex-col ${status === 'hit' || justHit ? 'animate-shake-hard bg-red-900/10' : ''}`}
+      className={`relative w-full overflow-hidden transition-all duration-500 h-full min-h-[220px] bg-[#12132a] flex flex-col ${status === 'hit' || justHit ? 'animate-shake-hard bg-red-900/10' : ''}`}
     >
       {/* ─── STRUCTURED HUD BAR ─── */}
       <div className="game-hud-bar">
         <div key={activeGame?.currentMultiplier ?? 0} className="flex gap-2 items-center animate-mult-pulse">
-          <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]" />
-          <div className="flex flex-col">
-            <span className="text-[8px] font-black text-emerald-500 uppercase tracking-widest leading-none">Multiplier</span>
-            <span className="text-sm sm:text-lg font-black text-white font-mono leading-none">
+          <div className="w-2.5 h-2.5 rounded-full bg-success shadow-[0_0_10px_#2dd4bf] animate-pulse" />
+          <div className="flex items-center gap-2 bg-success/10 border border-success/20 rounded-full px-3 py-1">
+            <span className="text-[8px] font-black text-success uppercase tracking-widest leading-none">MULT</span>
+            <span className="text-sm sm:text-lg font-black text-success font-mono leading-none">
               {activeGame?.currentMultiplier?.toFixed(2) ?? '1.00'}x
             </span>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="hidden sm:flex flex-col items-end">
-            <span className="text-[8px] font-bold text-gray-500 uppercase tracking-widest leading-none">Hazard Level</span>
-            <span className="text-[10px] font-black text-red-400 uppercase italic leading-none">{difficultyLabels[difficulty]}</span>
+        <div className="flex items-center gap-2">
+          <div className={`hidden sm:block px-2 py-0.5 rounded-full border text-[9px] font-bold ${difficultyColors[difficulty]}`}>
+            {difficultyLabels[difficulty]}
           </div>
-          <div className={`px-3 py-1 rounded-full border-2 text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all ${isActive ? 'border-yellow-500/50 text-yellow-500 bg-yellow-500/5' : 'border-white/10 text-gray-400'}`}>
+          <div className={`px-3 py-1 rounded-full border-2 text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all ${isActive
+            ? 'border-action-primary/50 text-action-primary bg-action-primary/10'
+            : status === 'hit'
+              ? 'border-danger/50 text-danger bg-danger/10'
+              : 'border-[#3d3f7a]/40 text-txt-dim'
+            }`}>
             {status.toUpperCase().replace('_', ' ')}
           </div>
         </div>
@@ -204,14 +215,14 @@ export default function ChickenRoad() {
             <div
               key={laneNum}
               className={`cartoon-road-lane ${isNextLane ? 'cartoon-road-lane-active' : ''} ${isHitLane ? 'bg-red-500/20' : ''
-                } ${safeZone ? 'bg-emerald-900/10' : ''}`}
+                } ${safeZone ? 'bg-success/5' : ''}`}
             >
               {/* Road Markings — vertical stripe */}
               {!safeZone && <div className="road-stripe" />}
 
               {/* Lane Designator — top of column */}
-              <div className="absolute top-2 left-1/2 -translate-x-1/2 z-0 opacity-10">
-                <span className="text-[10px] sm:text-xs font-black text-white italic">L{laneNum}</span>
+              <div className="absolute top-2 left-1/2 -translate-x-1/2 z-0 opacity-20">
+                <span className="text-[10px] sm:text-xs font-black text-action-primary/60 italic">L{laneNum}</span>
               </div>
 
               {/* Lane Content Container */}
@@ -219,11 +230,9 @@ export default function ChickenRoad() {
 
                 {/* Safe Zone Visuals — borders top/bottom */}
                 {safeZone && (
-                  <div className="absolute inset-0 border-y-2 border-dashed border-emerald-500/20 flex items-center justify-center">
+                  <div className="absolute inset-0 border-y-[3px] border-dashed border-success/40 flex items-center justify-center" style={{ background: 'linear-gradient(180deg, rgba(45,212,191,0.06) 0%, transparent 30%, transparent 70%, rgba(45,212,191,0.06) 100%)' }}>
                     <div className="flex flex-col items-center gap-1">
-                      <span className="text-xs opacity-30">🏁</span>
-                      <span className="text-[8px] font-black tracking-[0.1em] text-emerald-500/40 uppercase" style={{ writingMode: 'vertical-rl' }}>Safe</span>
-                      <span className="text-xs opacity-30">🏁</span>
+                      <span className="text-[10px] font-black tracking-[0.15em] text-success/60 uppercase px-2 py-0.5 rounded bg-success/10 border border-success/20">SAFE</span>
                     </div>
                   </div>
                 )}
@@ -231,7 +240,7 @@ export default function ChickenRoad() {
                 {/* Next Multiplier Target (Manhole Cover style) */}
                 {isNextLane && activeGame?.nextMultiplier && !isChickenHere && (
                   <div className="manhole-cover animate-pop z-40 cursor-pointer hover:scale-105 active:scale-95 group">
-                    <span className="text-[9px] sm:text-[10px] font-black leading-none text-white/90 drop-shadow-md">{activeGame.nextMultiplier.toFixed(2)}x</span>
+                    <span className="text-[9px] sm:text-[10px] font-black leading-none text-white drop-shadow-md">{activeGame.nextMultiplier.toFixed(2)}x</span>
                   </div>
                 )}
 
@@ -241,7 +250,7 @@ export default function ChickenRoad() {
                     <div
                       className={`absolute left-1/2 w-20 h-32 drop-shadow-lg ${goingDown ? 'animate-crash-from-left' : 'animate-crash-from-right'}`}
                     >
-                      <CarSvg color={carColor} direction={goingDown ? 'down' : 'up'} />
+                      <CarSvg color={carColor} direction={goingDown ? 'up' : 'down'} />
                     </div>
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[55] animate-crash-fire">
                       <ExplosionSvg className="w-16 h-16 sm:w-20 sm:h-20 drop-shadow-[0_4px_0_rgba(255,0,0,0.4)] animate-shake-hard" />
@@ -253,7 +262,7 @@ export default function ChickenRoad() {
                 {isRevealed && revealed.hasCar && !isChickenHere && (
                   <div className="absolute inset-0 z-50 pointer-events-none overflow-hidden">
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-32 drop-shadow-lg">
-                      <CarSvg color={carColor} direction={goingDown ? 'down' : 'up'} />
+                      <CarSvg color={carColor} direction={goingDown ? 'up' : 'down'} />
                     </div>
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[55]">
                       <ExplosionSvg className="w-16 h-16 sm:w-20 sm:h-20 drop-shadow-[0_4px_0_rgba(255,0,0,0.4)] animate-shake-hard" />
@@ -264,7 +273,7 @@ export default function ChickenRoad() {
                 {/* Checkmark bubble */}
                 {isRevealed && !revealed.hasCar && (
                   <div className="relative z-50 animate-pop">
-                    <div className="multiplier-bubble-cartoon bg-emerald-500 border-emerald-700 text-white shadow-[#00000033]">
+                    <div className="multiplier-bubble-cartoon bg-success border-success/80 text-white shadow-[0_0_12px_rgba(45,212,191,0.3)]">
                       <span className="text-lg font-black">✓</span>
                     </div>
                   </div>

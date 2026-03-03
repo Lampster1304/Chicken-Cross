@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { RootState } from '../store';
+import Navbar from '../components/Navbar';
 
 interface AffiliateStats {
   referralCode: string;
@@ -40,77 +41,86 @@ export default function AffiliatePage() {
   };
 
   return (
-    <div className="min-h-screen bg-surface text-white">
-      <div className="bg-surface-50 border-b border-surface-200/50 px-4 py-3">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
+    <div className="min-h-screen bg-gradient-to-b from-bg-primary via-bg-secondary to-bg-primary text-txt">
+      <Navbar />
+
+      <div className="max-w-4xl mx-auto p-4 space-y-6">
+        <div className="flex items-center justify-between">
           <h1 className="text-lg sm:text-xl font-bold">Affiliate Program</h1>
-          <Link to="/game" className="text-brand hover:underline text-sm">
+          <Link to="/game" className="text-brand hover:text-brand-light text-sm font-medium transition-colors">
             Back to Game
           </Link>
         </div>
-      </div>
 
-      <div className="max-w-4xl mx-auto p-4 space-y-6">
         {loading ? (
-          <div className="text-center py-12 text-gray-500">Loading...</div>
+          <div className="text-center py-12 text-txt-dim">Loading...</div>
         ) : !stats ? (
-          <div className="text-center py-12 text-gray-500">
+          <div className="text-center py-12 text-txt-dim">
             Please log in to view your affiliate stats.
           </div>
         ) : (
           <>
             {/* Referral Code */}
-            <div className="bg-surface-50 border border-surface-200/50 rounded-xl p-6 text-center">
-              <p className="text-gray-400 text-sm mb-2">Your Referral Code</p>
+            <div className="game-panel p-6 text-center">
+              <p className="text-txt-muted text-sm mb-2">Your Referral Code</p>
               <div className="flex items-center justify-center gap-3">
-                <code className="bg-surfaceer px-6 py-3 rounded-lg border border-surface-200/50 text-2xl font-bold text-brand tracking-widest">
+                <code className="bg-bg-surfaceLight px-6 py-3 rounded-2xl border-2 border-brand/40 text-2xl font-bold text-brand tracking-widest" style={{ boxShadow: '0 0 20px rgba(251,191,36,0.1)' }}>
                   {stats.referralCode}
                 </code>
                 <button
                   onClick={copyCode}
-                  className="bg-brand hover:bg-brand/80 text-white px-4 py-3 rounded-lg text-sm font-medium transition"
+                  className="btn-3d-primary px-4 py-3 rounded-xl text-sm"
                 >
                   {copied ? 'Copied!' : 'Copy'}
                 </button>
               </div>
-              <p className="text-gray-500 text-xs mt-3">
+              <p className="text-txt-dim text-xs mt-3">
                 Share this code with friends. You earn {stats.commissionRate}% of their bets!
               </p>
             </div>
 
             {/* Stats Grid */}
             <div className="grid grid-cols-3 gap-3">
-              <div className="bg-surface-50 border border-surface-200/50 rounded-xl p-4 text-center">
-                <p className="text-2xl font-bold text-accent-green">
+              <div className="game-panel p-4 text-center">
+                <div className="w-8 h-8 rounded-full bg-success/15 flex items-center justify-center mx-auto mb-2">
+                  <span className="text-success text-sm">$</span>
+                </div>
+                <p className="text-2xl font-bold text-success">
                   ${stats.totalEarnings.toFixed(2)}
                 </p>
-                <p className="text-xs text-gray-500 mt-1">Total Earnings</p>
+                <p className="text-xs text-txt-dim mt-1">Total Earnings</p>
               </div>
-              <div className="bg-surface-50 border border-surface-200/50 rounded-xl p-4 text-center">
-                <p className="text-2xl font-bold text-white">{stats.totalReferrals}</p>
-                <p className="text-xs text-gray-500 mt-1">Referrals</p>
+              <div className="game-panel p-4 text-center">
+                <div className="w-8 h-8 rounded-full bg-action-secondary/15 flex items-center justify-center mx-auto mb-2">
+                  <span className="text-action-secondary text-sm">👥</span>
+                </div>
+                <p className="text-2xl font-bold text-txt">{stats.totalReferrals}</p>
+                <p className="text-xs text-txt-dim mt-1">Referrals</p>
               </div>
-              <div className="bg-surface-50 border border-surface-200/50 rounded-xl p-4 text-center">
+              <div className="game-panel p-4 text-center">
+                <div className="w-8 h-8 rounded-full bg-brand/15 flex items-center justify-center mx-auto mb-2">
+                  <span className="text-brand text-sm">%</span>
+                </div>
                 <p className="text-2xl font-bold text-brand">
                   {stats.commissionRate}%
                 </p>
-                <p className="text-xs text-gray-500 mt-1">Commission Rate</p>
+                <p className="text-xs text-txt-dim mt-1">Commission Rate</p>
               </div>
             </div>
 
             {/* Recent Commissions */}
-            <div className="bg-surface-50 border border-surface-200/50 rounded-xl overflow-hidden">
-              <div className="px-4 py-3 border-b border-surface-200/50">
+            <div className="game-panel overflow-hidden">
+              <div className="px-4 py-3 border-b border-[#3d3f7a]/40" style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.08) 0%, transparent 100%)' }}>
                 <h3 className="font-bold text-sm">Recent Commissions</h3>
               </div>
               {stats.recentCommissions.length === 0 ? (
-                <div className="p-6 text-center text-gray-500 text-sm">
+                <div className="p-6 text-center text-txt-dim text-sm">
                   No commissions yet. Share your code to start earning!
                 </div>
               ) : (
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="text-gray-500 border-b border-surface-200/50 bg-surfaceer">
+                    <tr className="text-txt-dim border-b border-[#3d3f7a]/30">
                       <th className="text-left py-2 px-4">Player</th>
                       <th className="text-right py-2 px-4">Commission</th>
                       <th className="text-right py-2 px-4">Date</th>
@@ -118,12 +128,12 @@ export default function AffiliatePage() {
                   </thead>
                   <tbody>
                     {stats.recentCommissions.map((c, i) => (
-                      <tr key={i} className="border-b border-surface-200/50/30">
-                        <td className="py-2 px-4 text-white">{c.referredUser}</td>
-                        <td className="py-2 px-4 text-right text-accent-green font-mono">
+                      <tr key={i} className="border-b border-[#3d3f7a]/20 hover:bg-bg-surfaceHover transition-colors">
+                        <td className="py-2 px-4 text-txt">{c.referredUser}</td>
+                        <td className="py-2 px-4 text-right text-success font-mono font-semibold">
                           +${c.amount.toFixed(2)}
                         </td>
-                        <td className="py-2 px-4 text-right text-gray-500">
+                        <td className="py-2 px-4 text-right text-txt-dim">
                           {new Date(c.date).toLocaleDateString()}
                         </td>
                       </tr>

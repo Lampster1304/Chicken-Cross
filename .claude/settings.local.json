@@ -32,7 +32,8 @@
       "WebFetch(domain:chickenroadsbonus.com)",
       "WebFetch(domain:chickenroadlovingstep.com)",
       "WebFetch(domain:slot.day)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "WebFetch(domain:dribbble.com)"
     ]
   }
 }

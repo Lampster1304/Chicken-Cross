@@ -14,11 +14,12 @@ export default function GameArea() {
   const isWin = status === 'cashed_out';
 
   const currentLane = activeGame?.currentLane ?? 0;
+  const streakIntensity = Math.min((activeGame?.riskyLanesCrossed ?? 0) / 8, 1);
 
   return (
     <div
-      className={`bg-surface-50 border border-surface-200/50 rounded-2xl overflow-hidden relative transition-all duration-700 h-full ${isActive ? 'shadow-[0_0_40px_rgba(52,211,153,0.08)]' : ''
-        } ${isHit ? 'shadow-[0_0_40px_rgba(248,113,113,0.12)]' : ''} ${isWin ? 'shadow-[0_0_40px_rgba(240,180,41,0.12)]' : ''
+      className={`game-panel overflow-hidden relative transition-all duration-700 h-full ${isActive ? 'shadow-[0_0_50px_rgba(45,212,191,0.12)]' : ''
+        } ${isHit ? 'shadow-[0_0_50px_rgba(255,107,107,0.2)]' : ''} ${isWin ? 'shadow-[0_0_50px_rgba(251,191,36,0.2)]' : ''
         }`}
     >
       <ChickenRoad />
@@ -32,13 +33,13 @@ export default function GameArea() {
 
         {/* Idle State */}
         {status === 'idle' && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 backdrop-blur-[2px]">
+          <div className="absolute inset-0 flex flex-col items-center justify-center" style={{ background: 'linear-gradient(180deg, rgba(26,27,58,0.95) 0%, rgba(139,92,246,0.15) 100%)' }}>
             <div className="text-center space-y-3">
-              <div className="relative inline-block w-14 h-14 drop-shadow-2xl">
+              <div className="relative inline-block w-16 h-16 drop-shadow-2xl">
                 <ChickenSvg />
               </div>
               <div>
-                <h2 className="text-base font-bold text-txt tracking-tight">Chicken Cross</h2>
+                <h2 className="text-lg font-bold bg-gradient-to-r from-brand to-action-primary bg-clip-text text-transparent tracking-tight">Chicken Cross</h2>
                 <p className="text-[11px] text-txt-muted mt-0.5">Place a bet to start</p>
               </div>
             </div>
@@ -47,11 +48,11 @@ export default function GameArea() {
 
         {/* Hit State */}
         {isHit && (
-          <div className="absolute inset-0 flex items-center justify-center bg-red-950/20">
+          <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'linear-gradient(180deg, rgba(255,107,107,0.08) 0%, rgba(255,107,107,0.15) 100%)' }}>
             <div className="text-center space-y-3">
               <ExplosionSvg className="w-14 h-14 animate-shake mx-auto" />
-              <div className="bg-surface-50/90 backdrop-blur-sm px-5 py-2 rounded-full border border-accent-red/30">
-                <p className="text-accent-red font-bold text-sm">Crashed!</p>
+              <div className="bg-danger/90 px-6 py-2.5 rounded-2xl border-b-4 border-[#b91c1c]">
+                <p className="text-white font-black text-lg tracking-wide">CRASHED!</p>
               </div>
             </div>
           </div>
@@ -59,25 +60,15 @@ export default function GameArea() {
 
         {/* Win State */}
         {isWin && lastResult && (
-          <div className="absolute inset-0 flex items-center justify-center bg-emerald-950/10">
+          <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'linear-gradient(180deg, rgba(45,212,191,0.05) 0%, rgba(251,191,36,0.1) 100%)' }}>
             <div className="text-center space-y-2">
-              <div className="relative">
-                <svg viewBox="0 0 48 64" className="w-12 h-12 mx-auto" xmlns="http://www.w3.org/2000/svg">
-                  <defs>
-                    <radialGradient id="egg-grad" cx="40%" cy="35%" r="60%">
-                      <stop offset="0%" stopColor="#fef08a" />
-                      <stop offset="40%" stopColor="#fbbf24" />
-                      <stop offset="100%" stopColor="#d97706" />
-                    </radialGradient>
-                  </defs>
-                  <ellipse cx="24" cy="36" rx="18" ry="24" fill="url(#egg-grad)" />
-                  <ellipse cx="18" cy="28" rx="6" ry="10" fill="white" opacity="0.25" />
-                </svg>
-              </div>
+              <div className="text-4xl">🏆</div>
               <div>
-                <p className="text-xl font-bold text-txt font-mono">{lastResult.multiplier.toFixed(2)}×</p>
-                <div className="inline-block bg-surface-50/90 backdrop-blur-sm px-4 py-1 rounded-full border border-accent-green/30 mt-1">
-                  <p className="text-accent-green font-bold text-sm font-mono">+${lastResult.profit.toFixed(2)}</p>
+                <div className="inline-block bg-brand/20 border-2 border-brand/40 px-4 py-1 rounded-full mb-1">
+                  <p className="text-xl font-bold text-brand font-mono">{lastResult.multiplier.toFixed(2)}×</p>
+                </div>
+                <div className="inline-block bg-success/15 border border-success/30 px-4 py-1 rounded-full mt-1">
+                  <p className="text-success font-bold text-sm font-mono">+${lastResult.profit.toFixed(2)}</p>
                 </div>
               </div>
             </div>
@@ -85,11 +76,15 @@ export default function GameArea() {
         )}
       </div>
 
-      {/* Vignette */}
-      <div
-        className="absolute inset-0 pointer-events-none z-20"
-        style={{ boxShadow: `inset 0 0 80px rgba(0,0,0,${isActive ? Math.min(0.4 + (activeGame?.riskyLanesCrossed ?? 0) * 0.04, 0.8) : 0.4})` }}
-      />
+      {/* Colored border glow that intensifies with streak */}
+      {isActive && streakIntensity > 0 && (
+        <div
+          className="absolute inset-0 pointer-events-none z-20 rounded-3xl"
+          style={{
+            boxShadow: `inset 0 0 ${30 + streakIntensity * 40}px rgba(45, 212, 191, ${0.05 + streakIntensity * 0.12})`,
+          }}
+        />
+      )}
     </div>
   );
 }

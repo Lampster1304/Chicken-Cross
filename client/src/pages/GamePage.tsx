@@ -19,7 +19,7 @@ export default function GamePage() {
   const [activeTab, setActiveTab] = useState<'feed' | 'history' | 'chat'>('feed');
 
   return (
-    <div className="min-h-screen min-h-[100dvh] bg-surface text-txt flex flex-col font-sans">
+    <div className="min-h-screen min-h-[100dvh] bg-gradient-to-b from-bg-primary via-bg-secondary to-bg-primary text-txt flex flex-col font-sans">
       <Navbar />
 
       <main className="flex-1 p-3 sm:p-5 lg:p-6 max-w-[1600px] mx-auto w-full flex flex-col gap-5">
@@ -36,7 +36,7 @@ export default function GamePage() {
         {/* Bottom Panels */}
         <div>
           {/* Mobile tabs */}
-          <div className="flex bg-surface-50 rounded-xl p-1 gap-0.5 mb-4 lg:hidden border border-surface-200/50">
+          <div className="flex bg-bg-surface rounded-2xl p-1 gap-0.5 mb-4 lg:hidden border border-[#3d3f7a]/50">
             {TABS.map(tab => {
               const Icon = tab.icon;
               const active = activeTab === tab.key;
@@ -44,7 +44,7 @@ export default function GamePage() {
                 <button
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key)}
-                  className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-medium transition-all ${active ? 'bg-surface-200 text-brand shadow-sm' : 'text-txt-muted hover:text-txt'
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-medium transition-all ${active ? 'bg-action-primary text-bg-primary shadow-sm font-bold' : 'text-txt-muted hover:text-txt'
                     }`}
                 >
                   <Icon size={13} />
@@ -77,7 +77,7 @@ export default function GamePage() {
       </main>
 
       <footer className="py-3 text-center">
-        <p className="text-[10px] text-txt-dim font-medium">
+        <p className="text-[10px] text-txt-muted font-medium">
           Chicken Cross · Provably Fair
         </p>
       </footer>
@@ -97,11 +97,11 @@ function Panel({
   children: React.ReactNode;
 }) {
   return (
-    <div className="bg-surface-50 border border-surface-200/50 rounded-2xl overflow-hidden flex flex-col min-h-[320px]">
-      <div className="flex items-center gap-2 px-4 py-3 border-b border-surface-200/40">
-        <Icon size={13} className="text-txt-dim" />
+    <div className="game-panel overflow-hidden flex flex-col min-h-[320px]">
+      <div className="flex items-center gap-2 px-4 py-3 border-b border-[#3d3f7a]/40" style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.08) 0%, transparent 100%)' }}>
+        <Icon size={13} className="text-action-secondary" />
         <span className="text-[13px] font-medium text-txt-muted">{title}</span>
-        {live && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-accent-green animate-pulse" />}
+        {live && <span className="ml-auto w-2 h-2 rounded-full bg-success shadow-[0_0_8px_#2dd4bf] animate-pulse" />}
       </div>
       <div className="flex-1 overflow-auto p-3">{children}</div>
     </div>

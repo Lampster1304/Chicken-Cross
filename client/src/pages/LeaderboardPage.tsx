@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import Navbar from '../components/Navbar';
 
 type Period = 'daily' | 'weekly' | 'monthly' | 'alltime';
 type Category = 'biggest_win' | 'most_won' | 'most_wagered';
@@ -42,11 +43,17 @@ export default function LeaderboardPage() {
   }, [period, category]);
 
   const currentCat = categories.find(c => c.key === category)!;
+  const getRankBorder = (rank: number) => {
+    if (rank === 1) return 'border-l-4 border-l-brand';
+    if (rank === 2) return 'border-l-4 border-l-gray-300';
+    if (rank === 3) return 'border-l-4 border-l-orange-400';
+    return '';
+  };
   const getRankStyle = (rank: number) => {
     if (rank === 1) return 'text-brand';
     if (rank === 2) return 'text-gray-300';
     if (rank === 3) return 'text-orange-400';
-    return 'text-gray-500';
+    return 'text-txt-dim';
   };
   const getRankEmoji = (rank: number) => {
     if (rank === 1) return '🥇';
@@ -60,28 +67,34 @@ export default function LeaderboardPage() {
     return `$${val.toFixed(2)}`;
   };
 
+  const getValueColor = () => {
+    if (category === 'biggest_win') return 'text-brand';
+    if (category === 'most_won') return 'text-success';
+    return 'text-action-secondary';
+  };
+
   return (
-    <div className="min-h-screen bg-surface text-white">
-      <div className="bg-surface-50 border-b border-surface-200/50 px-4 py-3">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
+    <div className="min-h-screen bg-gradient-to-b from-bg-primary via-bg-secondary to-bg-primary text-txt">
+      <Navbar />
+
+      <div className="max-w-4xl mx-auto p-4 space-y-4">
+        <div className="flex items-center justify-between">
           <h1 className="text-lg sm:text-xl font-bold">Leaderboard</h1>
-          <Link to="/game" className="text-brand hover:underline text-sm">
+          <Link to="/game" className="text-brand hover:text-brand-light text-sm font-medium transition-colors">
             Back to Game
           </Link>
         </div>
-      </div>
 
-      <div className="max-w-4xl mx-auto p-4 space-y-4">
         {/* Period tabs */}
-        <div className="flex gap-1 bg-surface-50 rounded-lg p-1 border border-surface-200/50">
+        <div className="flex gap-1 game-panel p-1.5">
           {periods.map(p => (
             <button
               key={p.key}
               onClick={() => setPeriod(p.key)}
-              className={`flex-1 py-2 rounded-md text-sm font-medium transition ${
+              className={`flex-1 py-2 rounded-xl text-sm font-medium transition-all ${
                 period === p.key
-                  ? 'bg-brand text-white'
-                  : 'text-gray-400 hover:text-white'
+                  ? 'bg-action-primary text-bg-primary font-bold'
+                  : 'text-txt-muted hover:text-txt hover:bg-bg-surfaceHover'
               }`}
             >
               {p.label}
@@ -90,15 +103,15 @@ export default function LeaderboardPage() {
         </div>
 
         {/* Category tabs */}
-        <div className="flex gap-1 bg-surface-50 rounded-lg p-1 border border-surface-200/50">
+        <div className="flex gap-1 game-panel p-1.5">
           {categories.map(c => (
             <button
               key={c.key}
               onClick={() => setCategory(c.key)}
-              className={`flex-1 py-2 rounded-md text-xs sm:text-sm font-medium transition ${
+              className={`flex-1 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all ${
                 category === c.key
-                  ? 'bg-casino-border text-white'
-                  : 'text-gray-500 hover:text-gray-300'
+                  ? 'bg-action-secondary text-white font-bold'
+                  : 'text-txt-muted hover:text-txt hover:bg-bg-surfaceHover'
               }`}
             >
               {c.label}
@@ -107,28 +120,28 @@ export default function LeaderboardPage() {
         </div>
 
         {/* Table */}
-        <div className="bg-surface-50 border border-surface-200/50 rounded-xl overflow-hidden">
+        <div className="game-panel overflow-hidden">
           {loading ? (
-            <div className="p-8 text-center text-gray-500">Loading...</div>
+            <div className="p-8 text-center text-txt-dim">Loading...</div>
           ) : entries.length === 0 ? (
-            <div className="p-8 text-center text-gray-500">No data for this period yet.</div>
+            <div className="p-8 text-center text-txt-dim">No data for this period yet.</div>
           ) : (
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-gray-500 border-b border-surface-200/50 bg-surfaceer">
+                <tr className="text-txt-dim border-b border-[#3d3f7a]/40">
                   <th className="text-left py-3 px-4 w-16">Rank</th>
                   <th className="text-left py-3 px-4">Player</th>
                   <th className="text-right py-3 px-4">{currentCat.label}</th>
                 </tr>
               </thead>
               <tbody>
-                {entries.map(entry => (
-                  <tr key={`${entry.userId}-${entry.rank}`} className="border-b border-surface-200/50/30 hover:bg-surfaceer/50 transition">
+                {entries.map((entry, i) => (
+                  <tr key={`${entry.userId}-${entry.rank}`} className={`border-b border-[#3d3f7a]/20 hover:bg-bg-surfaceHover transition-colors rounded-xl ${getRankBorder(entry.rank)} ${i % 2 === 0 ? 'bg-bg-surface/30' : ''}`}>
                     <td className={`py-3 px-4 font-bold ${getRankStyle(entry.rank)}`}>
                       {getRankEmoji(entry.rank)}
                     </td>
-                    <td className="py-3 px-4 text-white font-medium">{entry.username}</td>
-                    <td className="py-3 px-4 text-right font-mono font-bold text-accent-green">
+                    <td className="py-3 px-4 text-txt font-medium">{entry.username}</td>
+                    <td className={`py-3 px-4 text-right font-mono font-bold ${getValueColor()}`}>
                       {formatValue(entry.value)}
                     </td>
                   </tr>

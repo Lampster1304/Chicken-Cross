@@ -1,6 +1,7 @@
 import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { RootState } from '../store';
+import Navbar from '../components/Navbar';
 
 interface VipTier {
   name: string;
@@ -33,46 +34,46 @@ export default function VipPage() {
     : 100;
 
   return (
-    <div className="min-h-screen bg-surface text-white">
-      <div className="bg-surface-50 border-b border-surface-200/50 px-4 py-3">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
+    <div className="min-h-screen bg-gradient-to-b from-bg-primary via-bg-secondary to-bg-primary text-txt">
+      <Navbar />
+
+      <div className="max-w-4xl mx-auto p-4 space-y-6">
+        <div className="flex items-center justify-between">
           <h1 className="text-lg sm:text-xl font-bold">VIP Program</h1>
-          <Link to="/game" className="text-brand hover:underline text-sm">
+          <Link to="/game" className="text-brand hover:text-brand-light text-sm font-medium transition-colors">
             Back to Game
           </Link>
         </div>
-      </div>
 
-      <div className="max-w-4xl mx-auto p-4 space-y-6">
         {/* Current Status */}
-        <div className="bg-surface-50 border border-surface-200/50 rounded-xl p-6 text-center">
-          <p className="text-gray-400 text-sm mb-2">Your VIP Level</p>
+        <div className="game-panel p-6 text-center">
+          <p className="text-txt-muted text-sm mb-2">Your VIP Level</p>
           <h2
             className="text-3xl font-bold mb-1"
-            style={{ color: currentTier.color }}
+            style={{ color: currentTier.color, textShadow: `0 0 20px ${currentTier.color}40` }}
           >
             {currentTier.name}
           </h2>
-          <p className="text-gray-400 text-sm">
-            Rakeback: <span className="text-white font-bold">{currentTier.rakebackRate}%</span>
+          <p className="text-txt-muted text-sm">
+            Rakeback: <span className="text-txt font-bold">{currentTier.rakebackRate}%</span>
           </p>
 
           {nextTier && (
             <div className="mt-6 max-w-md mx-auto">
-              <div className="flex justify-between text-xs text-gray-500 mb-1">
+              <div className="flex justify-between text-xs text-txt-dim mb-1">
                 <span>${totalWagered.toLocaleString()} wagered</span>
                 <span>${nextTier.minWagered.toLocaleString()} for {nextTier.name}</span>
               </div>
-              <div className="w-full bg-surfaceer rounded-full h-3 border border-surface-200/50">
+              <div className="w-full bg-bg-surfaceLight rounded-full h-3 border border-[#3d3f7a]/40 overflow-hidden">
                 <div
                   className="h-full rounded-full transition-all duration-500"
                   style={{
                     width: `${Math.min(progressToNext, 100)}%`,
-                    backgroundColor: nextTier.color,
+                    background: `linear-gradient(90deg, #a3e635, #fbbf24)`,
                   }}
                 />
               </div>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-txt-dim mt-1">
                 ${(nextTier.minWagered - totalWagered).toLocaleString()} more to go
               </p>
             </div>
@@ -88,11 +89,15 @@ export default function VipPage() {
             return (
               <div
                 key={tier.name}
-                className={`bg-surface-50 border rounded-xl p-4 flex items-center justify-between transition ${
+                className={`game-panel p-4 flex items-center justify-between transition ${
                   isCurrentTier
-                    ? 'border-casino-accent shadow-lg shadow-casino-accent/10'
-                    : 'border-surface-200/50'
+                    ? ''
+                    : ''
                 } ${!isUnlocked ? 'opacity-50' : ''}`}
+                style={{
+                  borderColor: isCurrentTier ? tier.color + '60' : undefined,
+                  boxShadow: isCurrentTier ? `0 0 20px ${tier.color}20, 0 8px 0 0 #13142e` : undefined,
+                }}
               >
                 <div className="flex items-center gap-4">
                   <div
@@ -101,6 +106,7 @@ export default function VipPage() {
                       backgroundColor: tier.color + '22',
                       color: tier.color,
                       border: `2px solid ${tier.color}`,
+                      boxShadow: isCurrentTier ? `0 0 12px ${tier.color}40` : undefined,
                     }}
                   >
                     {tier.name[0]}
@@ -109,7 +115,7 @@ export default function VipPage() {
                     <p className="font-bold" style={{ color: tier.color }}>
                       {tier.name}
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-txt-dim">
                       {tier.minWagered === 0
                         ? 'Starting tier'
                         : `$${tier.minWagered.toLocaleString()} wagered`}
@@ -117,8 +123,8 @@ export default function VipPage() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-bold text-accent-green">{tier.rakebackRate}%</p>
-                  <p className="text-xs text-gray-500">Rakeback</p>
+                  <p className="font-bold text-success">{tier.rakebackRate}%</p>
+                  <p className="text-xs text-txt-dim">Rakeback</p>
                 </div>
               </div>
             );

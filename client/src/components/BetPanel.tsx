@@ -111,12 +111,12 @@ export default function BetPanel() {
   const nextIsSafeZone = nextLane > 0 && nextLane % 5 === 0;
 
   return (
-    <div className="bg-surface-50 border border-surface-200/50 rounded-2xl p-4 sm:p-5 flex flex-col gap-4">
+    <div className="game-panel p-4 sm:p-5 flex flex-col gap-4">
       {/* Error */}
       {error && (
-        <div className="flex items-center gap-2 bg-accent-red/10 border border-accent-red/20 rounded-xl px-3 py-2.5">
-          <AlertCircle size={14} className="text-accent-red shrink-0" />
-          <p className="text-accent-red text-xs font-medium">{error}</p>
+        <div className="flex items-center gap-2 bg-danger/10 border border-danger/20 rounded-xl px-3 py-2.5">
+          <AlertCircle size={14} className="text-danger shrink-0" />
+          <p className="text-danger text-xs font-medium">{error}</p>
         </div>
       )}
 
@@ -135,7 +135,7 @@ export default function BetPanel() {
                 type="number"
                 value={betAmount}
                 onChange={e => setBetAmount(e.target.value)}
-                className="w-full bg-surface-100 border border-surface-300/50 focus:border-brand/50 rounded-xl py-3 pl-8 pr-3 text-txt text-lg font-semibold outline-none transition-colors"
+                className="w-full bg-[#2f3070] border border-[#3d3f7a]/50 focus:border-action-primary/50 rounded-xl py-3 pl-8 pr-3 text-white text-lg font-semibold outline-none transition-colors focus:shadow-[0_0_12px_rgba(163,230,53,0.15)]"
                 min="0.01" step="0.01"
               />
             </div>
@@ -146,7 +146,7 @@ export default function BetPanel() {
                 { label: 'Min', fn: () => setBetAmount('1.00') },
                 { label: 'Max', fn: () => setBetAmount(String(Math.min(user?.balance ?? 100, 500).toFixed(2))) },
               ].map(b => (
-                <button key={b.label} onClick={b.fn} className="py-1.5 bg-surface-100 hover:bg-surface-200 border border-surface-200/60 rounded-lg text-[11px] font-semibold text-txt-muted hover:text-txt transition-colors">
+                <button key={b.label} onClick={b.fn} className="py-1.5 bg-bg-surfaceHover hover:bg-bg-surfaceLight border border-[#3d3f7a]/40 rounded-full text-[11px] font-semibold text-txt-muted hover:text-action-primary transition-colors">
                   {b.label}
                 </button>
               ))}
@@ -160,17 +160,17 @@ export default function BetPanel() {
               {DIFFICULTIES.map(d => {
                 const sel = difficulty === d.value;
                 const colors: Record<string, { border: string; text: string; bg: string }> = {
-                  emerald: { border: 'border-emerald-500/50', text: 'text-emerald-400', bg: 'bg-emerald-500/8' },
-                  amber: { border: 'border-amber-500/50', text: 'text-amber-400', bg: 'bg-amber-500/8' },
-                  orange: { border: 'border-orange-500/50', text: 'text-orange-400', bg: 'bg-orange-500/8' },
-                  red: { border: 'border-red-500/50', text: 'text-red-400', bg: 'bg-red-500/8' },
+                  emerald: { border: 'border-emerald-500/50', text: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+                  amber: { border: 'border-amber-500/50', text: 'text-amber-400', bg: 'bg-amber-500/10' },
+                  orange: { border: 'border-orange-500/50', text: 'text-orange-400', bg: 'bg-orange-500/10' },
+                  red: { border: 'border-red-500/50', text: 'text-red-400', bg: 'bg-red-500/10' },
                 };
                 const c = colors[d.color];
                 return (
                   <button
                     key={d.value}
                     onClick={() => setDifficulty(d.value)}
-                    className={`flex items-center justify-between p-2.5 rounded-xl border transition-all ${sel ? `${c.border} ${c.bg}` : 'border-surface-200/50 bg-surface-100 hover:bg-surface-200/60'
+                    className={`flex items-center justify-between p-2.5 rounded-xl border-2 transition-all ${sel ? `${c.border} ${c.bg}` : 'border-[#3d3f7a]/40 bg-bg-surfaceHover hover:bg-bg-surfaceLight'
                       }`}
                   >
                     <div className="flex flex-col items-start">
@@ -199,7 +199,7 @@ export default function BetPanel() {
                 <input
                   type="number" value={autoCashOut} onChange={e => setAutoCashOut(e.target.value)}
                   placeholder="e.g. 2.50"
-                  className="w-full bg-surface-100 border border-surface-300/50 focus:border-brand/50 rounded-xl py-2.5 pl-3 pr-8 text-txt text-sm font-medium outline-none transition-colors placeholder:text-txt-dim/50"
+                  className="w-full bg-[#2f3070] border border-[#3d3f7a]/50 focus:border-action-primary/50 rounded-xl py-2.5 pl-3 pr-8 text-white text-sm font-medium outline-none transition-colors placeholder:text-txt-dim/50 focus:shadow-[0_0_12px_rgba(163,230,53,0.15)]"
                   min="1.01" step="0.01"
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-txt-dim text-xs">×</span>
@@ -210,7 +210,7 @@ export default function BetPanel() {
           {/* Play Button */}
           <button
             onClick={handleStartGame} disabled={isLoading}
-            className="w-full py-3.5 rounded-xl bg-brand hover:bg-brand-light text-surface font-bold text-sm transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
+            className="w-full py-3.5 rounded-2xl btn-3d-primary text-sm flex items-center justify-center gap-2"
           >
             <Zap size={16} />
             {isLoading ? 'Starting...' : 'Place Bet'}
@@ -222,18 +222,18 @@ export default function BetPanel() {
       {isActive && activeGame && (
         <>
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-surface-100 rounded-xl p-3 border border-surface-200/50">
-              <p className="text-[10px] text-txt-dim font-medium mb-0.5">Multiplier</p>
-              <p className="text-xl font-bold text-accent-green font-mono">{currentMultiplier.toFixed(2)}×</p>
+            <div className="rounded-2xl p-3 border-2 border-success/20" style={{ background: 'linear-gradient(135deg, rgba(45,212,191,0.08) 0%, rgba(45,212,191,0.03) 100%)' }}>
+              <p className="text-[10px] text-success/70 font-medium mb-0.5">Multiplier</p>
+              <p className="text-xl font-bold text-success font-mono">{currentMultiplier.toFixed(2)}×</p>
             </div>
-            <div className="bg-surface-100 rounded-xl p-3 border border-surface-200/50 text-right">
-              <p className="text-[10px] text-txt-dim font-medium mb-0.5">Payout</p>
-              <p className="text-xl font-bold text-txt font-mono">${payout.toFixed(2)}</p>
+            <div className="rounded-2xl p-3 border-2 border-brand/20 text-right" style={{ background: 'linear-gradient(135deg, rgba(251,191,36,0.08) 0%, rgba(251,191,36,0.03) 100%)' }}>
+              <p className="text-[10px] text-brand/70 font-medium mb-0.5">Payout</p>
+              <p className="text-xl font-bold text-brand font-mono">${payout.toFixed(2)}</p>
             </div>
           </div>
 
           {activeGame.autoCashOutAt && (
-            <div className="flex items-center gap-2 bg-brand/8 border border-brand/20 rounded-lg px-3 py-2">
+            <div className="flex items-center gap-2 bg-brand/8 border border-brand/20 rounded-xl px-3 py-2">
               <Lock size={12} className="text-brand" />
               <span className="text-[11px] text-brand font-medium">Auto cash-out at {activeGame.autoCashOutAt.toFixed(2)}×</span>
             </div>
@@ -241,9 +241,9 @@ export default function BetPanel() {
 
           <button
             onClick={handleCross} disabled={isLoading}
-            className={`w-full py-4 rounded-xl font-bold text-sm transition-all active:scale-[0.98] disabled:opacity-50 flex flex-col items-center gap-0.5 ${nextIsSafeZone
-              ? 'bg-accent-purple hover:bg-accent-purple/90 text-white'
-              : 'bg-brand hover:bg-brand-light text-surface'
+            className={`w-full py-4 rounded-2xl text-sm flex flex-col items-center gap-0.5 ${nextIsSafeZone
+              ? 'btn-3d-secondary'
+              : 'btn-3d-primary'
               }`}
           >
             <span className="text-[10px] opacity-70 flex items-center gap-1">
@@ -255,7 +255,8 @@ export default function BetPanel() {
           {activeGame.currentLane > 0 && (
             <button
               onClick={handleCashOut} disabled={isLoading}
-              className="w-full py-3 rounded-xl border border-accent-green/30 text-accent-green text-sm font-semibold hover:bg-accent-green/5 transition-all flex items-center justify-center gap-2"
+              className="w-full py-3 rounded-2xl btn-3d-success text-sm flex items-center justify-center gap-2"
+              style={{ boxShadow: '0 0 20px rgba(45,212,191,0.3)' }}
             >
               <TrendingUp size={14} />
               Cash Out ${payout.toFixed(2)}
@@ -267,27 +268,33 @@ export default function BetPanel() {
       {/* ── GAME OVER ── */}
       {isGameOver && lastResult && (
         <>
-          <div className={`p-5 rounded-2xl text-center border ${lastResult.result === 'hit'
-            ? 'bg-accent-red/5 border-accent-red/15'
-            : 'bg-accent-green/5 border-accent-green/15'
-            }`}>
+          <div className={`p-5 rounded-2xl text-center border-2 ${lastResult.result === 'hit'
+            ? 'border-danger/30'
+            : 'border-success/30'
+            }`}
+            style={{
+              background: lastResult.result === 'hit'
+                ? 'linear-gradient(135deg, rgba(255,107,107,0.1) 0%, rgba(255,107,107,0.03) 100%)'
+                : 'linear-gradient(135deg, rgba(45,212,191,0.1) 0%, rgba(251,191,36,0.05) 100%)'
+            }}
+          >
             {lastResult.result === 'hit' ? (
               <div className="space-y-1">
-                <p className="text-lg font-bold text-accent-red">Crashed</p>
+                <p className="text-lg font-bold text-danger">💥 Crashed</p>
                 <p className="text-xl font-bold text-txt/70 font-mono">-${Math.abs(lastResult.profit).toFixed(2)}</p>
               </div>
             ) : (
               <div className="space-y-1">
-                <p className="text-lg font-bold text-accent-green">Won!</p>
+                <p className="text-lg font-bold text-success">🎉 Won!</p>
                 <p className="text-2xl font-bold text-txt font-mono">{lastResult.multiplier.toFixed(2)}×</p>
-                <p className="text-base font-semibold text-accent-green font-mono">+${lastResult.profit.toFixed(2)}</p>
+                <p className="text-base font-semibold text-success font-mono">+${lastResult.profit.toFixed(2)}</p>
               </div>
             )}
           </div>
 
           <button
             onClick={handlePlayAgain}
-            className="w-full py-3.5 rounded-xl bg-brand hover:bg-brand-light text-surface font-bold text-sm transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+            className="w-full py-3.5 rounded-2xl btn-3d-primary text-sm flex items-center justify-center gap-2"
           >
             <RotateCcw size={14} />
             Play Again
@@ -296,7 +303,7 @@ export default function BetPanel() {
       )}
 
       {/* Provably fair footer */}
-      <div className="mt-auto pt-3 border-t border-surface-200/30 flex items-center justify-between text-[9px] text-txt-dim">
+      <div className="mt-auto pt-3 border-t border-[#3d3f7a]/30 flex items-center justify-between text-[9px] text-txt-dim">
         <div className="flex items-center gap-1">
           <Shield size={10} />
           <span>Provably Fair</span>

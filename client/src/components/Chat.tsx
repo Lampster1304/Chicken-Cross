@@ -80,15 +80,15 @@ export default function Chat() {
         {messages.map(msg => (
           <div key={msg.id} className="text-[12px]">
             {msg.type === 'win' ? (
-              <div className="bg-brand/8 border border-brand/15 text-brand px-3 py-1.5 rounded-lg text-[11px] font-medium flex items-center gap-1.5">
-                <span className="w-3 h-3 rounded-full bg-brand/20 flex items-center justify-center text-[8px]">★</span>
+              <div className="bg-brand/10 border border-brand/20 text-brand px-3 py-1.5 rounded-xl text-[11px] font-medium flex items-center gap-1.5">
+                <span className="w-4 h-4 rounded-full bg-brand/20 flex items-center justify-center text-[8px]">★</span>
                 {msg.message}
               </div>
             ) : msg.type === 'system' ? (
               <p className="text-txt-dim italic text-[11px] px-1">{msg.message}</p>
             ) : (
-              <div className="px-1 py-0.5">
-                <span className="text-brand/80 font-semibold">{msg.username}</span>
+              <div className="px-2 py-1 rounded-lg hover:bg-bg-surfaceHover/50 transition-colors">
+                <span className="text-action-secondary font-semibold">{msg.username}</span>
                 <span className="text-txt-dim mx-1.5">·</span>
                 <span className="text-txt/70">{msg.message}</span>
               </div>
@@ -105,12 +105,12 @@ export default function Chat() {
           onKeyDown={handleKeyDown}
           placeholder="Message..."
           maxLength={200}
-          className="flex-1 bg-surface-100 border border-surface-200/60 rounded-xl px-3 py-2.5 text-txt text-sm outline-none focus:border-brand/40 transition-colors placeholder:text-txt-dim/40 min-h-[40px]"
+          className="flex-1 bg-[#2f3070] border border-[#3d3f7a]/50 rounded-xl px-3 py-2.5 text-white text-sm outline-none focus:border-action-primary/40 transition-colors placeholder:text-txt-dim/40 min-h-[40px] focus:shadow-[0_0_12px_rgba(163,230,53,0.1)]"
         />
         <button
           onClick={sendMessage}
           disabled={!canSend || !input.trim()}
-          className="bg-brand/15 hover:bg-brand/25 text-brand p-2.5 rounded-xl transition-all disabled:opacity-30 min-w-[40px] flex items-center justify-center"
+          className="btn-3d-primary p-2.5 rounded-xl min-w-[40px] flex items-center justify-center disabled:opacity-30"
         >
           <Send size={14} />
         </button>
