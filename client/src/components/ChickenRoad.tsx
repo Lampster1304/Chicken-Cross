@@ -105,7 +105,21 @@ function AnimatedCars({ laneNum, difficulty, rushing }: { laneNum: number; diffi
 }
 
 /** Road barrier + optional half-visible stopped car (railroad crossing style). */
-function AnimatedBarrier({ laneNum, showCar }: { laneNum: number; showCar: boolean }) {
+function AnimatedBarrier({ laneNum, showCar, isJustCrossed }: { laneNum: number; showCar: boolean; isJustCrossed?: boolean }) {
+  useEffect(() => {
+    if (showCar && isJustCrossed) {
+      const audio = new Audio('/assets/olenchic--110065.mp3');
+      audio.currentTime = 4.0;
+      audio.volume = 0.5;
+      audio.play().catch(e => console.log('Audio error:', e));
+
+      // Stop the audio after 2.0 seconds (so it stops at 6.0s)
+      setTimeout(() => {
+        audio.pause();
+      }, 2000);
+    }
+  }, [showCar, isJustCrossed]);
+
   const goingDown = laneNum % 2 === 0;
   const carColor = CAR_COLORS[laneNum % 4];
   const carVariant = CAR_VARIANTS[Math.floor(seededRandom(laneNum * 31) * 4)];
@@ -325,7 +339,11 @@ export default function ChickenRoad() {
 
                 {/* Road Barrier (always on safe lanes) */}
                 {((isCrossingThisLane && crossingLane.safe) || (isRevealed && !revealed.hasCar)) && (
-                  <AnimatedBarrier laneNum={laneNum} showCar={showBrakingCar} />
+                  <AnimatedBarrier
+                    laneNum={laneNum}
+                    showCar={showBrakingCar}
+                    isJustCrossed={isCrossingThisLane && crossingLane.safe}
+                  />
                 )}
 
                 {/* ────── CHICKEN SPRITE ────── */}

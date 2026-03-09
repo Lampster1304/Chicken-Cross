@@ -5,13 +5,13 @@ import { getSocket } from '../hooks/useGameSocket';
 import {
   resetGame, setLoading, gameError, clearError,
 } from '../store/gameSlice';
-import { Zap, TrendingUp, ArrowRight, RotateCcw, AlertCircle, Lock } from 'lucide-react';
+import { Zap, TrendingUp, ArrowRight, RotateCcw, AlertCircle, Lock, X } from 'lucide-react';
 
 export default function BetPanel() {
   const [betAmount, setBetAmount] = useState('10.00');
-  const difficulty = 1; // Controlled by admin only
   const [autoCashOut, setAutoCashOut] = useState('');
-  const [betLimits, setBetLimits] = useState({ minBet: 1, maxBet: 500 });
+  const [showAutoCashOutMobile, setShowAutoCashOutMobile] = useState(false);
+  const [betLimits, setBetLimits] = useState({ minBet: 1, maxBet: 500, difficulty: 1 });
 
   const dispatch = useDispatch();
   const { status, activeGame, lastResult, isLoading, error } = useSelector((state: RootState) => state.game);
@@ -50,10 +50,14 @@ export default function BetPanel() {
       .then(res => res.json())
       .then(data => {
         if (data.minBet !== undefined && data.maxBet !== undefined) {
-          setBetLimits({ minBet: data.minBet, maxBet: data.maxBet });
+          setBetLimits({
+            minBet: data.minBet,
+            maxBet: data.maxBet,
+            difficulty: data.difficulty ?? 1
+          });
         }
       })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   const emitStartGame = useCallback((amount: number) => {
@@ -68,7 +72,7 @@ export default function BetPanel() {
     actionLockRef.current = true;
     dispatch(clearError());
     dispatch(setLoading(true));
-    socket.emit('game:start', { amount, difficulty, autoCashOutAt });
+    socket.emit('game:start', { amount, difficulty: betLimits.difficulty, autoCashOutAt });
   }, [autoCashOut, user, betLimits, dispatch]);
 
   const handleStartGame = useCallback(() => {
@@ -196,14 +200,35 @@ export default function BetPanel() {
               Auto Cobro
               <span className="text-[10px] text-txt-dim ml-1">opcional</span>
             </span>
-            <div className="relative">
+
+            {!showAutoCashOutMobile ? (
+              <button
+                onClick={() => setShowAutoCashOutMobile(true)}
+                className="w-full py-2.5 bg-orange-500 hover:bg-orange-600 border border-orange-400/50 rounded-xl text-white text-sm font-bold flex items-center justify-center gap-2 transition-all shadow-[0_0_15px_rgba(249,115,22,0.2)] active:scale-95"
+              >
+                <TrendingUp size={14} />
+                Establecer Auto Cobro
+              </button>
+            ) : null}
+
+            <div className={`relative ${!showAutoCashOutMobile ? 'hidden' : 'block'}`}>
               <input
                 type="number" value={autoCashOut} onChange={e => setAutoCashOut(e.target.value)}
                 placeholder="e.g. 2.50"
                 className="w-full bg-[#2f3070] border border-[#3d3f7a]/50 focus:border-action-primary/50 rounded-xl py-2.5 pl-3 pr-8 text-white text-sm font-medium outline-none transition-colors placeholder:text-txt-dim/50 focus:shadow-[0_0_12px_rgba(163,230,53,0.15)]"
                 min="1.01" step="0.01"
+                autoFocus={showAutoCashOutMobile}
               />
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-txt-dim text-xs">x</span>
+              {showAutoCashOutMobile && (
+                <button
+                  onClick={() => setShowAutoCashOutMobile(false)}
+                  className="absolute -right-8 top-1/2 -translate-y-1/2 p-2 text-txt-dim hover:text-white transition-colors"
+                  title="Cancelar"
+                >
+                  <X size={14} />
+                </button>
+              )}
             </div>
           </div>
 

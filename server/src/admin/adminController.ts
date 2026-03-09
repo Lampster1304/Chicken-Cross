@@ -5,7 +5,7 @@ import { authMiddleware } from '../middleware/authMiddleware';
 import { adminMiddleware } from '../middleware/adminMiddleware';
 import { authLimiter } from '../middleware/rateLimiter';
 import { validate, loginSchema } from '../middleware/validate';
-import { getAllSettings, updateSetting, getBetLimits } from './settingsService';
+import { getAllSettings, updateSetting, getBetLimits, getSiteStats } from './settingsService';
 
 export const adminRouter = Router();
 
@@ -36,10 +36,11 @@ adminRouter.get('/settings', authMiddleware, adminMiddleware, async (_req: Reque
 });
 
 const updateSettingsSchema = z.object({
-  minBet: z.number().positive('Min bet must be positive').optional(),
-  maxBet: z.number().positive('Max bet must be positive').optional(),
-}).refine(data => data.minBet !== undefined || data.maxBet !== undefined, {
-  message: 'At least one setting must be provided',
+  minBet: z.number().positive('El monto mínimo debe ser positivo').optional(),
+  maxBet: z.number().positive('El monto máximo debe ser positivo').optional(),
+  difficulty: z.number().min(1).max(4).optional(),
+}).refine(data => data.minBet !== undefined || data.maxBet !== undefined || data.difficulty !== undefined, {
+  message: 'Al menos una configuración debe proporcionarse',
 });
 
 // PUT /api/admin/settings
@@ -47,11 +48,11 @@ adminRouter.put('/settings', authMiddleware, adminMiddleware, async (req: Reques
   try {
     const parsed = updateSettingsSchema.safeParse(req.body);
     if (!parsed.success) {
-      const msg = parsed.error.issues[0]?.message || 'Validation failed';
+      const msg = parsed.error.issues[0]?.message || 'Validación fallida';
       return res.status(400).json({ error: msg });
     }
 
-    const { minBet, maxBet } = parsed.data;
+    const { minBet, maxBet, difficulty } = parsed.data;
 
     // Get current limits to validate cross-constraints
     const current = await getBetLimits();
@@ -59,7 +60,7 @@ adminRouter.put('/settings', authMiddleware, adminMiddleware, async (req: Reques
     const effectiveMax = maxBet ?? current.maxBet;
 
     if (effectiveMin > effectiveMax) {
-      return res.status(400).json({ error: 'Min bet cannot exceed max bet' });
+      return res.status(400).json({ error: 'El monto mínimo no puede superar al máximo' });
     }
 
     if (minBet !== undefined) {
@@ -68,10 +69,23 @@ adminRouter.put('/settings', authMiddleware, adminMiddleware, async (req: Reques
     if (maxBet !== undefined) {
       await updateSetting('max_bet', maxBet.toFixed(2));
     }
+    if (difficulty !== undefined) {
+      await updateSetting('difficulty', difficulty.toString());
+    }
 
     const settings = await getAllSettings();
     res.json({ settings });
   } catch (error: any) {
-    res.status(500).json({ error: 'Failed to update settings' });
+    res.status(500).json({ error: 'Error al actualizar la configuración' });
+  }
+});
+
+// GET /api/admin/stats
+adminRouter.get('/stats', authMiddleware, adminMiddleware, async (_req: Request, res: Response) => {
+  try {
+    const stats = await getSiteStats();
+    res.json(stats);
+  } catch (error: any) {
+    res.status(500).json({ error: 'Error al obtener las estadísticas' });
   }
 });

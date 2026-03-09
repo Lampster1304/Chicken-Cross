@@ -10,7 +10,6 @@ const NAV_ITEMS = [
   { to: '/leaderboard', label: 'Clasificación', icon: Trophy },
   { to: '/tournaments', label: 'Torneos', icon: Swords },
   { to: '/vip', label: 'VIP', icon: Crown },
-  { to: '/fairness', label: 'Justicia', icon: Shield },
 ];
 
 export default function Navbar() {
@@ -31,7 +30,10 @@ export default function Navbar() {
     try {
       const res = await fetch('/api/dev/reset-balance', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
       });
       const data = await res.json();
       if (data.balance != null) dispatch(updateBalance(data.balance));

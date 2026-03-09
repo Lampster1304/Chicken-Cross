@@ -4,20 +4,16 @@ import GameArea from '../components/GameArea';
 import BetPanel from '../components/BetPanel';
 import GameHistory from '../components/GameHistory';
 import BetsList from '../components/BetsList';
-import Chat from '../components/Chat';
 import GameDescription from '../components/GameDescription';
-import GameFairness from '../components/GameFairness';
 import { useGameSocket } from '../hooks/useGameSocket';
-import { Radio, History, MessageCircle, Info, Shield } from 'lucide-react';
+import { Radio, History, Info } from 'lucide-react';
 
-type TabKey = 'feed' | 'history' | 'chat' | 'description' | 'fairness';
+type TabKey = 'feed' | 'history' | 'description';
 
 const TABS: { key: TabKey; label: string; icon: React.ElementType }[] = [
   { key: 'feed', label: 'En Vivo', icon: Radio },
   { key: 'history', label: 'Historial', icon: History },
-  { key: 'chat', label: 'Chat', icon: MessageCircle },
   { key: 'description', label: 'Reglas', icon: Info },
-  { key: 'fairness', label: 'Justicia', icon: Shield },
 ];
 
 export default function GamePage() {
@@ -60,26 +56,20 @@ export default function GamePage() {
             })}
           </div>
 
-          {/* Desktop: first row 3-col (Live, History, Chat) */}
-          <div className="hidden lg:grid lg:grid-cols-3 gap-4">
+          {/* Desktop: first row 2-col (Live, History) */}
+          <div className="hidden lg:grid lg:grid-cols-2 gap-4">
             <Panel title="En Vivo" icon={Radio} live>
               <BetsList />
             </Panel>
             <Panel title="Tu Historial" icon={History}>
               <GameHistory />
             </Panel>
-            <Panel title="Chat" icon={MessageCircle}>
-              <Chat />
-            </Panel>
           </div>
 
-          {/* Desktop: second row 2-col (Rules, Fairness) */}
-          <div className="hidden lg:grid lg:grid-cols-2 gap-4 mt-4">
+          {/* Desktop: second row (Rules) */}
+          <div className="hidden lg:block mt-4">
             <Panel title="Reglas del Juego" icon={Info}>
               <GameDescription />
-            </Panel>
-            <Panel title="Verificablemente Justo" icon={Shield}>
-              <GameFairness />
             </Panel>
           </div>
 
@@ -87,9 +77,7 @@ export default function GamePage() {
           <div className="lg:hidden">
             {activeTab === 'feed' && <Panel title="En Vivo" icon={Radio} live><BetsList /></Panel>}
             {activeTab === 'history' && <Panel title="Tu Historial" icon={History}><GameHistory /></Panel>}
-            {activeTab === 'chat' && <Panel title="Chat" icon={MessageCircle}><Chat /></Panel>}
             {activeTab === 'description' && <Panel title="Reglas del Juego" icon={Info}><GameDescription /></Panel>}
-            {activeTab === 'fairness' && <Panel title="Verificablemente Justo" icon={Shield}><GameFairness /></Panel>}
           </div>
         </div>
       </main>

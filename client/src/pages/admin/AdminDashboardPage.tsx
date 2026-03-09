@@ -3,11 +3,13 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { RootState } from '../../store';
 import { adminLogout } from '../../store/adminSlice';
-import { Shield, Save, LogOut, AlertCircle, CheckCircle } from 'lucide-react';
+import { Shield, Save, LogOut, AlertCircle, CheckCircle, TrendingUp, Wallet, DollarSign, Gauge } from 'lucide-react';
 
 export default function AdminDashboardPage() {
   const [minBet, setMinBet] = useState('');
   const [maxBet, setMaxBet] = useState('');
+  const [difficulty, setDifficulty] = useState('1');
+  const [stats, setStats] = useState({ totalWagered: 0, totalWon: 0, totalProfit: 0 });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -31,12 +33,27 @@ export default function AdminDashboardPage() {
         if (data.settings) {
           setMinBet(data.settings.min_bet || '1.00');
           setMaxBet(data.settings.max_bet || '500.00');
+          setDifficulty(data.settings.difficulty || '1');
         }
       } catch {
         setError('Error al cargar configuración');
       }
     };
+
+    const fetchStats = async () => {
+      try {
+        const res = await fetch('/api/admin/stats', {
+          headers: { Authorization: `Bearer ${admin.accessToken}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setStats(data);
+        }
+      } catch { }
+    };
+
     fetchSettings();
+    fetchStats();
   }, [admin.accessToken]);
 
   const handleSave = async (e: React.FormEvent) => {
@@ -48,6 +65,7 @@ export default function AdminDashboardPage() {
     const body: Record<string, number> = {};
     if (minBet) body.minBet = parseFloat(minBet);
     if (maxBet) body.maxBet = parseFloat(maxBet);
+    if (difficulty) body.difficulty = parseInt(difficulty);
 
     if (body.minBet !== undefined && (isNaN(body.minBet) || body.minBet <= 0)) {
       setError('La apuesta mínima debe ser un número positivo');
@@ -75,6 +93,7 @@ export default function AdminDashboardPage() {
       if (data.settings) {
         setMinBet(data.settings.min_bet || '1.00');
         setMaxBet(data.settings.max_bet || '500.00');
+        setDifficulty(data.settings.difficulty || '1');
       }
       setSuccess('Configuración guardada exitosamente');
       setTimeout(() => setSuccess(''), 3000);
@@ -92,9 +111,9 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="min-h-screen px-4 py-8" style={{ background: 'linear-gradient(180deg, #1a1b3a 0%, rgba(239,68,68,0.05) 50%, #1a1b3a 100%)' }}>
-      <div className="max-w-lg mx-auto">
+      <div className="max-w-xl mx-auto space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 flex items-center justify-center rounded-full bg-red-500/10 border border-red-500/30">
               <Shield size={20} className="text-red-400" />
@@ -113,47 +132,110 @@ export default function AdminDashboardPage() {
           </button>
         </div>
 
+        {/* Stats Section */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="game-panel p-4 flex flex-col items-center text-center">
+            <TrendingUp size={16} className="text-txt-dim mb-2" />
+            <p className="text-[10px] uppercase tracking-wider text-txt-dim font-bold">Total Apostado</p>
+            <p className="text-lg font-bold text-txt font-mono">${stats.totalWagered.toFixed(2)}</p>
+          </div>
+          <div className="game-panel p-4 flex flex-col items-center text-center">
+            <Wallet size={16} className="text-txt-dim mb-2" />
+            <p className="text-[10px] uppercase tracking-wider text-txt-dim font-bold">Total Pagado</p>
+            <p className="text-lg font-bold text-txt font-mono">${stats.totalWon.toFixed(2)}</p>
+          </div>
+          <div className="game-panel p-4 flex flex-col items-center text-center border-emerald-500/20 bg-emerald-500/5">
+            <DollarSign size={16} className="text-emerald-400 mb-2" />
+            <p className="text-[10px] uppercase tracking-wider text-emerald-400 font-bold">Ganancia Neta</p>
+            <p className="text-lg font-bold text-emerald-400 font-mono">${stats.totalProfit.toFixed(2)}</p>
+          </div>
+        </div>
+
         {/* Settings Card */}
         <div className="game-panel p-6" style={{ borderColor: 'rgba(239,68,68,0.15)' }}>
-          <h2 className="text-sm font-semibold text-txt mb-4">Límites de Apuesta</h2>
+          <div className="flex items-center gap-2 mb-6 pb-4 border-b border-[#3d3f7a]/40">
+            <Shield size={16} className="text-red-400" />
+            <h2 className="text-sm font-bold text-txt">Configuración del Sitio</h2>
+          </div>
 
           {error && (
-            <div className="flex items-center gap-2 bg-danger/10 border border-danger/20 rounded-xl px-3 py-2.5 mb-4">
+            <div className="flex items-center gap-2 bg-danger/10 border border-danger/20 rounded-xl px-3 py-2.5 mb-4 font-medium">
               <AlertCircle size={14} className="text-danger shrink-0" />
-              <p className="text-danger text-xs font-medium">{error}</p>
+              <p className="text-danger text-xs">{error}</p>
             </div>
           )}
 
           {success && (
-            <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-3 py-2.5 mb-4">
+            <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-3 py-2.5 mb-4 font-medium">
               <CheckCircle size={14} className="text-emerald-400 shrink-0" />
-              <p className="text-emerald-400 text-xs font-medium">{success}</p>
+              <p className="text-emerald-400 text-xs">{success}</p>
             </div>
           )}
 
-          <form onSubmit={handleSave} className="space-y-4">
-            <div>
-              <label className="text-xs font-medium text-txt-muted mb-1.5 block">Apuesta Mínima ($)</label>
-              <input
-                type="number" value={minBet} onChange={e => setMinBet(e.target.value)}
-                className="w-full bg-[#2f3070] border border-[#3d3f7a]/50 focus:border-red-500/50 rounded-xl px-3.5 py-3 text-white text-sm outline-none transition-colors placeholder:text-txt-dim/40 focus:shadow-[0_0_12px_rgba(239,68,68,0.15)]"
-                min="0.01" step="0.01" required
-              />
+          <form onSubmit={handleSave} className="space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="text-xs font-bold text-txt-muted mb-2 block uppercase tracking-tight">Apuesta Mínima ($)</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-txt-dim text-xs">$</span>
+                  <input
+                    type="number" value={minBet} onChange={e => setMinBet(e.target.value)}
+                    className="w-full bg-[#2f3070] border border-[#3d3f7a]/50 focus:border-red-500/50 rounded-xl pl-7 pr-3.5 py-3 text-white text-sm outline-none transition-colors placeholder:text-txt-dim/40"
+                    min="0.01" step="0.01" required
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-bold text-txt-muted mb-2 block uppercase tracking-tight">Apuesta Máxima ($)</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-txt-dim text-xs">$</span>
+                  <input
+                    type="number" value={maxBet} onChange={e => setMaxBet(e.target.value)}
+                    className="w-full bg-[#2f3070] border border-[#3d3f7a]/50 focus:border-red-500/50 rounded-xl pl-7 pr-3.5 py-3 text-white text-sm outline-none transition-colors placeholder:text-txt-dim/40"
+                    min="0.01" step="0.01" required
+                  />
+                </div>
+              </div>
             </div>
+
             <div>
-              <label className="text-xs font-medium text-txt-muted mb-1.5 block">Apuesta Máxima ($)</label>
-              <input
-                type="number" value={maxBet} onChange={e => setMaxBet(e.target.value)}
-                className="w-full bg-[#2f3070] border border-[#3d3f7a]/50 focus:border-red-500/50 rounded-xl px-3.5 py-3 text-white text-sm outline-none transition-colors placeholder:text-txt-dim/40 focus:shadow-[0_0_12px_rgba(239,68,68,0.15)]"
-                min="0.01" step="0.01" required
-              />
+              <label className="text-xs font-bold text-txt-muted mb-2 block uppercase tracking-tight flex items-center gap-1.5">
+                <Gauge size={12} className="text-orange-400" />
+                Dificultad Global
+              </label>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {[
+                  { id: '1', label: 'Fácil', sub: '20% - 1.05x', color: 'border-emerald-500/30 text-emerald-400', active: 'bg-emerald-500/20 border-emerald-500 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.2)]' },
+                  { id: '2', label: 'Medio', sub: '40% - 1.10x', color: 'border-amber-500/30 text-amber-400', active: 'bg-amber-500/20 border-amber-500 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.2)]' },
+                  { id: '3', label: 'Difícil', sub: '60% - 1.20x', color: 'border-orange-500/30 text-orange-400', active: 'bg-orange-500/20 border-orange-500 text-orange-400 shadow-[0_0_15px_rgba(249,115,22,0.2)]' },
+                  { id: '4', label: 'Extremo', sub: '80% - 1.45x', color: 'border-red-500/30 text-red-500', active: 'bg-red-500/20 border-red-500 text-red-500 shadow-[0_0_15px_rgba(239,68,68,0.2)]' },
+                ].map(d => (
+                  <button
+                    key={d.id}
+                    type="button"
+                    onClick={() => setDifficulty(d.id)}
+                    className={`flex flex-col items-center justify-center py-2.5 rounded-xl border transition-all active:scale-95 ${difficulty === d.id
+                      ? d.active
+                      : 'bg-[#2f3070] border-[#3d3f7a]/50 text-txt-dim hover:border-[#3d3f7a] hover:bg-[#363785]'
+                      }`}
+                  >
+                    <span className="text-xs font-bold uppercase tracking-tight">{d.label}</span>
+                    <span className="text-[10px] opacity-60 font-mono font-bold">{d.sub}</span>
+                  </button>
+                ))}
+              </div>
+              <p className="text-[11px] text-txt-dim mt-3 leading-relaxed">
+                Este valor controla la densidad de tráfico en todas las partidas nuevas.
+                Niveles altos aumentan exponencialmente los multiplicadores pero también el riesgo.
+              </p>
             </div>
+
             <button
               type="submit" disabled={loading}
-              className="w-full py-3 rounded-2xl bg-red-600 hover:bg-red-500 text-white text-sm font-semibold flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+              className="w-full py-4 rounded-2xl bg-red-600 hover:bg-red-500 text-white text-sm font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-red-600/20 active:scale-95 disabled:opacity-50"
             >
-              <Save size={15} />
-              {loading ? 'Guardando...' : 'Guardar Configuración'}
+              <Save size={16} />
+              {loading ? 'Guardando...' : 'Actualizar Configuración'}
             </button>
           </form>
         </div>

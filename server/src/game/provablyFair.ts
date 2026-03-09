@@ -44,6 +44,12 @@ export function isLaneDangerous(
  * Formula: (1 - HOUSE_EDGE) / P(safe)
  */
 export function getLaneMultiplier(difficulty: number): number {
+  if (difficulty === 1) return 1.05;
+  if (difficulty === 2) return 1.10;
+  if (difficulty === 3) return 1.20;
+  if (difficulty === 4) return 1.45;
+
+  // Fallback
   const safeProbability = (100 - difficulty * 20) / 100;
   return Math.floor((1 - HOUSE_EDGE) / safeProbability * 100) / 100;
 }

@@ -4,7 +4,6 @@ import { RootState } from './store';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import GamePage from './pages/GamePage';
-import FairnessPage from './pages/FairnessPage';
 import LeaderboardPage from './pages/LeaderboardPage';
 import VipPage from './pages/VipPage';
 import AffiliatePage from './pages/AffiliatePage';
@@ -38,7 +37,6 @@ function App() {
           </ProtectedRoute>
         }
       />
-      <Route path="/fairness" element={<FairnessPage />} />
       <Route path="/leaderboard" element={<LeaderboardPage />} />
       <Route
         path="/vip"
