@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { createHash, isLaneDangerous, isSafeZone, getLaneMultiplier } from '../utils/crypto';
+import { createHash, isLaneDangerous, getLaneMultiplier } from '../utils/crypto';
 
 interface GameRecord {
   id: number;
@@ -21,7 +21,6 @@ interface GameRecord {
 interface LaneResult {
   lane: number;
   hasCar: boolean;
-  isSafeZone: boolean;
 }
 
 interface VerifyResult {
@@ -58,9 +57,8 @@ export default function FairnessPage() {
 
     const lanes: LaneResult[] = [];
     for (let lane = 1; lane <= numLanes; lane++) {
-      const safe = isSafeZone(lane);
-      const hasCar = safe ? false : await isLaneDangerous(serverSeed, clientSeed, nonceNum, lane, diffNum);
-      lanes.push({ lane, hasCar, isSafeZone: safe });
+      const hasCar = await isLaneDangerous(serverSeed, clientSeed, nonceNum, lane, diffNum);
+      lanes.push({ lane, hasCar });
     }
 
     const hashedSeed = await createHash(serverSeed);
@@ -83,9 +81,9 @@ export default function FairnessPage() {
       {/* Header */}
       <div className="bg-surface-50 border-b border-surface-200/50 px-4 py-3">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <h1 className="text-lg sm:text-xl font-bold">Provably Fair</h1>
+          <h1 className="text-lg sm:text-xl font-bold">Verificablemente Justo</h1>
           <Link to="/game" className="text-brand hover:underline text-sm">
-            Back to Game
+            Volver al Juego
           </Link>
         </div>
       </div>
@@ -93,39 +91,38 @@ export default function FairnessPage() {
       <div className="max-w-4xl mx-auto p-4 space-y-6">
         {/* Explanation */}
         <div className="bg-surface-50 border border-surface-200/50 rounded-xl p-4 sm:p-6">
-          <h2 className="text-lg font-bold mb-3">How it works</h2>
+          <h2 className="text-lg font-bold mb-3">Cómo funciona</h2>
           <div className="text-gray-400 text-sm space-y-2">
-            <p>Every lane in Chicken Cross is provably fair. Each lane outcome is determined independently using cryptographic hashing.</p>
-            <p><strong className="text-white">1.</strong> A <span className="text-brand">server seed</span> is generated and its SHA-256 hash is shown before you play.</p>
-            <p><strong className="text-white">2.</strong> Each lane result: <code className="bg-surfaceer px-1 rounded">HMAC-SHA256(server_seed, client_seed:nonce:lane)</code> → roll % 100. If roll &lt; difficulty*20 → car.</p>
-            <p><strong className="text-white">3.</strong> Every 5th lane is a guaranteed safe zone (no hash check needed).</p>
-            <p><strong className="text-white">4.</strong> After the game, the server seed is revealed so you can verify every lane.</p>
-            <p><strong className="text-white">5.</strong> House edge: 3% (applied to multipliers).</p>
+            <p>Cada carril en Chicken Cross es verificablemente justo. El resultado de cada carril se determina independientemente usando hash criptográfico.</p>
+            <p><strong className="text-white">1.</strong> Se genera una <span className="text-brand">semilla del servidor</span> y su hash SHA-256 se muestra antes de jugar.</p>
+            <p><strong className="text-white">2.</strong> Resultado de cada carril: <code className="bg-surfaceer px-1 rounded">HMAC-SHA256(server_seed, client_seed:nonce:lane)</code> → roll % 100. Si roll &lt; dificultad*20 → auto.</p>
+            <p><strong className="text-white">3.</strong> Después del juego, se revela la semilla del servidor para que puedas verificar cada carril.</p>
+            <p><strong className="text-white">4.</strong> Ventaja de la casa: 3% (aplicada a los multiplicadores).</p>
           </div>
         </div>
 
         {/* Verification tool */}
         <div className="bg-surface-50 border border-surface-200/50 rounded-xl p-4 sm:p-6">
-          <h2 className="text-lg font-bold mb-4">Verify a Game</h2>
+          <h2 className="text-lg font-bold mb-4">Verificar un Juego</h2>
           <div className="space-y-3">
             <div>
-              <label className="block text-xs text-gray-400 mb-1">Server Seed</label>
+              <label className="block text-xs text-gray-400 mb-1">Semilla del Servidor</label>
               <input
                 type="text"
                 value={serverSeed}
                 onChange={e => setServerSeed(e.target.value)}
-                placeholder="Enter server seed..."
+                placeholder="Ingresa la semilla del servidor..."
                 className="w-full bg-surfaceer border border-surface-200/50 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-brand/50 font-mono"
               />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
               <div>
-                <label className="block text-xs text-gray-400 mb-1">Client Seed</label>
+                <label className="block text-xs text-gray-400 mb-1">Semilla del Cliente</label>
                 <input
                   type="text"
                   value={clientSeed}
                   onChange={e => setClientSeed(e.target.value)}
-                  placeholder="client seed"
+                  placeholder="semilla del cliente"
                   className="w-full bg-surfaceer border border-surface-200/50 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-brand/50 font-mono"
                 />
               </div>
@@ -140,20 +137,20 @@ export default function FairnessPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs text-gray-400 mb-1">Difficulty</label>
+                <label className="block text-xs text-gray-400 mb-1">Dificultad</label>
                 <select
                   value={difficulty}
                   onChange={e => setDifficulty(e.target.value)}
                   className="w-full bg-surfaceer border border-surface-200/50 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-brand/50"
                 >
-                  <option value="1">1 (Easy)</option>
-                  <option value="2">2 (Medium)</option>
-                  <option value="3">3 (Hard)</option>
-                  <option value="4">4 (Extreme)</option>
+                  <option value="1">1 (Fácil)</option>
+                  <option value="2">2 (Medio)</option>
+                  <option value="3">3 (Difícil)</option>
+                  <option value="4">4 (Extremo)</option>
                 </select>
               </div>
               <div>
-                <label className="block text-xs text-gray-400 mb-1">Lanes to check</label>
+                <label className="block text-xs text-gray-400 mb-1">Carriles a verificar</label>
                 <input
                   type="number"
                   value={lanesToCheck}
@@ -168,7 +165,7 @@ export default function FairnessPage() {
               onClick={verify}
               className="w-full sm:w-auto bg-brand hover:bg-red-600 text-white font-bold px-6 py-3 rounded-lg transition min-h-[48px]"
             >
-              Verify
+              Verificar
             </button>
           </div>
 
@@ -176,27 +173,25 @@ export default function FairnessPage() {
             <div className="mt-4 bg-surfaceer border border-surface-200/50 rounded-lg p-4 space-y-3">
               <div>
                 <span className="text-gray-400 text-sm">
-                  Per-lane multiplier: <span className="text-accent-green font-bold font-mono">{result.laneMultiplier.toFixed(2)}x</span>
+                  Multiplicador por carril: <span className="text-accent-green font-bold font-mono">{result.laneMultiplier.toFixed(2)}x</span>
                 </span>
               </div>
 
               {/* Lane results */}
               <div>
-                <span className="text-gray-400 text-sm">Lane outcomes:</span>
+                <span className="text-gray-400 text-sm">Resultados por carril:</span>
                 <div className="flex gap-1 mt-2 flex-wrap">
                   {result.lanes.map(l => (
                     <div
                       key={l.lane}
                       className={`w-10 h-10 rounded flex items-center justify-center text-xs font-bold border ${
-                        l.isSafeZone
-                          ? 'bg-green-900/40 text-green-400 border-green-500/40'
-                          : l.hasCar
+                        l.hasCar
                             ? 'bg-red-900/50 text-red-400 border-red-500/40'
                             : 'bg-gray-800/50 text-gray-300 border-gray-600/30'
                       }`}
-                      title={`Lane ${l.lane}${l.isSafeZone ? ' (Safe Zone)' : l.hasCar ? ' (Car!)' : ' (Safe)'}`}
+                      title={`Carril ${l.lane}${l.hasCar ? ' (¡Auto!)' : ' (Seguro)'}`}
                     >
-                      {l.isSafeZone ? '🌿' : l.hasCar ? '🚗' : l.lane}
+                      {l.hasCar ? '🚗' : l.lane}
                     </div>
                   ))}
                 </div>
@@ -204,7 +199,7 @@ export default function FairnessPage() {
 
               {/* Hashed seed */}
               <div>
-                <span className="text-gray-400 text-xs">Hashed Server Seed (SHA-256):</span>
+                <span className="text-gray-400 text-xs">Semilla del Servidor Hasheada (SHA-256):</span>
                 <p className="text-xs font-mono text-gray-300 break-all mt-1 select-all">{result.hashedSeed}</p>
               </div>
             </div>
@@ -213,20 +208,20 @@ export default function FairnessPage() {
 
         {/* Game history */}
         <div className="bg-surface-50 border border-surface-200/50 rounded-xl p-4 sm:p-6">
-          <h2 className="text-lg font-bold mb-4">Recent Games</h2>
+          <h2 className="text-lg font-bold mb-4">Juegos Recientes</h2>
           {loadingHistory ? (
-            <p className="text-gray-500 text-sm">Loading...</p>
+            <p className="text-gray-500 text-sm">Cargando...</p>
           ) : history.length === 0 ? (
-            <p className="text-gray-500 text-sm">No games yet.</p>
+            <p className="text-gray-500 text-sm">Sin juegos aún.</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-xs sm:text-sm">
                 <thead>
                   <tr className="text-gray-500 border-b border-surface-200/50">
-                    <th className="text-left py-2 px-2">Game</th>
-                    <th className="text-center py-2 px-2">Difficulty</th>
-                    <th className="text-center py-2 px-2">Lanes</th>
-                    <th className="text-right py-2 px-2">Result</th>
+                    <th className="text-left py-2 px-2">Juego</th>
+                    <th className="text-center py-2 px-2">Dificultad</th>
+                    <th className="text-center py-2 px-2">Carriles</th>
+                    <th className="text-right py-2 px-2">Resultado</th>
                     <th className="text-right py-2 px-2"></th>
                   </tr>
                 </thead>
@@ -263,7 +258,7 @@ export default function FairnessPage() {
                             onClick={() => fillFromHistory(game)}
                             className="text-brand hover:underline text-xs"
                           >
-                            Verify
+                            Verificar
                           </button>
                         </td>
                       </tr>

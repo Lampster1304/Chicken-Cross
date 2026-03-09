@@ -4,13 +4,13 @@ import {
   generateServerSeed,
   hashServerSeed,
   isLaneDangerous,
-  isSafeZone,
   getLaneMultiplier,
   getCumulativeMultiplier,
   getNextMultiplier,
 } from './provablyFair';
 import { deductBetAmount, resolveBetWin, resolveBetLoss } from './betManager';
 import { MAX_WIN_CAP } from './constants';
+import { getBetLimits } from '../admin/settingsService';
 import { pool } from '../config/db';
 import { logger } from '../config/logger';
 import { gameStartSchema, chatSchema } from '../middleware/validate';
@@ -20,7 +20,6 @@ const CHAT_COOLDOWN = 3000;
 interface RevealedLane {
   lane: number;
   hasCar: boolean;
-  isSafeZone: boolean;
 }
 
 interface PlayerSession {
@@ -73,7 +72,7 @@ export function initGameEngine(io: SocketIOServer) {
   io.use((socket, next) => {
     const token = socket.handshake.auth.token;
     if (!token) {
-      return next(new Error('Authentication required'));
+      return next(new Error('Autenticación requerida'));
     }
 
     try {
@@ -82,7 +81,7 @@ export function initGameEngine(io: SocketIOServer) {
       (socket as any).username = payload.username;
       next();
     } catch {
-      next(new Error('Invalid token'));
+      next(new Error('Token inválido'));
     }
   });
 
@@ -124,16 +123,28 @@ export function initGameEngine(io: SocketIOServer) {
       const parsed = gameStartSchema.safeParse(data);
       if (!parsed.success) {
         const issues = parsed.error.issues || [];
-        socket.emit('game:error', { error: issues[0]?.message || 'Invalid input' });
+        socket.emit('game:error', { error: issues[0]?.message || 'Entrada inválida' });
         return;
       }
 
       if (activeSessions.has(userId)) {
-        socket.emit('game:error', { error: 'You already have an active game' });
+        socket.emit('game:error', { error: 'Ya tienes un juego activo' });
         return;
       }
 
       const { amount, difficulty } = parsed.data;
+
+      // Dynamic bet limits validation
+      const limits = await getBetLimits();
+      if (amount < limits.minBet) {
+        socket.emit('game:error', { error: `La apuesta mínima es $${limits.minBet.toFixed(2)}` });
+        return;
+      }
+      if (amount > limits.maxBet) {
+        socket.emit('game:error', { error: `La apuesta máxima es $${limits.maxBet.toFixed(2)}` });
+        return;
+      }
+
       let autoCashOutAt = parsed.data.autoCashOutAt ?? null;
 
       // Clamp auto-cashout so payout never exceeds MAX_WIN_CAP
@@ -204,14 +215,14 @@ export function initGameEngine(io: SocketIOServer) {
     socket.on('game:cross', async () => {
       const session = activeSessions.get(userId);
       if (!session || session.status !== 'active') {
-        socket.emit('game:error', { error: 'No active game' });
+        socket.emit('game:error', { error: 'No hay juego activo' });
         return;
       }
 
       // Prevent concurrent processing
       if (session.processing) {
         // Don't silently drop - tell client to retry
-        socket.emit('game:error', { error: 'Processing previous action' });
+        socket.emit('game:error', { error: 'Procesando acción anterior' });
         return;
       }
       session.processing = true;
@@ -219,37 +230,8 @@ export function initGameEngine(io: SocketIOServer) {
       try {
 
       const nextLane = session.currentLane + 1;
-      const safeZone = isSafeZone(nextLane);
 
-      if (safeZone) {
-        // Safe zone - always safe, no multiplier change
-        session.currentLane = nextLane;
-        session.revealedLanes.push({ lane: nextLane, hasCar: false, isSafeZone: true });
-
-        await pool.query(
-          'UPDATE games SET current_lane = $1 WHERE id = $2',
-          [nextLane, session.gameId]
-        );
-
-        const nextMult = getNextMultiplier(
-          session.difficulty,
-          nextLane,
-          session.riskyLanesCrossed
-        );
-
-        socket.emit('game:crossed', {
-          lane: nextLane,
-          safe: true,
-          isSafeZone: true,
-          multiplier: session.currentMultiplier,
-          nextMultiplier: nextMult,
-          revealedLane: { lane: nextLane, hasCar: false, isSafeZone: true },
-        });
-
-        return;
-      }
-
-      // Risky lane - check if it has a car
+      // Check if lane has a car
       const hasCar = isLaneDangerous(
         session.serverSeed,
         session.clientSeed,
@@ -262,17 +244,16 @@ export function initGameEngine(io: SocketIOServer) {
         // Player hit a car!
         session.status = 'hit';
         session.currentLane = nextLane;
-        session.revealedLanes.push({ lane: nextLane, hasCar: true, isSafeZone: false });
+        session.revealedLanes.push({ lane: nextLane, hasCar: true });
 
         await resolveBetLoss(session.gameId, nextLane);
 
         socket.emit('game:crossed', {
           lane: nextLane,
           safe: false,
-          isSafeZone: false,
           multiplier: 0,
           nextMultiplier: null,
-          revealedLane: { lane: nextLane, hasCar: true, isSafeZone: false },
+          revealedLane: { lane: nextLane, hasCar: true },
         });
 
         socket.emit('game:over', {
@@ -288,17 +269,18 @@ export function initGameEngine(io: SocketIOServer) {
           username: session.username,
           difficulty: session.difficulty,
           lane: nextLane,
+          betAmount: session.betAmount,
         });
 
         activeSessions.delete(userId);
         logger.info({ userId, gameId: session.gameId, lane: nextLane }, 'Player hit a car');
       } else {
-        // Safe crossing on risky lane
+        // Safe crossing
         session.currentLane = nextLane;
         session.riskyLanesCrossed++;
         const newMultiplier = getCumulativeMultiplier(session.difficulty, session.riskyLanesCrossed);
         session.currentMultiplier = newMultiplier;
-        session.revealedLanes.push({ lane: nextLane, hasCar: false, isSafeZone: false });
+        session.revealedLanes.push({ lane: nextLane, hasCar: false });
 
         await pool.query(
           'UPDATE games SET current_lane = $1 WHERE id = $2',
@@ -315,9 +297,9 @@ export function initGameEngine(io: SocketIOServer) {
           session.status = 'cashed_out';
 
           socket.emit('game:crossed', {
-            lane: nextLane, safe: true, isSafeZone: false,
+            lane: nextLane, safe: true,
             multiplier: cappedMultiplier, nextMultiplier: null,
-            revealedLane: { lane: nextLane, hasCar: false, isSafeZone: false },
+            revealedLane: { lane: nextLane, hasCar: false },
           });
 
           socket.emit('game:over', {
@@ -330,7 +312,7 @@ export function initGameEngine(io: SocketIOServer) {
             autoCashedOut: true,
           });
 
-          io.emit('feed:win', { username: session.username, multiplier: cappedMultiplier, profit, difficulty: session.difficulty });
+          io.emit('feed:win', { username: session.username, multiplier: cappedMultiplier, profit, difficulty: session.difficulty, betAmount: session.betAmount });
           activeSessions.delete(userId);
           logger.info({ userId, gameId: session.gameId, multiplier: cappedMultiplier, profit }, 'Auto cash-out triggered');
           return;
@@ -345,10 +327,9 @@ export function initGameEngine(io: SocketIOServer) {
         socket.emit('game:crossed', {
           lane: nextLane,
           safe: true,
-          isSafeZone: false,
           multiplier: newMultiplier,
           nextMultiplier: nextMult,
-          revealedLane: { lane: nextLane, hasCar: false, isSafeZone: false },
+          revealedLane: { lane: nextLane, hasCar: false },
         });
       }
 
@@ -363,7 +344,7 @@ export function initGameEngine(io: SocketIOServer) {
     socket.on('game:cashout', async () => {
       const session = activeSessions.get(userId);
       if (!session || session.status !== 'active') {
-        socket.emit('game:error', { error: 'No active game' });
+        socket.emit('game:error', { error: 'No hay juego activo' });
         return;
       }
 
@@ -372,7 +353,7 @@ export function initGameEngine(io: SocketIOServer) {
 
       if (session.currentLane === 0) {
         session.processing = false;
-        socket.emit('game:error', { error: 'Must cross at least one lane before cashing out' });
+        socket.emit('game:error', { error: 'Debes cruzar al menos un carril antes de cobrar' });
         return;
       }
 
@@ -397,6 +378,7 @@ export function initGameEngine(io: SocketIOServer) {
           multiplier,
           profit,
           difficulty: session.difficulty,
+          betAmount: session.betAmount,
         });
 
         activeSessions.delete(userId);

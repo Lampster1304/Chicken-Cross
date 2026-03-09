@@ -1,22 +1,19 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
+import BarrierSvg from './svg/BarrierSvg';
 import CarSvg from './svg/CarSvg';
 import ChickenSvg from './svg/ChickenSvg';
 import ExplosionSvg from './svg/ExplosionSvg';
 
 const CAR_COLORS = ['#ef4444', '#eab308', '#3b82f6', '#8b5cf6'];
-const SAFE_ZONE_INTERVAL = 5;
-
-function isSafeZoneLane(lane: number): boolean {
-  return lane > 0 && lane % SAFE_ZONE_INTERVAL === 0;
-}
+const CAR_VARIANTS: Array<'sedan' | 'pickup' | 'taxi' | 'sports'> = ['sedan', 'pickup', 'taxi', 'sports'];
 
 const difficultyLabels: Record<number, string> = {
-  1: 'Safe',
-  2: 'Classic',
-  3: 'Risky',
-  4: 'Hardcore',
+  1: 'Seguro',
+  2: 'Clásico',
+  3: 'Arriesgado',
+  4: 'Extremo',
 };
 
 const difficultyColors: Record<number, string> = {
@@ -32,48 +29,61 @@ function seededRandom(seed: number): number {
   return x - Math.floor(x);
 }
 
-/** Single animated car with random pause (0.3–4.0s) between each pass */
-function AnimatedCar({ goingDown, carColor, speed, initialDelay, stop }: {
-  goingDown: boolean; carColor: string; speed: number; initialDelay: number; stop?: boolean;
+/** Single animated car with random pause (0.3–4.0s) between each pass.
+ *  When `rushing` is true, the car accelerates (3x) and doesn't start new cycles. */
+function AnimatedCar({ goingDown, carColor, speed, initialDelay, variant, rushing }: {
+  goingDown: boolean; carColor: string; speed: number; initialDelay: number; variant?: 'sedan' | 'pickup' | 'taxi' | 'sports'; rushing?: boolean;
 }) {
   const [cycle, setCycle] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
+  const carRef = useRef<HTMLDivElement>(null);
+  const rushingRef = useRef(false);
+  rushingRef.current = !!rushing;
+
+  // Accelerate running animation via Web Animations API
+  useEffect(() => {
+    if (rushing && carRef.current) {
+      const anims = carRef.current.getAnimations();
+      anims.forEach(a => { a.playbackRate = 3; });
+    }
+  }, [rushing]);
 
   const handleAnimationEnd = useCallback(() => {
     setIsVisible(false);
+    if (rushingRef.current) return; // Car left — don't restart
     const pause = 300 + Math.random() * 3700; // 0.3s – 4.0s
     setTimeout(() => {
+      if (rushingRef.current) return;
       setIsVisible(true);
       setCycle(c => c + 1);
     }, pause);
   }, []);
 
-  const animClass = stop
-    ? (goingDown ? 'animate-emergency-brake-down' : 'animate-emergency-brake-up')
-    : (goingDown ? 'car-pass-ltr' : 'car-pass-rtl');
+  const animClass = goingDown ? 'car-pass-ltr' : 'car-pass-rtl';
 
-  // If not stop-mode and not currently in an animation cycle (waiting for next pass), hide it
-  if (!isVisible && !stop) return null;
+  if (!isVisible) return null;
 
   return (
     <div
-      key={`${cycle}-${stop}`}
-      className={`absolute left-1/2 -translate-x-1/2 w-20 h-32 drop-shadow-lg ${stop ? animClass : ''}`}
+      ref={carRef}
+      key={cycle}
+      className="absolute left-1/2 -translate-x-1/2 w-28 h-40 lg:w-20 lg:h-32 drop-shadow-lg"
       style={{
-        animation: !stop ? `${animClass} ${speed}s linear ${cycle === 0 ? initialDelay : 0}s forwards` : undefined,
+        animation: `${animClass} ${speed}s linear ${cycle === 0 ? initialDelay : 0}s forwards`,
       }}
-      onAnimationEnd={!stop ? handleAnimationEnd : undefined}
+      onAnimationEnd={handleAnimationEnd}
     >
-      <CarSvg color={carColor} direction={goingDown ? 'up' : 'down'} className="animate-wobble" />
+      <CarSvg color={carColor} direction={goingDown ? 'up' : 'down'} className="animate-wobble" variant={variant} />
     </div>
   );
 }
 
 /** Decorative animated car passing through unrevealed lanes (purely cosmetic).
  *  Always 1 car per lane — higher difficulty = faster speed. */
-function AnimatedCars({ laneNum, difficulty, stop }: { laneNum: number; difficulty: number; stop?: boolean }) {
+function AnimatedCars({ laneNum, difficulty, rushing }: { laneNum: number; difficulty: number; rushing?: boolean }) {
   const goingDown = laneNum % 2 === 0;
   const carColor = CAR_COLORS[laneNum % 4];
+  const variant = CAR_VARIANTS[Math.floor(seededRandom(laneNum * 31) * 4)];
 
   const rand = seededRandom(laneNum * 100);
   // Synchronized with the 0.4s crash animation speed
@@ -87,8 +97,47 @@ function AnimatedCars({ laneNum, difficulty, stop }: { laneNum: number; difficul
         carColor={carColor}
         speed={speed}
         initialDelay={delay}
-        stop={stop}
+        variant={variant}
+        rushing={rushing}
       />
+    </div>
+  );
+}
+
+/** Road barrier + optional half-visible stopped car (railroad crossing style). */
+function AnimatedBarrier({ laneNum, showCar }: { laneNum: number; showCar: boolean }) {
+  const goingDown = laneNum % 2 === 0;
+  const carColor = CAR_COLORS[laneNum % 4];
+  const carVariant = CAR_VARIANTS[Math.floor(seededRandom(laneNum * 31) * 4)];
+  const side = goingDown ? 'left' as const : 'right' as const;
+
+  return (
+    <div className="absolute inset-0 pointer-events-none z-[58] overflow-hidden">
+      {/* Car brakes to a halt, half-visible at the edge (30% chance) */}
+      {showCar && (
+        <div
+          className={`absolute w-28 h-40 lg:w-20 lg:h-32 drop-shadow-lg ${goingDown ? 'animate-car-brake-top' : 'animate-car-brake-bottom'}`}
+          style={goingDown
+            ? { top: 0, left: '50%' }
+            : { bottom: 0, left: '50%' }
+          }
+        >
+          <CarSvg color={carColor} direction={goingDown ? 'up' : 'down'} variant={carVariant} />
+        </div>
+      )}
+
+      {/* Barrier always drops */}
+      <div
+        className="absolute left-[30%] -translate-x-1/2 animate-barrier-drop-down"
+        style={goingDown
+          ? { top: '20%' }
+          : { bottom: '20%' }
+        }
+      >
+        <div className="w-20 h-24 lg:w-16 lg:h-20 drop-shadow-lg">
+          <BarrierSvg side={side} />
+        </div>
+      </div>
     </div>
   );
 }
@@ -96,6 +145,12 @@ function AnimatedCars({ laneNum, difficulty, stop }: { laneNum: number; difficul
 export default function ChickenRoad() {
   const { status, activeGame, crossingLane } = useSelector((state: RootState) => state.game);
   const [visibleLanes, setVisibleLanes] = useState(6);
+  const brakingCarCache = useRef<Map<number, boolean>>(new Map());
+
+  // Reset braking car cache on new game
+  useEffect(() => {
+    if (status === 'idle') brakingCarCache.current.clear();
+  }, [status]);
 
   // Dynamic lanes based on width
   useEffect(() => {
@@ -138,19 +193,17 @@ export default function ChickenRoad() {
   // Build lane data from left (viewStart+1) to right (viewEnd) — columns left to right
   const lanes: Array<{
     laneNum: number;
-    revealed: { lane: number; hasCar: boolean; isSafeZone: boolean } | undefined;
-    safeZone: boolean;
+    revealed: { lane: number; hasCar: boolean } | undefined;
     isNextLane: boolean;
     isChickenHere: boolean;
   }> = [];
 
   for (let lane = Math.max(1, viewStart + 1); lane <= viewEnd; lane++) {
     const revealed = revealedLanes.find(r => r.lane === lane);
-    const safeZone = isSafeZoneLane(lane);
     const isNextLane = isActive && lane === currentLane + 1;
     const isChickenHere = lane === currentLane && (isActive || isGameOver);
 
-    lanes.push({ laneNum: lane, revealed, safeZone, isNextLane, isChickenHere });
+    lanes.push({ laneNum: lane, revealed, isNextLane, isChickenHere });
   }
 
   return (
@@ -160,20 +213,20 @@ export default function ChickenRoad() {
       {/* ─── STRUCTURED HUD BAR ─── */}
       <div className="game-hud-bar">
         <div key={activeGame?.currentMultiplier ?? 0} className="flex gap-2 items-center animate-mult-pulse">
-          <div className="w-2.5 h-2.5 rounded-full bg-success shadow-[0_0_10px_#2dd4bf] animate-pulse" />
-          <div className="flex items-center gap-2 bg-success/10 border border-success/20 rounded-full px-3 py-1">
-            <span className="text-[8px] font-black text-success uppercase tracking-widest leading-none">MULT</span>
-            <span className="text-sm sm:text-lg font-black text-success font-mono leading-none">
+          <div className="w-3 h-3 lg:w-2.5 lg:h-2.5 rounded-full bg-success shadow-[0_0_10px_#2dd4bf] animate-pulse" />
+          <div className="flex items-center gap-2 bg-success/10 border border-success/20 rounded-full px-3 py-1.5 lg:py-1">
+            <span className="text-[11px] lg:text-[8px] font-black text-success uppercase tracking-widest leading-none">MULT</span>
+            <span className="text-xl lg:text-lg font-black text-success font-mono leading-none">
               {activeGame?.currentMultiplier?.toFixed(2) ?? '1.00'}x
             </span>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <div className={`hidden sm:block px-2 py-0.5 rounded-full border text-[9px] font-bold ${difficultyColors[difficulty]}`}>
+          <div className={`hidden sm:block px-2.5 py-1 lg:px-2 lg:py-0.5 rounded-full border text-[11px] lg:text-[9px] font-bold ${difficultyColors[difficulty]}`}>
             {difficultyLabels[difficulty]}
           </div>
-          <div className={`px-3 py-1 rounded-full border-2 text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all ${isActive
+          <div className={`px-3 py-1.5 lg:py-1 rounded-full border-2 text-xs lg:text-[10px] font-black uppercase tracking-widest transition-all ${isActive
             ? 'border-action-primary/50 text-action-primary bg-action-primary/10'
             : status === 'hit'
               ? 'border-danger/50 text-danger bg-danger/10'
@@ -190,11 +243,11 @@ export default function ChickenRoad() {
           <div className="sidewalk-station">
             <div className="absolute inset-0 opacity-[0.05] pattern-dots" />
             <div className="absolute right-[-24px] top-1/2 -translate-y-1/2 z-10 opacity-20 transform rotate-[-90deg]">
-              <span className="text-[8px] font-black tracking-widest text-white uppercase whitespace-nowrap">SIDEWALK</span>
+              <span className="text-[8px] font-black tracking-widest text-white uppercase whitespace-nowrap">ACERA</span>
             </div>
             {currentLane === 0 && isActive && (
               <div className="relative z-20 animate-idle-bounce">
-                <div className="w-14 h-14 sm:w-16 sm:h-16 drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)]">
+                <div className="w-20 h-20 lg:w-16 lg:h-16 drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)]">
                   <ChickenSvg />
                 </div>
               </div>
@@ -203,44 +256,38 @@ export default function ChickenRoad() {
         )}
 
         {/* Lanes — rendered as vertical columns left to right */}
-        {lanes.map(({ laneNum, revealed, safeZone, isNextLane, isChickenHere }) => {
+        {lanes.map(({ laneNum, revealed, isNextLane, isChickenHere }) => {
           const isCrossingThisLane = crossingLane !== null && crossingLane.lane === laneNum;
           const isRevealed = !!revealed;
           const isHitLane = (status === 'hit' || justHit) && (revealed?.hasCar || (isCrossingThisLane && !crossingLane.safe));
           const goingDown = laneNum % 2 === 0;
           const carColor = CAR_COLORS[laneNum % 4];
-          const showStoppedCar = seededRandom(laneNum * 777) < 0.66;
+          const carVariant = CAR_VARIANTS[Math.floor(seededRandom(laneNum * 31) * 4)];
+          if (!brakingCarCache.current.has(laneNum)) {
+            brakingCarCache.current.set(laneNum, Math.random() < 0.30);
+          }
+          const showBrakingCar = brakingCarCache.current.get(laneNum)!;
 
           return (
             <div
               key={laneNum}
-              className={`cartoon-road-lane ${isNextLane ? 'cartoon-road-lane-active' : ''} ${isHitLane ? 'bg-red-500/20' : ''
-                } ${safeZone ? 'bg-success/5' : ''}`}
+              className={`cartoon-road-lane ${isNextLane ? 'cartoon-road-lane-active' : ''} ${isHitLane ? 'bg-red-500/20' : ''}`}
             >
               {/* Road Markings — vertical stripe */}
-              {!safeZone && <div className="road-stripe" />}
+              <div className="road-stripe" />
 
               {/* Lane Designator — top of column */}
               <div className="absolute top-2 left-1/2 -translate-x-1/2 z-0 opacity-20">
-                <span className="text-[10px] sm:text-xs font-black text-action-primary/60 italic">L{laneNum}</span>
+                <span className="text-sm lg:text-xs font-black text-action-primary/60 italic">L{laneNum}</span>
               </div>
 
               {/* Lane Content Container */}
               <div className="relative flex-1 h-full flex items-center justify-center">
 
-                {/* Safe Zone Visuals — borders top/bottom */}
-                {safeZone && (
-                  <div className="absolute inset-0 border-y-[3px] border-dashed border-success/40 flex items-center justify-center" style={{ background: 'linear-gradient(180deg, rgba(45,212,191,0.06) 0%, transparent 30%, transparent 70%, rgba(45,212,191,0.06) 100%)' }}>
-                    <div className="flex flex-col items-center gap-1">
-                      <span className="text-[10px] font-black tracking-[0.15em] text-success/60 uppercase px-2 py-0.5 rounded bg-success/10 border border-success/20">SAFE</span>
-                    </div>
-                  </div>
-                )}
-
                 {/* Next Multiplier Target (Manhole Cover style) */}
                 {isNextLane && activeGame?.nextMultiplier && !isChickenHere && (
                   <div className="manhole-cover animate-pop z-40 cursor-pointer hover:scale-105 active:scale-95 group">
-                    <span className="text-[9px] sm:text-[10px] font-black leading-none text-white drop-shadow-md">{activeGame.nextMultiplier.toFixed(2)}x</span>
+                    <span className="text-base lg:text-[10px] font-black leading-none text-white drop-shadow-md">{activeGame.nextMultiplier.toFixed(2)}x</span>
                   </div>
                 )}
 
@@ -248,12 +295,12 @@ export default function ChickenRoad() {
                 {isCrossingThisLane && !crossingLane.safe && (
                   <div className="absolute inset-0 z-50 pointer-events-none overflow-hidden">
                     <div
-                      className={`absolute left-1/2 w-20 h-32 drop-shadow-lg ${goingDown ? 'animate-crash-from-left' : 'animate-crash-from-right'}`}
+                      className={`absolute left-1/2 w-28 h-40 lg:w-20 lg:h-32 drop-shadow-lg ${goingDown ? 'animate-crash-from-left' : 'animate-crash-from-right'}`}
                     >
-                      <CarSvg color={carColor} direction={goingDown ? 'up' : 'down'} />
+                      <CarSvg color={carColor} direction={goingDown ? 'up' : 'down'} variant={carVariant} />
                     </div>
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[55] animate-crash-fire">
-                      <ExplosionSvg className="w-16 h-16 sm:w-20 sm:h-20 drop-shadow-[0_4px_0_rgba(255,0,0,0.4)] animate-shake-hard" />
+                      <ExplosionSvg className="w-24 h-24 lg:w-20 lg:h-20 drop-shadow-[0_4px_0_rgba(255,0,0,0.4)] animate-shake-hard" />
                     </div>
                   </div>
                 )}
@@ -261,39 +308,34 @@ export default function ChickenRoad() {
                 {/* ─── PHASE 2: REVEALED STATES ─── */}
                 {isRevealed && revealed.hasCar && !isChickenHere && (
                   <div className="absolute inset-0 z-50 pointer-events-none overflow-hidden">
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-32 drop-shadow-lg">
-                      <CarSvg color={carColor} direction={goingDown ? 'up' : 'down'} />
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-28 h-40 lg:w-20 lg:h-32 drop-shadow-lg">
+                      <CarSvg color={carColor} direction={goingDown ? 'up' : 'down'} variant={carVariant} />
                     </div>
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[55]">
-                      <ExplosionSvg className="w-16 h-16 sm:w-20 sm:h-20 drop-shadow-[0_4px_0_rgba(255,0,0,0.4)] animate-shake-hard" />
+                      <ExplosionSvg className="w-24 h-24 lg:w-20 lg:h-20 drop-shadow-[0_4px_0_rgba(255,0,0,0.4)] animate-shake-hard" />
                     </div>
                   </div>
                 )}
 
-                {/* Checkmark bubble */}
-                {isRevealed && !revealed.hasCar && (
-                  <div className="relative z-50 animate-pop">
-                    <div className="multiplier-bubble-cartoon bg-success border-success/80 text-white shadow-[0_0_12px_rgba(45,212,191,0.3)]">
-                      <span className="text-lg font-black">✓</span>
-                    </div>
-                  </div>
+
+                {/* Decorative Traffic — stays during safe crossing so car accelerates out */}
+                {!isRevealed && !(isCrossingThisLane && !crossingLane.safe) && (
+                  <AnimatedCars laneNum={laneNum} difficulty={difficulty} rushing={isCrossingThisLane && crossingLane.safe} />
                 )}
 
-                {/* Decorative Traffic (only if not revealed and not crossing) */}
-                {!isRevealed && !isCrossingThisLane && !safeZone && (
-                  <AnimatedCars laneNum={laneNum} difficulty={difficulty} />
-                )}
-
-                {/* Emergency Brake Car (if safe) */}
-                {((isCrossingThisLane && crossingLane.safe) || (isRevealed && !revealed.hasCar)) && !safeZone && showStoppedCar && (
-                  <AnimatedCars laneNum={laneNum} difficulty={difficulty} stop={true} />
+                {/* Road Barrier (always on safe lanes) */}
+                {((isCrossingThisLane && crossingLane.safe) || (isRevealed && !revealed.hasCar)) && (
+                  <AnimatedBarrier laneNum={laneNum} showCar={showBrakingCar} />
                 )}
 
                 {/* ────── CHICKEN SPRITE ────── */}
                 {isChickenHere && (() => {
-                  const chickenAnim = (isCrossingThisLane && crossingLane?.safe && !crossingLane?.isSafeZone)
+                  const isSafeCrossing = isCrossingThisLane && crossingLane?.safe;
+                  const chickenAnim = isSafeCrossing
                     ? 'animate-dodge'
-                    : 'animate-hop';
+                    : isCrossingThisLane
+                      ? 'animate-hop'
+                      : '';
                   const isHit = status === 'hit' || justHit;
 
                   return (
@@ -306,7 +348,7 @@ export default function ChickenRoad() {
                             : undefined,
                         }}
                       >
-                        <div className="w-14 h-14 sm:w-16 sm:h-16 drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)]">
+                        <div className="w-20 h-20 lg:w-16 lg:h-16 drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)]">
                           <ChickenSvg hit={isHit} />
                         </div>
                       </div>

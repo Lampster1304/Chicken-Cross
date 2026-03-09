@@ -7,6 +7,7 @@ interface User {
   balance: number;
   totalWagered: number;
   vipLevel: string;
+  role: string;
 }
 
 interface AuthState {

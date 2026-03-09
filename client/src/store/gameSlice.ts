@@ -5,7 +5,6 @@ type GameStatus = 'idle' | 'active' | 'hit' | 'cashed_out';
 interface RevealedLane {
   lane: number;
   hasCar: boolean;
-  isSafeZone: boolean;
 }
 
 interface ActiveGame {
@@ -36,15 +35,36 @@ interface FeedEntry {
   username: string;
   multiplier?: number;
   profit?: number;
+  betAmount?: number;
   difficulty: number;
   lane?: number;
   timestamp: number;
 }
 
+export interface AutobetConfig {
+  enabled: boolean;
+  totalRounds: number;
+  onWinAction: 'reset' | 'increase';
+  onWinPercent: number;
+  onLossAction: 'reset' | 'increase';
+  onLossPercent: number;
+  stopOnProfit: number;
+  stopOnLoss: number;
+}
+
+export interface AutobetState {
+  active: boolean;
+  roundsPlayed: number;
+  wins: number;
+  losses: number;
+  totalProfit: number;
+  currentBet: number;
+  baseBet: number;
+}
+
 interface CrossingState {
   lane: number;
   safe: boolean;
-  isSafeZone: boolean;
   pendingData: {
     multiplier: number;
     nextMultiplier: number | null;
@@ -60,7 +80,20 @@ interface GameState {
   feed: FeedEntry[];
   isLoading: boolean;
   error: string | null;
+  autobetConfig: AutobetConfig;
+  autobetState: AutobetState | null;
 }
+
+const defaultAutobetConfig: AutobetConfig = {
+  enabled: false,
+  totalRounds: 0,
+  onWinAction: 'reset',
+  onWinPercent: 0,
+  onLossAction: 'reset',
+  onLossPercent: 0,
+  stopOnProfit: 0,
+  stopOnLoss: 0,
+};
 
 const initialState: GameState = {
   status: 'idle',
@@ -70,6 +103,8 @@ const initialState: GameState = {
   feed: [],
   isLoading: false,
   error: null,
+  autobetConfig: defaultAutobetConfig,
+  autobetState: null,
 };
 
 let feedIdCounter = 0;
@@ -119,7 +154,6 @@ const gameSlice = createSlice({
       action: PayloadAction<{
         lane: number;
         safe: boolean;
-        isSafeZone: boolean;
         multiplier: number;
         nextMultiplier: number | null;
         revealedLane: RevealedLane;
@@ -131,7 +165,7 @@ const gameSlice = createSlice({
       state.activeGame.currentMultiplier = p.multiplier;
       state.activeGame.nextMultiplier = p.nextMultiplier;
       state.activeGame.revealedLanes.push(p.revealedLane);
-      if (p.safe && !p.isSafeZone) {
+      if (p.safe) {
         state.activeGame.riskyLanesCrossed++;
       }
       // If hit (safe=false), keep isLoading true to lock UI until gameOver overlay
@@ -143,7 +177,6 @@ const gameSlice = createSlice({
       action: PayloadAction<{
         lane: number;
         safe: boolean;
-        isSafeZone: boolean;
         multiplier: number;
         nextMultiplier: number | null;
         revealedLane: RevealedLane;
@@ -159,7 +192,6 @@ const gameSlice = createSlice({
       state.crossingLane = {
         lane: p.lane,
         safe: p.safe,
-        isSafeZone: p.isSafeZone,
         pendingData: {
           multiplier: p.multiplier,
           nextMultiplier: p.nextMultiplier,
@@ -175,7 +207,7 @@ const gameSlice = createSlice({
       const c = state.crossingLane;
       // Now officially reveal the lane
       state.activeGame.revealedLanes.push(c.pendingData.revealedLane);
-      if (c.safe && !c.isSafeZone) {
+      if (c.safe) {
         state.activeGame.riskyLanesCrossed++;
       }
       // If safe, unlock UI. If hit, keep loading until gameOver overlay.
@@ -277,6 +309,68 @@ const gameSlice = createSlice({
     clearError(state) {
       state.error = null;
     },
+
+    setAutobetConfig(state, action: PayloadAction<Partial<AutobetConfig>>) {
+      state.autobetConfig = { ...state.autobetConfig, ...action.payload };
+    },
+
+    startAutobet(state, action: PayloadAction<{ baseBet: number }>) {
+      state.autobetConfig.enabled = true;
+      state.autobetState = {
+        active: true,
+        roundsPlayed: 0,
+        wins: 0,
+        losses: 0,
+        totalProfit: 0,
+        currentBet: action.payload.baseBet,
+        baseBet: action.payload.baseBet,
+      };
+    },
+
+    stopAutobet(state) {
+      state.autobetConfig.enabled = false;
+      if (state.autobetState) {
+        state.autobetState.active = false;
+      }
+    },
+
+    autobetRoundComplete(state, action: PayloadAction<{ won: boolean; profit: number }>) {
+      if (!state.autobetState) return;
+      const s = state.autobetState;
+      const config = state.autobetConfig;
+      s.roundsPlayed++;
+      s.totalProfit += action.payload.profit;
+
+      if (action.payload.won) {
+        s.wins++;
+        if (config.onWinAction === 'reset') {
+          s.currentBet = s.baseBet;
+        } else {
+          s.currentBet = Math.round(s.currentBet * (1 + config.onWinPercent / 100) * 100) / 100;
+        }
+      } else {
+        s.losses++;
+        if (config.onLossAction === 'reset') {
+          s.currentBet = s.baseBet;
+        } else {
+          s.currentBet = Math.round(s.currentBet * (1 + config.onLossPercent / 100) * 100) / 100;
+        }
+      }
+
+      // Check stop conditions
+      if (config.totalRounds > 0 && s.roundsPlayed >= config.totalRounds) {
+        s.active = false;
+        config.enabled = false;
+      }
+      if (config.stopOnProfit > 0 && s.totalProfit >= config.stopOnProfit) {
+        s.active = false;
+        config.enabled = false;
+      }
+      if (config.stopOnLoss > 0 && s.totalProfit <= -config.stopOnLoss) {
+        s.active = false;
+        config.enabled = false;
+      }
+    },
   },
 });
 
@@ -292,5 +386,9 @@ export const {
   addFeedEntry,
   gameError,
   clearError,
+  setAutobetConfig,
+  startAutobet,
+  stopAutobet,
+  autobetRoundComplete,
 } = gameSlice.actions;
 export default gameSlice.reducer;

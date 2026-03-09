@@ -23,17 +23,17 @@ export async function deductBetAmount(
     );
 
     if (userResult.rows.length === 0) {
-      throw new Error('User not found');
+      throw new Error('Usuario no encontrado');
     }
 
     const balance = parseFloat(userResult.rows[0].balance);
 
     if (balance < amount) {
-      throw new Error('Insufficient balance');
+      throw new Error('Saldo insuficiente');
     }
 
     if (amount <= 0) {
-      throw new Error('Bet amount must be positive');
+      throw new Error('El monto de la apuesta debe ser positivo');
     }
 
     // Deduct balance and track wagered

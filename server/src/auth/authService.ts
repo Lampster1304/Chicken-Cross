@@ -14,6 +14,7 @@ export interface UserPayload {
   id: number;
   username: string;
   email: string;
+  role: string;
 }
 
 export async function registerUser(username: string, email: string, password: string) {
@@ -24,7 +25,7 @@ export async function registerUser(username: string, email: string, password: st
   );
 
   if (existing.rows.length > 0) {
-    throw new Error('User with this email or username already exists');
+    throw new Error('Ya existe un usuario con ese email o nombre de usuario');
   }
 
   // Hash password
@@ -34,7 +35,7 @@ export async function registerUser(username: string, email: string, password: st
   const result = await pool.query(
     `INSERT INTO users (username, email, password_hash, balance)
      VALUES ($1, $2, $3, $4)
-     RETURNING id, username, email, balance, total_wagered, vip_level`,
+     RETURNING id, username, email, balance, total_wagered, vip_level, role`,
     [username, email, passwordHash, INITIAL_BALANCE]
   );
 
@@ -51,6 +52,7 @@ export async function registerUser(username: string, email: string, password: st
       balance: parseFloat(user.balance),
       totalWagered: parseFloat(user.total_wagered || '0'),
       vipLevel: user.vip_level || 'bronze',
+      role: user.role || 'user',
     },
     ...tokens,
   };
@@ -58,19 +60,19 @@ export async function registerUser(username: string, email: string, password: st
 
 export async function loginUser(email: string, password: string) {
   const result = await pool.query(
-    'SELECT id, username, email, password_hash, balance, total_wagered, vip_level FROM users WHERE email = $1',
+    'SELECT id, username, email, password_hash, balance, total_wagered, vip_level, role FROM users WHERE email = $1',
     [email]
   );
 
   if (result.rows.length === 0) {
-    throw new Error('Invalid email or password');
+    throw new Error('Email o contraseña inválidos');
   }
 
   const user = result.rows[0];
 
   const isValid = await bcrypt.compare(password, user.password_hash);
   if (!isValid) {
-    throw new Error('Invalid email or password');
+    throw new Error('Email o contraseña inválidos');
   }
 
   const tokens = await generateTokens(user);
@@ -83,6 +85,7 @@ export async function loginUser(email: string, password: string) {
       balance: parseFloat(user.balance),
       totalWagered: parseFloat(user.total_wagered || '0'),
       vipLevel: user.vip_level || 'bronze',
+      role: user.role || 'user',
     },
     ...tokens,
   };
@@ -94,7 +97,7 @@ export async function refreshAccessToken(refreshToken: string) {
   try {
     payload = jwt.verify(refreshToken, JWT_REFRESH_SECRET) as UserPayload;
   } catch {
-    throw new Error('Invalid refresh token');
+    throw new Error('Token de actualización inválido');
   }
 
   // Check if token exists in DB
@@ -104,7 +107,7 @@ export async function refreshAccessToken(refreshToken: string) {
   );
 
   if (tokenResult.rows.length === 0) {
-    throw new Error('Refresh token not found or expired');
+    throw new Error('Token de actualización no encontrado o expirado');
   }
 
   // Delete old refresh token
@@ -112,12 +115,12 @@ export async function refreshAccessToken(refreshToken: string) {
 
   // Get fresh user data
   const userResult = await pool.query(
-    'SELECT id, username, email, balance, total_wagered, vip_level FROM users WHERE id = $1',
+    'SELECT id, username, email, balance, total_wagered, vip_level, role FROM users WHERE id = $1',
     [payload.id]
   );
 
   if (userResult.rows.length === 0) {
-    throw new Error('User not found');
+    throw new Error('Usuario no encontrado');
   }
 
   const user = userResult.rows[0];
@@ -131,6 +134,7 @@ export async function refreshAccessToken(refreshToken: string) {
       balance: parseFloat(user.balance),
       totalWagered: parseFloat(user.total_wagered || '0'),
       vipLevel: user.vip_level || 'bronze',
+      role: user.role || 'user',
     },
     ...tokens,
   };
@@ -138,12 +142,12 @@ export async function refreshAccessToken(refreshToken: string) {
 
 export async function getUserById(userId: number) {
   const result = await pool.query(
-    'SELECT id, username, email, balance, total_wagered, vip_level FROM users WHERE id = $1',
+    'SELECT id, username, email, balance, total_wagered, vip_level, role FROM users WHERE id = $1',
     [userId]
   );
 
   if (result.rows.length === 0) {
-    throw new Error('User not found');
+    throw new Error('Usuario no encontrado');
   }
 
   const user = result.rows[0];
@@ -154,6 +158,7 @@ export async function getUserById(userId: number) {
     balance: parseFloat(user.balance),
     totalWagered: parseFloat(user.total_wagered || '0'),
     vipLevel: user.vip_level || 'bronze',
+    role: user.role || 'user',
   };
 }
 
@@ -161,11 +166,12 @@ export function verifyAccessToken(token: string): UserPayload {
   return jwt.verify(token, JWT_SECRET) as UserPayload;
 }
 
-async function generateTokens(user: { id: number; username: string; email: string }) {
+async function generateTokens(user: { id: number; username: string; email: string; role: string }) {
   const payload: UserPayload = {
     id: user.id,
     username: user.username,
     email: user.email,
+    role: user.role || 'user',
   };
 
   const accessToken = jwt.sign(payload, JWT_SECRET, { expiresIn: ACCESS_TOKEN_EXPIRY });

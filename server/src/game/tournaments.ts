@@ -36,7 +36,7 @@ tournamentRouter.get('/', async (_req: Request, res: Response) => {
       })),
     });
   } catch {
-    res.status(500).json({ error: 'Failed to fetch tournaments' });
+    res.status(500).json({ error: 'Error al obtener los torneos' });
   }
 });
 
@@ -47,7 +47,7 @@ tournamentRouter.get('/:id', async (req: Request, res: Response) => {
 
     const tourney = await pool.query('SELECT * FROM tournaments WHERE id = $1', [id]);
     if (tourney.rows.length === 0) {
-      return res.status(404).json({ error: 'Tournament not found' });
+      return res.status(404).json({ error: 'Torneo no encontrado' });
     }
 
     const entries = await pool.query(
@@ -84,7 +84,7 @@ tournamentRouter.get('/:id', async (req: Request, res: Response) => {
       })),
     });
   } catch {
-    res.status(500).json({ error: 'Failed to fetch tournament' });
+    res.status(500).json({ error: 'Error al obtener el torneo' });
   }
 });
 
@@ -104,14 +104,14 @@ tournamentRouter.post('/:id/join', authMiddleware, async (req: Request, res: Res
 
     if (tourney.rows.length === 0) {
       await client.query('ROLLBACK');
-      return res.status(404).json({ error: 'Tournament not found' });
+      return res.status(404).json({ error: 'Torneo no encontrado' });
     }
 
     const t = tourney.rows[0];
 
     if (t.status !== 'active' && t.status !== 'upcoming') {
       await client.query('ROLLBACK');
-      return res.status(400).json({ error: 'Tournament is not open for registration' });
+      return res.status(400).json({ error: 'El torneo no está abierto para registro' });
     }
 
     // Check if already joined
@@ -122,7 +122,7 @@ tournamentRouter.post('/:id/join', authMiddleware, async (req: Request, res: Res
 
     if (existing.rows.length > 0) {
       await client.query('ROLLBACK');
-      return res.status(400).json({ error: 'Already joined this tournament' });
+      return res.status(400).json({ error: 'Ya te uniste a este torneo' });
     }
 
     // Check entry fee
@@ -135,7 +135,7 @@ tournamentRouter.post('/:id/join', authMiddleware, async (req: Request, res: Res
 
       if (parseFloat(user.rows[0].balance) < entryFee) {
         await client.query('ROLLBACK');
-        return res.status(400).json({ error: 'Insufficient balance for entry fee' });
+        return res.status(400).json({ error: 'Saldo insuficiente para la cuota de entrada' });
       }
 
       await client.query(

@@ -108,12 +108,24 @@
 
 /* ROAD DESIGN */
 .cartoon-road-lane {
-  @apply relative w-[110px] sm:w-[130px] lg:w-[160px] flex-shrink-0 flex items-center justify-center bg-[#1e2040] border-x border-white/5 transition-all duration-300;
+  @apply relative w-[150px] flex-shrink-0 flex items-center justify-center bg-[#1e2040] border-x border-white/5 transition-all duration-300;
   height: 100%;
   background-image:
     linear-gradient(90deg, rgba(163, 230, 53, 0.03) 1px, transparent 1px),
     linear-gradient(rgba(163, 230, 53, 0.03) 1px, transparent 1px);
   background-size: 20px 20px;
+}
+
+@screen lg {
+  .cartoon-road-lane {
+    width: 160px;
+  }
+}
+
+@screen sm {
+  .cartoon-road-lane {
+    width: 160px;
+  }
 }
 
 .cartoon-road-lane-active {
@@ -133,7 +145,7 @@
 }
 
 .sidewalk-station {
-  @apply w-20 sm:w-32 flex-shrink-0 flex items-center justify-center relative;
+  @apply w-28 flex-shrink-0 flex items-center justify-center relative;
   background: linear-gradient(135deg, #3d3f6a 0%, #2a2b5a 100%);
   background-image:
     linear-gradient(90deg, #33356a 2px, transparent 2px),
@@ -142,19 +154,45 @@
   border-right: 8px solid #fbbf24;
 }
 
+@screen lg {
+  .sidewalk-station {
+    width: 8rem; /* w-32 original */
+  }
+}
+
+@screen sm {
+  .sidewalk-station {
+    width: 9rem; /* w-36 */
+  }
+}
+
 .manhole-cover {
-  @apply relative rounded-full flex flex-col items-center justify-center border-[3px] sm:border-[4px] border-[#fbbf24];
-  width: 55px;
-  height: 55px;
-  @apply sm:w-[70px] sm:h-[70px];
+  @apply relative rounded-full flex flex-col items-center justify-center border-[4px] border-[#fbbf24];
+  width: 80px;
+  height: 80px;
   background: radial-gradient(circle, #3d3f6a 0%, #252660 100%);
   box-shadow: inset 0 4px 8px rgba(0, 0, 0, 0.4), 0 0 16px rgba(251, 191, 36, 0.2);
 }
 
+@screen lg {
+  .manhole-cover {
+    width: 70px;
+    height: 70px;
+    border-width: 4px;
+  }
+}
+
 .game-hud-bar {
-  @apply sticky top-0 left-0 right-0 z-[100] flex justify-between items-center px-4 py-2 backdrop-blur-md;
+  @apply sticky top-0 left-0 right-0 z-[100] flex justify-between items-center px-4 py-3 backdrop-blur-md;
   background: linear-gradient(180deg, rgba(18, 19, 42, 0.95) 0%, rgba(26, 27, 58, 0.9) 100%);
   border-bottom: 2px solid rgba(139, 92, 246, 0.2);
+}
+
+@screen lg {
+  .game-hud-bar {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
 }
 
 .manhole-cover::before {
@@ -347,32 +385,60 @@
   }
 }
 
-@keyframes emergency-brake-ltr {
+/* ─── BARRIER DROP (safe lane — railroad barrier falls into place) ─── */
+@keyframes barrier-drop-down {
   0% {
-    top: -120px;
+    transform: translateY(-100%) rotate(-15deg);
+    opacity: 0;
+  }
+
+  60% {
+    transform: translateY(5%) rotate(2deg);
+    opacity: 1;
+  }
+
+  80% {
+    transform: translateY(-3%) rotate(-1deg);
+    opacity: 1;
   }
 
   100% {
-    top: 0%;
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
   }
 }
 
-@keyframes emergency-brake-rtl {
+.animate-barrier-drop-down {
+  animation: barrier-drop-down 0.5s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+}
+
+/* ─── CAR BRAKE (car enters and screeches to a halt, half visible) ─── */
+@keyframes car-brake-from-top {
   0% {
-    top: 110%;
+    transform: translateX(-50%) translateY(-100%);
   }
 
   100% {
-    top: 60%;
+    transform: translateX(-50%) translateY(-50%);
   }
 }
 
-.animate-emergency-brake-down {
-  animation: emergency-brake-ltr 0.4s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+@keyframes car-brake-from-bottom {
+  0% {
+    transform: translateX(-50%) translateY(100%);
+  }
+
+  100% {
+    transform: translateX(-50%) translateY(50%);
+  }
 }
 
-.animate-emergency-brake-up {
-  animation: emergency-brake-rtl 0.4s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+.animate-car-brake-top {
+  animation: car-brake-from-top 0.4s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+}
+
+.animate-car-brake-bottom {
+  animation: car-brake-from-bottom 0.4s cubic-bezier(0.19, 1, 0.22, 1) forwards;
 }
 
 .animate-safe-pass-ltr {
@@ -662,12 +728,13 @@
 
 /* Bubbly Multiplier */
 .multiplier-bubble-cartoon {
-  @apply flex flex-col items-center justify-center rounded-2xl font-black text-xs border-[3px] shadow-lg transition-all duration-300;
-  width: 40px;
-  height: 40px;
+  @apply flex flex-col items-center justify-center rounded-2xl font-black text-sm border-[3px] shadow-lg transition-all duration-300;
+  width: 56px;
+  height: 56px;
 
-  @screen sm {
+  @screen lg {
     width: 48px;
     height: 48px;
+    font-size: 0.75rem;
   }
 }

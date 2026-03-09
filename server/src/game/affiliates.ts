@@ -71,7 +71,7 @@ affiliateRouter.get('/stats', authMiddleware, async (req: Request, res: Response
     );
 
     if (userResult.rows.length === 0) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: 'Usuario no encontrado' });
     }
 
     let { referral_code, affiliate_earnings } = userResult.rows[0];
@@ -110,7 +110,7 @@ affiliateRouter.get('/stats', authMiddleware, async (req: Request, res: Response
       })),
     });
   } catch {
-    res.status(500).json({ error: 'Failed to fetch affiliate stats' });
+    res.status(500).json({ error: 'Error al obtener estadísticas de afiliado' });
   }
 });
 

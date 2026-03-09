@@ -9,11 +9,19 @@ import LeaderboardPage from './pages/LeaderboardPage';
 import VipPage from './pages/VipPage';
 import AffiliatePage from './pages/AffiliatePage';
 import TournamentsPage from './pages/TournamentsPage';
+import AdminLoginPage from './pages/admin/AdminLoginPage';
+import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const token = useSelector((state: RootState) => state.auth.accessToken);
   const user = useSelector((state: RootState) => state.auth.user);
   if (!token || !user) return <Navigate to="/login" replace />;
+  return <>{children}</>;
+}
+
+function AdminProtectedRoute({ children }: { children: React.ReactNode }) {
+  const token = useSelector((state: RootState) => state.admin.accessToken);
+  if (!token) return <Navigate to="/admin/login" replace />;
   return <>{children}</>;
 }
 
@@ -49,6 +57,15 @@ function App() {
         }
       />
       <Route path="/tournaments" element={<TournamentsPage />} />
+      <Route path="/admin/login" element={<AdminLoginPage />} />
+      <Route
+        path="/admin"
+        element={
+          <AdminProtectedRoute>
+            <AdminDashboardPage />
+          </AdminProtectedRoute>
+        }
+      />
       <Route path="*" element={<Navigate to="/game" replace />} />
     </Routes>
   );

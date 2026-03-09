@@ -3,8 +3,6 @@
  * Used for Provably Fair verification on the client.
  */
 
-const SAFE_ZONE_INTERVAL = 5;
-
 export async function createHmac(key: string, message: string): Promise<string> {
   const encoder = new TextEncoder();
   const keyData = encoder.encode(key);
@@ -35,13 +33,6 @@ function bufferToHex(buffer: ArrayBuffer): string {
 }
 
 /**
- * Check if a lane is a safe zone.
- */
-export function isSafeZone(lane: number): boolean {
-  return lane > 0 && lane % SAFE_ZONE_INTERVAL === 0;
-}
-
-/**
  * Determine if a specific lane has a car (client-side verification).
  * Same algorithm as server: HMAC per lane, roll % 100 < difficulty * 20.
  */
@@ -52,8 +43,6 @@ export async function isLaneDangerous(
   lane: number,
   difficulty: number
 ): Promise<boolean> {
-  if (isSafeZone(lane)) return false;
-
   const hmac = await createHmac(serverSeed, `${clientSeed}:${nonce}:${lane}`);
   const roll = parseInt(hmac.substring(0, 8), 16) % 100;
   const threshold = difficulty * 20;
@@ -62,7 +51,7 @@ export async function isLaneDangerous(
 }
 
 /**
- * Get multiplier per risky lane for a given difficulty.
+ * Get multiplier per lane for a given difficulty.
  */
 export function getLaneMultiplier(difficulty: number): number {
   const safeProbability = (100 - difficulty * 20) / 100;
@@ -80,10 +69,6 @@ export async function verifyLaneOutcomes(
   lanes: Array<{ lane: number; hasCar: boolean }>
 ): Promise<boolean> {
   for (const l of lanes) {
-    if (isSafeZone(l.lane)) {
-      if (l.hasCar) return false;
-      continue;
-    }
     const dangerous = await isLaneDangerous(serverSeed, clientSeed, nonce, l.lane, difficulty);
     if (dangerous !== l.hasCar) return false;
   }

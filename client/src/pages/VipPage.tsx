@@ -39,15 +39,15 @@ export default function VipPage() {
 
       <div className="max-w-4xl mx-auto p-4 space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-lg sm:text-xl font-bold">VIP Program</h1>
+          <h1 className="text-lg sm:text-xl font-bold">Programa VIP</h1>
           <Link to="/game" className="text-brand hover:text-brand-light text-sm font-medium transition-colors">
-            Back to Game
+            Volver al Juego
           </Link>
         </div>
 
         {/* Current Status */}
         <div className="game-panel p-6 text-center">
-          <p className="text-txt-muted text-sm mb-2">Your VIP Level</p>
+          <p className="text-txt-muted text-sm mb-2">Tu Nivel VIP</p>
           <h2
             className="text-3xl font-bold mb-1"
             style={{ color: currentTier.color, textShadow: `0 0 20px ${currentTier.color}40` }}
@@ -61,8 +61,8 @@ export default function VipPage() {
           {nextTier && (
             <div className="mt-6 max-w-md mx-auto">
               <div className="flex justify-between text-xs text-txt-dim mb-1">
-                <span>${totalWagered.toLocaleString()} wagered</span>
-                <span>${nextTier.minWagered.toLocaleString()} for {nextTier.name}</span>
+                <span>${totalWagered.toLocaleString()} apostado</span>
+                <span>${nextTier.minWagered.toLocaleString()} para {nextTier.name}</span>
               </div>
               <div className="w-full bg-bg-surfaceLight rounded-full h-3 border border-[#3d3f7a]/40 overflow-hidden">
                 <div
@@ -74,7 +74,7 @@ export default function VipPage() {
                 />
               </div>
               <p className="text-xs text-txt-dim mt-1">
-                ${(nextTier.minWagered - totalWagered).toLocaleString()} more to go
+                ${(nextTier.minWagered - totalWagered).toLocaleString()} más por apostar
               </p>
             </div>
           )}
@@ -117,8 +117,8 @@ export default function VipPage() {
                     </p>
                     <p className="text-xs text-txt-dim">
                       {tier.minWagered === 0
-                        ? 'Starting tier'
-                        : `$${tier.minWagered.toLocaleString()} wagered`}
+                        ? 'Nivel inicial'
+                        : `$${tier.minWagered.toLocaleString()} apostado`}
                     </p>
                   </div>
                 </div>

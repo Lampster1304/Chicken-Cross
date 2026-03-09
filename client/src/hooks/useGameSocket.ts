@@ -62,36 +62,24 @@ export function useGameSocket() {
       const crossData = {
         lane: data.lane,
         safe: data.safe,
-        isSafeZone: data.isSafeZone || false,
         multiplier: data.multiplier,
         nextMultiplier: data.nextMultiplier,
         revealedLane: data.revealedLane,
       };
 
-      // Safe zones: no car animation needed, reveal immediately
-      if (crossData.isSafeZone) {
-        dispatch(laneCrossed(crossData));
-        return;
+      // Both safe and hit use two-phase crossing:
+      // Phase 1: startCrossing (car accelerates out / crash anim)
+      // Phase 2: finishCrossing (reveal lane)
+      dispatch(startCrossing(crossData));
+
+      if (crossingTimerRef.current) {
+        clearTimeout(crossingTimerRef.current);
       }
 
-      // Risky lanes: 
-      // - If safe: reveal immediately (per USER request to go fast)
-      // - If hit: start crossing animation, reveal after delay
-      if (crossData.safe) {
-        dispatch(laneCrossed(crossData));
-      } else {
-        dispatch(startCrossing(crossData));
-
-        // Clear any previous timer (shouldn't happen, but safety)
-        if (crossingTimerRef.current) {
-          clearTimeout(crossingTimerRef.current);
-        }
-
-        crossingTimerRef.current = setTimeout(() => {
-          crossingTimerRef.current = null;
-          dispatch(finishCrossing());
-        }, 850);
-      }
+      crossingTimerRef.current = setTimeout(() => {
+        crossingTimerRef.current = null;
+        dispatch(finishCrossing());
+      }, crossData.safe ? 600 : 850);
     });
 
     // Game over
@@ -140,6 +128,7 @@ export function useGameSocket() {
         multiplier: data.multiplier,
         profit: data.profit,
         difficulty: data.difficulty,
+        betAmount: data.betAmount,
       }));
     });
 
@@ -150,6 +139,7 @@ export function useGameSocket() {
         username: data.username,
         difficulty: data.difficulty,
         lane: data.lane,
+        betAmount: data.betAmount,
       }));
     });
 

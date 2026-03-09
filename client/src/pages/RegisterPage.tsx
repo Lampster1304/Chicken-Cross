@@ -25,11 +25,11 @@ export default function RegisterPage() {
         body: JSON.stringify({ username, email, password }),
       });
       const data = await res.json();
-      if (!res.ok) { setError(data.error || 'Registration failed'); return; }
+      if (!res.ok) { setError(data.error || 'Error al registrarse'); return; }
       dispatch(setCredentials(data));
       navigate('/game');
     } catch {
-      setError('Connection error');
+      setError('Error de conexión');
     } finally {
       setLoading(false);
     }
@@ -44,7 +44,7 @@ export default function RegisterPage() {
             <ChickenSvg />
           </div>
           <h1 className="text-2xl font-bold bg-gradient-to-r from-brand to-action-primary bg-clip-text text-transparent">Chicken Cross</h1>
-          <p className="text-sm text-txt-muted mt-1">Create your account</p>
+          <p className="text-sm text-txt-muted mt-1">Crea tu cuenta</p>
         </div>
 
         {/* Card */}
@@ -58,11 +58,11 @@ export default function RegisterPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="text-xs font-medium text-txt-muted mb-1.5 block">Username</label>
+              <label className="text-xs font-medium text-txt-muted mb-1.5 block">Nombre de usuario</label>
               <input
                 type="text" value={username} onChange={e => setUsername(e.target.value)}
                 className="w-full bg-[#2f3070] border border-[#3d3f7a]/50 focus:border-action-primary/50 rounded-xl px-3.5 py-3 text-white text-sm outline-none transition-colors placeholder:text-txt-dim/40 focus:shadow-[0_0_12px_rgba(163,230,53,0.15)]"
-                placeholder="Choose a username" required minLength={3}
+                placeholder="Elige un nombre de usuario" required minLength={3}
               />
             </div>
             <div>
@@ -74,11 +74,11 @@ export default function RegisterPage() {
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-txt-muted mb-1.5 block">Password</label>
+              <label className="text-xs font-medium text-txt-muted mb-1.5 block">Contraseña</label>
               <input
                 type="password" value={password} onChange={e => setPassword(e.target.value)}
                 className="w-full bg-[#2f3070] border border-[#3d3f7a]/50 focus:border-action-primary/50 rounded-xl px-3.5 py-3 text-white text-sm outline-none transition-colors placeholder:text-txt-dim/40 focus:shadow-[0_0_12px_rgba(163,230,53,0.15)]"
-                placeholder="Min. 6 characters" required minLength={6}
+                placeholder="Mín. 6 caracteres" required minLength={6}
               />
             </div>
             <button
@@ -86,14 +86,14 @@ export default function RegisterPage() {
               className="w-full py-3 rounded-2xl btn-3d-primary text-sm flex items-center justify-center gap-2"
             >
               <UserPlus size={15} />
-              {loading ? 'Creating account...' : 'Create Account'}
+              {loading ? 'Creando cuenta...' : 'Crear Cuenta'}
             </button>
           </form>
 
           <p className="text-center text-txt-muted text-xs mt-4 pt-4 border-t border-[#3d3f7a]/30">
-            Already have an account?{' '}
+            ¿Ya tienes una cuenta?{' '}
             <Link to="/login" className="text-brand hover:text-brand-light font-semibold transition-colors">
-              Sign In
+              Iniciar Sesión
             </Link>
           </p>
         </div>

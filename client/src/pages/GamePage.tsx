@@ -5,18 +5,24 @@ import BetPanel from '../components/BetPanel';
 import GameHistory from '../components/GameHistory';
 import BetsList from '../components/BetsList';
 import Chat from '../components/Chat';
+import GameDescription from '../components/GameDescription';
+import GameFairness from '../components/GameFairness';
 import { useGameSocket } from '../hooks/useGameSocket';
-import { Radio, History, MessageCircle } from 'lucide-react';
+import { Radio, History, MessageCircle, Info, Shield } from 'lucide-react';
 
-const TABS = [
-  { key: 'feed' as const, label: 'Live', icon: Radio },
-  { key: 'history' as const, label: 'History', icon: History },
-  { key: 'chat' as const, label: 'Chat', icon: MessageCircle },
+type TabKey = 'feed' | 'history' | 'chat' | 'description' | 'fairness';
+
+const TABS: { key: TabKey; label: string; icon: React.ElementType }[] = [
+  { key: 'feed', label: 'En Vivo', icon: Radio },
+  { key: 'history', label: 'Historial', icon: History },
+  { key: 'chat', label: 'Chat', icon: MessageCircle },
+  { key: 'description', label: 'Reglas', icon: Info },
+  { key: 'fairness', label: 'Justicia', icon: Shield },
 ];
 
 export default function GamePage() {
   useGameSocket();
-  const [activeTab, setActiveTab] = useState<'feed' | 'history' | 'chat'>('feed');
+  const [activeTab, setActiveTab] = useState<TabKey>('feed');
 
   return (
     <div className="min-h-screen min-h-[100dvh] bg-gradient-to-b from-bg-primary via-bg-secondary to-bg-primary text-txt flex flex-col font-sans">
@@ -25,7 +31,7 @@ export default function GamePage() {
       <main className="flex-1 p-3 sm:p-5 lg:p-6 max-w-[1600px] mx-auto w-full flex flex-col gap-5">
         {/* Game + Controls */}
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] xl:grid-cols-[1fr_380px] gap-4 items-start">
-          <div className="h-full min-h-[400px]">
+          <div className="h-full min-h-[480px] sm:min-h-[500px] lg:min-h-[400px] isolate">
             <GameArea />
           </div>
           <div className="lg:sticky lg:top-[72px]">
@@ -44,22 +50,22 @@ export default function GamePage() {
                 <button
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key)}
-                  className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-medium transition-all ${active ? 'bg-action-primary text-bg-primary shadow-sm font-bold' : 'text-txt-muted hover:text-txt'
+                  className={`flex-1 flex items-center justify-center gap-1 py-2.5 rounded-xl text-[10px] sm:text-xs font-medium transition-all ${active ? 'bg-action-primary text-bg-primary shadow-sm font-bold' : 'text-txt-muted hover:text-txt'
                     }`}
                 >
-                  <Icon size={13} />
+                  <Icon size={12} />
                   {tab.label}
                 </button>
               );
             })}
           </div>
 
-          {/* Desktop 3-col */}
+          {/* Desktop: first row 3-col (Live, History, Chat) */}
           <div className="hidden lg:grid lg:grid-cols-3 gap-4">
-            <Panel title="Live Feed" icon={Radio} live>
+            <Panel title="En Vivo" icon={Radio} live>
               <BetsList />
             </Panel>
-            <Panel title="Your History" icon={History}>
+            <Panel title="Tu Historial" icon={History}>
               <GameHistory />
             </Panel>
             <Panel title="Chat" icon={MessageCircle}>
@@ -67,18 +73,30 @@ export default function GamePage() {
             </Panel>
           </div>
 
+          {/* Desktop: second row 2-col (Rules, Fairness) */}
+          <div className="hidden lg:grid lg:grid-cols-2 gap-4 mt-4">
+            <Panel title="Reglas del Juego" icon={Info}>
+              <GameDescription />
+            </Panel>
+            <Panel title="Verificablemente Justo" icon={Shield}>
+              <GameFairness />
+            </Panel>
+          </div>
+
           {/* Mobile content */}
           <div className="lg:hidden">
-            {activeTab === 'feed' && <Panel title="Live Feed" icon={Radio} live><BetsList /></Panel>}
-            {activeTab === 'history' && <Panel title="Your History" icon={History}><GameHistory /></Panel>}
+            {activeTab === 'feed' && <Panel title="En Vivo" icon={Radio} live><BetsList /></Panel>}
+            {activeTab === 'history' && <Panel title="Tu Historial" icon={History}><GameHistory /></Panel>}
             {activeTab === 'chat' && <Panel title="Chat" icon={MessageCircle}><Chat /></Panel>}
+            {activeTab === 'description' && <Panel title="Reglas del Juego" icon={Info}><GameDescription /></Panel>}
+            {activeTab === 'fairness' && <Panel title="Verificablemente Justo" icon={Shield}><GameFairness /></Panel>}
           </div>
         </div>
       </main>
 
       <footer className="py-3 text-center">
         <p className="text-[10px] text-txt-muted font-medium">
-          Chicken Cross · Provably Fair
+          Chicken Cross · Verificablemente Justo
         </p>
       </footer>
     </div>

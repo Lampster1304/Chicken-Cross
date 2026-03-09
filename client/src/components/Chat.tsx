@@ -33,7 +33,7 @@ export default function Chat() {
         {
           id: Date.now(),
           username: 'System',
-          message: `${data.username} won $${data.profit.toFixed(2)} at ${data.multiplier.toFixed(2)}×!`,
+          message: `¡${data.username} ganó $${data.profit.toFixed(2)} con ${data.multiplier.toFixed(2)}×!`,
           timestamp: Date.now(),
           type: 'win',
         },
@@ -74,7 +74,7 @@ export default function Chat() {
       <div className="flex-1 overflow-y-auto space-y-1.5 mb-3 pr-1">
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center py-16 text-txt-dim">
-            <p className="text-xs">No messages yet</p>
+            <p className="text-xs">Sin mensajes</p>
           </div>
         )}
         {messages.map(msg => (
@@ -103,7 +103,7 @@ export default function Chat() {
           type="text" value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Message..."
+          placeholder="Mensaje..."
           maxLength={200}
           className="flex-1 bg-[#2f3070] border border-[#3d3f7a]/50 rounded-xl px-3 py-2.5 text-white text-sm outline-none focus:border-action-primary/40 transition-colors placeholder:text-txt-dim/40 min-h-[40px] focus:shadow-[0_0_12px_rgba(163,230,53,0.1)]"
         />

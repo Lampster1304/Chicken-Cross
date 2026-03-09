@@ -81,10 +81,10 @@ export default function TournamentsPage() {
         const updated = await fetch('/api/tournaments').then(r => r.json());
         setTournaments(updated.tournaments || []);
       } else {
-        alert(data.error || 'Failed to join');
+        alert(data.error || 'Error al unirse');
       }
     } catch {
-      alert('Failed to join tournament');
+      alert('Error al unirse al torneo');
     } finally {
       setJoining(false);
     }
@@ -96,17 +96,17 @@ export default function TournamentsPage() {
 
       <div className="max-w-4xl mx-auto p-4 space-y-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-lg sm:text-xl font-bold">Tournaments</h1>
+          <h1 className="text-lg sm:text-xl font-bold">Torneos</h1>
           <Link to="/game" className="text-brand hover:text-brand-light text-sm font-medium transition-colors">
-            Back to Game
+            Volver al Juego
           </Link>
         </div>
 
         {loading ? (
-          <div className="text-center py-12 text-txt-dim">Loading...</div>
+          <div className="text-center py-12 text-txt-dim">Cargando...</div>
         ) : tournaments.length === 0 ? (
           <div className="text-center py-12 text-txt-dim">
-            No tournaments available right now. Check back later!
+            No hay torneos disponibles en este momento. ¡Vuelve más tarde!
           </div>
         ) : (
           tournaments.map(t => (
@@ -132,20 +132,20 @@ export default function TournamentsPage() {
                       </span>
                     </div>
                     <p className="text-xs text-txt-dim">
-                      {t.playerCount}/{t.maxPlayers} players
-                      {t.entryFee > 0 && ` · $${t.entryFee.toFixed(2)} entry`}
+                      {t.playerCount}/{t.maxPlayers} jugadores
+                      {t.entryFee > 0 && ` · $${t.entryFee.toFixed(2)} entrada`}
                     </p>
                   </div>
                   <div className="text-right">
                     <p className="text-brand font-bold text-lg">
                       ${t.prizePool.toFixed(2)}
                     </p>
-                    <p className="text-xs text-txt-dim">Prize Pool</p>
+                    <p className="text-xs text-txt-dim">Pozo de Premios</p>
                   </div>
                 </div>
                 <div className="flex gap-4 mt-2 text-xs text-txt-dim">
-                  <span>Starts: {new Date(t.startsAt).toLocaleDateString()}</span>
-                  <span>Ends: {new Date(t.endsAt).toLocaleDateString()}</span>
+                  <span>Inicia: {new Date(t.startsAt).toLocaleDateString()}</span>
+                  <span>Termina: {new Date(t.endsAt).toLocaleDateString()}</span>
                 </div>
               </button>
 
@@ -159,24 +159,24 @@ export default function TournamentsPage() {
                         disabled={joining}
                         className="w-full py-2.5 rounded-2xl btn-3d-primary text-sm"
                       >
-                        {joining ? 'Joining...' : `Join Tournament${t.entryFee > 0 ? ` ($${t.entryFee.toFixed(2)})` : ' (Free)'}`}
+                        {joining ? 'Uniéndose...' : `Unirse al Torneo${t.entryFee > 0 ? ` ($${t.entryFee.toFixed(2)})` : ' (Gratis)'}`}
                       </button>
                     </div>
                   )}
 
                   {lbLoading ? (
-                    <div className="p-4 text-center text-txt-dim text-sm">Loading leaderboard...</div>
+                    <div className="p-4 text-center text-txt-dim text-sm">Cargando clasificación...</div>
                   ) : leaderboard.length === 0 ? (
-                    <div className="p-4 text-center text-txt-dim text-sm">No entries yet.</div>
+                    <div className="p-4 text-center text-txt-dim text-sm">Sin participantes aún.</div>
                   ) : (
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="text-txt-dim border-b border-[#3d3f7a]/30 text-xs">
                           <th className="text-left py-2 px-4">#</th>
-                          <th className="text-left py-2 px-4">Player</th>
-                          <th className="text-right py-2 px-4">Score</th>
-                          <th className="text-right py-2 px-4">Best</th>
-                          <th className="text-right py-2 px-4">Prize</th>
+                          <th className="text-left py-2 px-4">Jugador</th>
+                          <th className="text-right py-2 px-4">Puntaje</th>
+                          <th className="text-right py-2 px-4">Mejor</th>
+                          <th className="text-right py-2 px-4">Premio</th>
                         </tr>
                       </thead>
                       <tbody>

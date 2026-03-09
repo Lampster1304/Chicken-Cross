@@ -46,23 +46,23 @@ export default function AffiliatePage() {
 
       <div className="max-w-4xl mx-auto p-4 space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-lg sm:text-xl font-bold">Affiliate Program</h1>
+          <h1 className="text-lg sm:text-xl font-bold">Programa de Afiliados</h1>
           <Link to="/game" className="text-brand hover:text-brand-light text-sm font-medium transition-colors">
-            Back to Game
+            Volver al Juego
           </Link>
         </div>
 
         {loading ? (
-          <div className="text-center py-12 text-txt-dim">Loading...</div>
+          <div className="text-center py-12 text-txt-dim">Cargando...</div>
         ) : !stats ? (
           <div className="text-center py-12 text-txt-dim">
-            Please log in to view your affiliate stats.
+            Inicia sesión para ver tus estadísticas de afiliado.
           </div>
         ) : (
           <>
             {/* Referral Code */}
             <div className="game-panel p-6 text-center">
-              <p className="text-txt-muted text-sm mb-2">Your Referral Code</p>
+              <p className="text-txt-muted text-sm mb-2">Tu Código de Referido</p>
               <div className="flex items-center justify-center gap-3">
                 <code className="bg-bg-surfaceLight px-6 py-3 rounded-2xl border-2 border-brand/40 text-2xl font-bold text-brand tracking-widest" style={{ boxShadow: '0 0 20px rgba(251,191,36,0.1)' }}>
                   {stats.referralCode}
@@ -71,11 +71,11 @@ export default function AffiliatePage() {
                   onClick={copyCode}
                   className="btn-3d-primary px-4 py-3 rounded-xl text-sm"
                 >
-                  {copied ? 'Copied!' : 'Copy'}
+                  {copied ? '¡Copiado!' : 'Copiar'}
                 </button>
               </div>
               <p className="text-txt-dim text-xs mt-3">
-                Share this code with friends. You earn {stats.commissionRate}% of their bets!
+                ¡Comparte este código con amigos! Ganas el {stats.commissionRate}% de sus apuestas.
               </p>
             </div>
 
@@ -88,14 +88,14 @@ export default function AffiliatePage() {
                 <p className="text-2xl font-bold text-success">
                   ${stats.totalEarnings.toFixed(2)}
                 </p>
-                <p className="text-xs text-txt-dim mt-1">Total Earnings</p>
+                <p className="text-xs text-txt-dim mt-1">Ganancias Totales</p>
               </div>
               <div className="game-panel p-4 text-center">
                 <div className="w-8 h-8 rounded-full bg-action-secondary/15 flex items-center justify-center mx-auto mb-2">
                   <span className="text-action-secondary text-sm">👥</span>
                 </div>
                 <p className="text-2xl font-bold text-txt">{stats.totalReferrals}</p>
-                <p className="text-xs text-txt-dim mt-1">Referrals</p>
+                <p className="text-xs text-txt-dim mt-1">Referidos</p>
               </div>
               <div className="game-panel p-4 text-center">
                 <div className="w-8 h-8 rounded-full bg-brand/15 flex items-center justify-center mx-auto mb-2">
@@ -104,26 +104,26 @@ export default function AffiliatePage() {
                 <p className="text-2xl font-bold text-brand">
                   {stats.commissionRate}%
                 </p>
-                <p className="text-xs text-txt-dim mt-1">Commission Rate</p>
+                <p className="text-xs text-txt-dim mt-1">Tasa de Comisión</p>
               </div>
             </div>
 
             {/* Recent Commissions */}
             <div className="game-panel overflow-hidden">
               <div className="px-4 py-3 border-b border-[#3d3f7a]/40" style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.08) 0%, transparent 100%)' }}>
-                <h3 className="font-bold text-sm">Recent Commissions</h3>
+                <h3 className="font-bold text-sm">Comisiones Recientes</h3>
               </div>
               {stats.recentCommissions.length === 0 ? (
                 <div className="p-6 text-center text-txt-dim text-sm">
-                  No commissions yet. Share your code to start earning!
+                  Sin comisiones aún. ¡Comparte tu código para empezar a ganar!
                 </div>
               ) : (
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="text-txt-dim border-b border-[#3d3f7a]/30">
-                      <th className="text-left py-2 px-4">Player</th>
-                      <th className="text-right py-2 px-4">Commission</th>
-                      <th className="text-right py-2 px-4">Date</th>
+                      <th className="text-left py-2 px-4">Jugador</th>
+                      <th className="text-right py-2 px-4">Comisión</th>
+                      <th className="text-right py-2 px-4">Fecha</th>
                     </tr>
                   </thead>
                   <tbody>

@@ -2,21 +2,17 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../store';
 import { getSocket } from '../hooks/useGameSocket';
-import { resetGame, setLoading, gameError, clearError } from '../store/gameSlice';
-import { Zap, TrendingUp, ArrowRight, RotateCcw, AlertCircle, ChevronDown, ChevronUp, Lock, Shield } from 'lucide-react';
-
-const DIFFICULTIES = [
-  { value: 1, label: 'Easy', cars: 1, mult: '1.21×', color: 'emerald' },
-  { value: 2, label: 'Medium', cars: 2, mult: '1.61×', color: 'amber' },
-  { value: 3, label: 'Hard', cars: 3, mult: '2.42×', color: 'orange' },
-  { value: 4, label: 'Extreme', cars: 4, mult: '4.85×', color: 'red' },
-];
+import {
+  resetGame, setLoading, gameError, clearError,
+} from '../store/gameSlice';
+import { Zap, TrendingUp, ArrowRight, RotateCcw, AlertCircle, Lock } from 'lucide-react';
 
 export default function BetPanel() {
   const [betAmount, setBetAmount] = useState('10.00');
-  const [difficulty, setDifficulty] = useState(1);
+  const difficulty = 1; // Controlled by admin only
   const [autoCashOut, setAutoCashOut] = useState('');
-  const [showAuto, setShowAuto] = useState(false);
+  const [betLimits, setBetLimits] = useState({ minBet: 1, maxBet: 500 });
+
   const dispatch = useDispatch();
   const { status, activeGame, lastResult, isLoading, error } = useSelector((state: RootState) => state.game);
   const user = useSelector((state: RootState) => state.auth.user);
@@ -49,25 +45,42 @@ export default function BetPanel() {
     return () => clearTimeout(timer);
   }, [error, dispatch]);
 
-  const handleStartGame = useCallback(() => {
-    if (actionLockRef.current) return;
+  useEffect(() => {
+    fetch('/api/settings/bet-limits')
+      .then(res => res.json())
+      .then(data => {
+        if (data.minBet !== undefined && data.maxBet !== undefined) {
+          setBetLimits({ minBet: data.minBet, maxBet: data.maxBet });
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const emitStartGame = useCallback((amount: number) => {
     const socket = getSocket();
-    if (!socket || !socket.connected) { dispatch(gameError('Not connected')); return; }
-    const amount = parseFloat(betAmount);
-    if (isNaN(amount) || amount <= 0) { dispatch(gameError('Invalid bet')); return; }
-    if (user && amount > user.balance) { dispatch(gameError('Insufficient balance')); return; }
+    if (!socket || !socket.connected) { dispatch(gameError('Sin conexión')); return; }
+    if (isNaN(amount) || amount <= 0) { dispatch(gameError('Apuesta inválida')); return; }
+    if (amount < betLimits.minBet) { dispatch(gameError(`La apuesta mínima es $${betLimits.minBet.toFixed(2)}`)); return; }
+    if (amount > betLimits.maxBet) { dispatch(gameError(`La apuesta máxima es $${betLimits.maxBet.toFixed(2)}`)); return; }
+    if (user && amount > user.balance) { dispatch(gameError('Saldo insuficiente')); return; }
     const autoCashOutAt = autoCashOut ? parseFloat(autoCashOut) : undefined;
-    if (autoCashOutAt !== undefined && autoCashOutAt <= 1) { dispatch(gameError('Auto cash-out must be > 1.00')); return; }
+    if (autoCashOutAt !== undefined && autoCashOutAt <= 1) { dispatch(gameError('Auto cobro debe ser > 1.00')); return; }
     actionLockRef.current = true;
     dispatch(clearError());
     dispatch(setLoading(true));
     socket.emit('game:start', { amount, difficulty, autoCashOutAt });
-  }, [betAmount, difficulty, autoCashOut, user, dispatch]);
+  }, [autoCashOut, user, betLimits, dispatch]);
+
+  const handleStartGame = useCallback(() => {
+    if (actionLockRef.current) return;
+    const amount = parseFloat(betAmount);
+    emitStartGame(amount);
+  }, [betAmount, emitStartGame]);
 
   const handleCross = useCallback(() => {
     if (actionLockRef.current) return;
     const socket = getSocket();
-    if (!socket || !socket.connected) { dispatch(gameError('Not connected')); return; }
+    if (!socket || !socket.connected) { dispatch(gameError('Sin conexión')); return; }
     actionLockRef.current = true;
     dispatch(setLoading(true));
     socket.emit('game:cross');
@@ -76,7 +89,7 @@ export default function BetPanel() {
   const handleCashOut = useCallback(() => {
     if (actionLockRef.current) return;
     const socket = getSocket();
-    if (!socket || !socket.connected) { dispatch(gameError('Not connected')); return; }
+    if (!socket || !socket.connected) { dispatch(gameError('Sin conexión')); return; }
     actionLockRef.current = true;
     dispatch(setLoading(true));
     socket.emit('game:cashout');
@@ -86,6 +99,7 @@ export default function BetPanel() {
     dispatch(resetGame());
   }, [dispatch]);
 
+  // Keyboard shortcuts
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement) return;
@@ -99,6 +113,29 @@ export default function BetPanel() {
     return () => window.removeEventListener('keydown', handler);
   }, [isIdle, isActive, handleStartGame, handleCross]);
 
+  // Auto-cross: when autoCashOutAt is set, automatically cross lanes
+  const autoCrossTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (!isActive || !activeGame?.autoCashOutAt || isLoading) return;
+
+    autoCrossTimerRef.current = setTimeout(() => {
+      autoCrossTimerRef.current = null;
+      const socket = getSocket();
+      if (!socket || !socket.connected) return;
+      actionLockRef.current = true;
+      dispatch(setLoading(true));
+      socket.emit('game:cross');
+    }, 400);
+
+    return () => {
+      if (autoCrossTimerRef.current) {
+        clearTimeout(autoCrossTimerRef.current);
+        autoCrossTimerRef.current = null;
+      }
+    };
+  }, [isActive, activeGame?.autoCashOutAt, activeGame?.currentLane, isLoading, dispatch]);
+
   const adjustBet = (factor: number) => {
     const current = parseFloat(betAmount) || 0;
     setBetAmount(Math.max(0.01, current * factor).toFixed(2));
@@ -108,10 +145,10 @@ export default function BetPanel() {
   const nextMultiplier = activeGame?.nextMultiplier;
   const payout = activeGame ? Math.floor(activeGame.betAmount * currentMultiplier * 100) / 100 : 0;
   const nextLane = activeGame ? activeGame.currentLane + 1 : 0;
-  const nextIsSafeZone = nextLane > 0 && nextLane % 5 === 0;
+  const isAutoPlaying = isActive && !!activeGame?.autoCashOutAt;
 
   return (
-    <div className="game-panel p-4 sm:p-5 flex flex-col gap-4">
+    <div className="game-panel p-4 sm:p-5 flex flex-col gap-5 lg:gap-4">
       {/* Error */}
       {error && (
         <div className="flex items-center gap-2 bg-danger/10 border border-danger/20 rounded-xl px-3 py-2.5">
@@ -126,94 +163,57 @@ export default function BetPanel() {
           {/* Bet Input */}
           <div>
             <div className="flex justify-between items-center mb-2">
-              <span className="text-xs font-medium text-txt-muted">Bet Amount</span>
-              <span className="text-[11px] text-txt-dim font-mono">${user?.balance.toFixed(2) ?? '0.00'}</span>
+              <span className="text-sm lg:text-xs font-medium text-txt-muted">Monto de Apuesta</span>
+              <span className="text-xs lg:text-[11px] text-txt-dim font-mono">${user?.balance.toFixed(2) ?? '0.00'}</span>
             </div>
             <div className="relative mb-2">
-              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-txt-dim text-sm">$</span>
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-txt-dim text-base lg:text-sm">$</span>
               <input
                 type="number"
                 value={betAmount}
                 onChange={e => setBetAmount(e.target.value)}
-                className="w-full bg-[#2f3070] border border-[#3d3f7a]/50 focus:border-action-primary/50 rounded-xl py-3 pl-8 pr-3 text-white text-lg font-semibold outline-none transition-colors focus:shadow-[0_0_12px_rgba(163,230,53,0.15)]"
-                min="0.01" step="0.01"
+                className="w-full bg-[#2f3070] border border-[#3d3f7a]/50 focus:border-action-primary/50 rounded-xl py-3.5 lg:py-3 pl-8 pr-3 text-white text-xl lg:text-lg font-semibold outline-none transition-colors focus:shadow-[0_0_12px_rgba(163,230,53,0.15)]"
+                min={betLimits.minBet} step="0.01"
               />
             </div>
             <div className="grid grid-cols-4 gap-1.5">
               {[
                 { label: '½', fn: () => adjustBet(0.5) },
-                { label: '2×', fn: () => adjustBet(2) },
-                { label: 'Min', fn: () => setBetAmount('1.00') },
-                { label: 'Max', fn: () => setBetAmount(String(Math.min(user?.balance ?? 100, 500).toFixed(2))) },
+                { label: '2x', fn: () => adjustBet(2) },
+                { label: 'Mín', fn: () => setBetAmount(betLimits.minBet.toFixed(2)) },
+                { label: 'Max', fn: () => setBetAmount(Math.min(user?.balance ?? betLimits.maxBet, betLimits.maxBet).toFixed(2)) },
               ].map(b => (
-                <button key={b.label} onClick={b.fn} className="py-1.5 bg-bg-surfaceHover hover:bg-bg-surfaceLight border border-[#3d3f7a]/40 rounded-full text-[11px] font-semibold text-txt-muted hover:text-action-primary transition-colors">
+                <button key={b.label} onClick={b.fn} className="py-2 lg:py-1.5 bg-bg-surfaceHover hover:bg-bg-surfaceLight border border-[#3d3f7a]/40 rounded-full text-sm lg:text-[11px] font-semibold text-txt-muted hover:text-action-primary transition-colors">
                   {b.label}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Difficulty */}
+          {/* Auto Cash-Out */}
           <div>
-            <span className="text-xs font-medium text-txt-muted mb-2 block">Difficulty</span>
-            <div className="grid grid-cols-2 gap-2">
-              {DIFFICULTIES.map(d => {
-                const sel = difficulty === d.value;
-                const colors: Record<string, { border: string; text: string; bg: string }> = {
-                  emerald: { border: 'border-emerald-500/50', text: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-                  amber: { border: 'border-amber-500/50', text: 'text-amber-400', bg: 'bg-amber-500/10' },
-                  orange: { border: 'border-orange-500/50', text: 'text-orange-400', bg: 'bg-orange-500/10' },
-                  red: { border: 'border-red-500/50', text: 'text-red-400', bg: 'bg-red-500/10' },
-                };
-                const c = colors[d.color];
-                return (
-                  <button
-                    key={d.value}
-                    onClick={() => setDifficulty(d.value)}
-                    className={`flex items-center justify-between p-2.5 rounded-xl border-2 transition-all ${sel ? `${c.border} ${c.bg}` : 'border-[#3d3f7a]/40 bg-bg-surfaceHover hover:bg-bg-surfaceLight'
-                      }`}
-                  >
-                    <div className="flex flex-col items-start">
-                      <span className={`text-[10px] font-semibold ${sel ? c.text : 'text-txt-dim'}`}>{d.label}</span>
-                      <span className={`text-sm font-bold ${sel ? 'text-txt' : 'text-txt-muted'}`}>{d.cars} car{d.cars > 1 ? 's' : ''}</span>
-                    </div>
-                    <span className={`text-[10px] font-mono font-semibold ${sel ? c.text : 'text-txt-dim'}`}>{d.mult}</span>
-                  </button>
-                );
-              })}
+            <span className="text-xs font-medium text-txt-muted mb-1.5 block">
+              Auto Cobro
+              <span className="text-[10px] text-txt-dim ml-1">opcional</span>
+            </span>
+            <div className="relative">
+              <input
+                type="number" value={autoCashOut} onChange={e => setAutoCashOut(e.target.value)}
+                placeholder="e.g. 2.50"
+                className="w-full bg-[#2f3070] border border-[#3d3f7a]/50 focus:border-action-primary/50 rounded-xl py-2.5 pl-3 pr-8 text-white text-sm font-medium outline-none transition-colors placeholder:text-txt-dim/50 focus:shadow-[0_0_12px_rgba(163,230,53,0.15)]"
+                min="1.01" step="0.01"
+              />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-txt-dim text-xs">x</span>
             </div>
-          </div>
-
-          {/* Auto Cash-Out (collapsible) */}
-          <div>
-            <button
-              onClick={() => setShowAuto(!showAuto)}
-              className="flex items-center gap-1.5 text-xs font-medium text-txt-dim hover:text-txt-muted transition-colors w-full"
-            >
-              {showAuto ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-              Auto Cash-Out
-              <span className="text-[10px] text-txt-dim ml-auto">optional</span>
-            </button>
-            {showAuto && (
-              <div className="mt-2 relative">
-                <input
-                  type="number" value={autoCashOut} onChange={e => setAutoCashOut(e.target.value)}
-                  placeholder="e.g. 2.50"
-                  className="w-full bg-[#2f3070] border border-[#3d3f7a]/50 focus:border-action-primary/50 rounded-xl py-2.5 pl-3 pr-8 text-white text-sm font-medium outline-none transition-colors placeholder:text-txt-dim/50 focus:shadow-[0_0_12px_rgba(163,230,53,0.15)]"
-                  min="1.01" step="0.01"
-                />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-txt-dim text-xs">×</span>
-              </div>
-            )}
           </div>
 
           {/* Play Button */}
           <button
             onClick={handleStartGame} disabled={isLoading}
-            className="w-full py-3.5 rounded-2xl btn-3d-primary text-sm flex items-center justify-center gap-2"
+            className="w-full py-5 lg:py-3.5 rounded-2xl btn-3d-primary text-lg lg:text-sm flex items-center justify-center gap-2"
           >
-            <Zap size={16} />
-            {isLoading ? 'Starting...' : 'Place Bet'}
+            <Zap size={18} className="lg:hidden" /><Zap size={16} className="hidden lg:block" />
+            {isLoading ? 'Iniciando...' : 'Apostar'}
           </button>
         </>
       )}
@@ -222,45 +222,47 @@ export default function BetPanel() {
       {isActive && activeGame && (
         <>
           <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-2xl p-3 border-2 border-success/20" style={{ background: 'linear-gradient(135deg, rgba(45,212,191,0.08) 0%, rgba(45,212,191,0.03) 100%)' }}>
-              <p className="text-[10px] text-success/70 font-medium mb-0.5">Multiplier</p>
-              <p className="text-xl font-bold text-success font-mono">{currentMultiplier.toFixed(2)}×</p>
+            <div className="rounded-2xl p-4 lg:p-3 border-2 border-success/20" style={{ background: 'linear-gradient(135deg, rgba(45,212,191,0.08) 0%, rgba(45,212,191,0.03) 100%)' }}>
+              <p className="text-sm lg:text-[10px] text-success/70 font-medium mb-0.5">Multiplicador</p>
+              <p className="text-3xl lg:text-xl font-bold text-success font-mono">{currentMultiplier.toFixed(2)}x</p>
             </div>
-            <div className="rounded-2xl p-3 border-2 border-brand/20 text-right" style={{ background: 'linear-gradient(135deg, rgba(251,191,36,0.08) 0%, rgba(251,191,36,0.03) 100%)' }}>
-              <p className="text-[10px] text-brand/70 font-medium mb-0.5">Payout</p>
-              <p className="text-xl font-bold text-brand font-mono">${payout.toFixed(2)}</p>
+            <div className="rounded-2xl p-4 lg:p-3 border-2 border-brand/20 text-right" style={{ background: 'linear-gradient(135deg, rgba(251,191,36,0.08) 0%, rgba(251,191,36,0.03) 100%)' }}>
+              <p className="text-sm lg:text-[10px] text-brand/70 font-medium mb-0.5">Pago</p>
+              <p className="text-3xl lg:text-xl font-bold text-brand font-mono">${payout.toFixed(2)}</p>
             </div>
           </div>
 
           {activeGame.autoCashOutAt && (
-            <div className="flex items-center gap-2 bg-brand/8 border border-brand/20 rounded-xl px-3 py-2">
-              <Lock size={12} className="text-brand" />
-              <span className="text-[11px] text-brand font-medium">Auto cash-out at {activeGame.autoCashOutAt.toFixed(2)}×</span>
+            <div className="flex items-center gap-2 bg-brand/8 border border-brand/20 rounded-xl px-3 py-2.5 lg:py-2">
+              <Lock size={14} className="lg:hidden text-brand" /><Lock size={12} className="hidden lg:block text-brand" />
+              <span className="text-sm lg:text-[11px] text-brand font-medium">Auto cobro en {activeGame.autoCashOutAt.toFixed(2)}x</span>
+              <span className="ml-auto text-xs lg:text-[10px] text-brand font-mono animate-pulse">JUGANDO</span>
             </div>
           )}
 
-          <button
-            onClick={handleCross} disabled={isLoading}
-            className={`w-full py-4 rounded-2xl text-sm flex flex-col items-center gap-0.5 ${nextIsSafeZone
-              ? 'btn-3d-secondary'
-              : 'btn-3d-primary'
-              }`}
-          >
-            <span className="text-[10px] opacity-70 flex items-center gap-1">
-              <ArrowRight size={10} /> Next lane
-            </span>
-            <span className="text-lg">{nextMultiplier?.toFixed(2)}×</span>
-          </button>
+          {!isAutoPlaying && (
+            <>
+              <button
+                onClick={handleCross} disabled={isLoading}
+                className="w-full py-6 lg:py-4 rounded-2xl text-lg lg:text-sm flex flex-col items-center gap-1 lg:gap-0.5 btn-3d-primary"
+              >
+                <span className="text-sm lg:text-[10px] opacity-70 flex items-center gap-1">
+                  <ArrowRight size={14} className="lg:hidden" /><ArrowRight size={10} className="hidden lg:block" /> Siguiente carril
+                </span>
+                <span className="text-2xl lg:text-lg font-bold">{nextMultiplier?.toFixed(2)}x</span>
+              </button>
 
-          {activeGame.currentLane > 0 && (
-            <button
-              onClick={handleCashOut} disabled={isLoading}
-              className="w-full py-3 rounded-2xl btn-3d-success text-sm flex items-center justify-center gap-2"
-              style={{ boxShadow: '0 0 20px rgba(45,212,191,0.3)' }}
-            >
-              <TrendingUp size={14} />
-              Cash Out ${payout.toFixed(2)}
-            </button>
+              {activeGame.currentLane > 0 && (
+                <button
+                  onClick={handleCashOut} disabled={isLoading}
+                  className="w-full py-5 lg:py-3 rounded-2xl btn-3d-success text-lg lg:text-sm flex items-center justify-center gap-2"
+                  style={{ boxShadow: '0 0 20px rgba(45,212,191,0.3)' }}
+                >
+                  <TrendingUp size={18} className="lg:hidden" /><TrendingUp size={14} className="hidden lg:block" />
+                  Cobrar ${payout.toFixed(2)}
+                </button>
+              )}
+            </>
           )}
         </>
       )}
@@ -280,36 +282,28 @@ export default function BetPanel() {
           >
             {lastResult.result === 'hit' ? (
               <div className="space-y-1">
-                <p className="text-lg font-bold text-danger">💥 Crashed</p>
-                <p className="text-xl font-bold text-txt/70 font-mono">-${Math.abs(lastResult.profit).toFixed(2)}</p>
+                <p className="text-2xl lg:text-lg font-bold text-danger">¡Chocaste!</p>
+                <p className="text-3xl lg:text-xl font-bold text-txt/70 font-mono">-${Math.abs(lastResult.profit).toFixed(2)}</p>
               </div>
             ) : (
               <div className="space-y-1">
-                <p className="text-lg font-bold text-success">🎉 Won!</p>
-                <p className="text-2xl font-bold text-txt font-mono">{lastResult.multiplier.toFixed(2)}×</p>
-                <p className="text-base font-semibold text-success font-mono">+${lastResult.profit.toFixed(2)}</p>
+                <p className="text-2xl lg:text-lg font-bold text-success">¡Ganaste!</p>
+                <p className="text-4xl lg:text-2xl font-bold text-txt font-mono">{lastResult.multiplier.toFixed(2)}x</p>
+                <p className="text-xl lg:text-base font-semibold text-success font-mono">+${lastResult.profit.toFixed(2)}</p>
               </div>
             )}
           </div>
 
           <button
             onClick={handlePlayAgain}
-            className="w-full py-3.5 rounded-2xl btn-3d-primary text-sm flex items-center justify-center gap-2"
+            className="w-full py-5 lg:py-3.5 rounded-2xl btn-3d-primary text-lg lg:text-sm flex items-center justify-center gap-2"
           >
-            <RotateCcw size={14} />
-            Play Again
+            <RotateCcw size={18} className="lg:hidden" /><RotateCcw size={14} className="hidden lg:block" />
+            Jugar de Nuevo
           </button>
         </>
       )}
 
-      {/* Provably fair footer */}
-      <div className="mt-auto pt-3 border-t border-[#3d3f7a]/30 flex items-center justify-between text-[9px] text-txt-dim">
-        <div className="flex items-center gap-1">
-          <Shield size={10} />
-          <span>Provably Fair</span>
-        </div>
-        <span className="font-mono text-[8px] max-w-[120px] truncate">{activeGame?.hashedServerSeed || '—'}</span>
-      </div>
     </div>
   );
 }

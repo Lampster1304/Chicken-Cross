@@ -7,10 +7,10 @@ import { useState } from 'react';
 import ChickenSvg from './svg/ChickenSvg';
 
 const NAV_ITEMS = [
-  { to: '/leaderboard', label: 'Leaderboard', icon: Trophy },
+  { to: '/leaderboard', label: 'Clasificación', icon: Trophy },
   { to: '/tournaments', label: 'Torneos', icon: Swords },
   { to: '/vip', label: 'VIP', icon: Crown },
-  { to: '/fairness', label: 'Fairness', icon: Shield },
+  { to: '/fairness', label: 'Justicia', icon: Shield },
 ];
 
 export default function Navbar() {
@@ -97,7 +97,7 @@ export default function Navbar() {
                 <button
                   onClick={handleLogout}
                   className="p-2 rounded-full text-txt-dim hover:text-danger hover:bg-danger/10 transition-colors"
-                  title="Logout"
+                  title="Cerrar Sesión"
                 >
                   <LogOut size={16} />
                 </button>

@@ -11,6 +11,8 @@ import { initGameEngine } from './game/gameEngine';
 import { leaderboardRouter } from './game/leaderboard';
 import { affiliateRouter } from './game/affiliates';
 import { tournamentRouter } from './game/tournaments';
+import { adminRouter } from './admin/adminController';
+import { getBetLimits, refreshBetLimitsCache } from './admin/settingsService';
 import { apiLimiter } from './middleware/rateLimiter';
 import { logger } from './config/logger';
 import { pool } from './config/db';
@@ -40,6 +42,17 @@ app.use('/api/auth', authRouter);
 app.use('/api/leaderboard', leaderboardRouter);
 app.use('/api/affiliate', affiliateRouter);
 app.use('/api/tournaments', tournamentRouter);
+app.use('/api/admin', adminRouter);
+
+// Public endpoint for bet limits
+app.get('/api/settings/bet-limits', async (_req, res) => {
+  try {
+    const limits = await getBetLimits();
+    res.json(limits);
+  } catch {
+    res.status(500).json({ error: 'Error al obtener los límites de apuesta' });
+  }
+});
 
 // Game history endpoint (public - for provably fair verification)
 app.get('/api/games/history', async (req, res) => {
@@ -67,7 +80,7 @@ app.get('/api/games/history', async (req, res) => {
     }
     res.json({ games: result.rows });
   } catch (error: any) {
-    res.status(500).json({ error: 'Failed to fetch history' });
+    res.status(500).json({ error: 'Error al obtener el historial' });
   }
 });
 
@@ -82,7 +95,7 @@ app.post('/api/dev/reset-balance', authMiddleware, async (req, res) => {
     );
     res.json({ balance: parseFloat(result.rows[0].balance) });
   } catch {
-    res.status(500).json({ error: 'Failed to reset balance' });
+    res.status(500).json({ error: 'Error al reiniciar el saldo' });
   }
 });
 
@@ -98,6 +111,13 @@ server.listen(PORT, () => {
   // Initialize the game engine after server starts
   initGameEngine(io);
   logger.info('Game engine initialized');
+
+  // Warm bet limits cache
+  refreshBetLimitsCache().then(() => {
+    logger.info('Bet limits cache warmed');
+  }).catch((err) => {
+    logger.error({ err }, 'Failed to warm bet limits cache');
+  });
 });
 
 // Graceful shutdown

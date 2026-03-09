@@ -15,16 +15,16 @@ interface Entry {
 }
 
 const periods: { key: Period; label: string }[] = [
-  { key: 'daily', label: 'Today' },
-  { key: 'weekly', label: 'Week' },
-  { key: 'monthly', label: 'Month' },
-  { key: 'alltime', label: 'All Time' },
+  { key: 'daily', label: 'Hoy' },
+  { key: 'weekly', label: 'Semana' },
+  { key: 'monthly', label: 'Mes' },
+  { key: 'alltime', label: 'Histórico' },
 ];
 
 const categories: { key: Category; label: string; unit: string }[] = [
-  { key: 'biggest_win', label: 'Biggest Multiplier', unit: 'x' },
-  { key: 'most_won', label: 'Most Won', unit: '$' },
-  { key: 'most_wagered', label: 'Most Wagered', unit: '$' },
+  { key: 'biggest_win', label: 'Mayor Multiplicador', unit: 'x' },
+  { key: 'most_won', label: 'Más Ganado', unit: '$' },
+  { key: 'most_wagered', label: 'Más Apostado', unit: '$' },
 ];
 
 export default function LeaderboardPage() {
@@ -79,9 +79,9 @@ export default function LeaderboardPage() {
 
       <div className="max-w-4xl mx-auto p-4 space-y-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-lg sm:text-xl font-bold">Leaderboard</h1>
+          <h1 className="text-lg sm:text-xl font-bold">Clasificación</h1>
           <Link to="/game" className="text-brand hover:text-brand-light text-sm font-medium transition-colors">
-            Back to Game
+            Volver al Juego
           </Link>
         </div>
 
@@ -122,15 +122,15 @@ export default function LeaderboardPage() {
         {/* Table */}
         <div className="game-panel overflow-hidden">
           {loading ? (
-            <div className="p-8 text-center text-txt-dim">Loading...</div>
+            <div className="p-8 text-center text-txt-dim">Cargando...</div>
           ) : entries.length === 0 ? (
-            <div className="p-8 text-center text-txt-dim">No data for this period yet.</div>
+            <div className="p-8 text-center text-txt-dim">Sin datos para este periodo.</div>
           ) : (
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-txt-dim border-b border-[#3d3f7a]/40">
-                  <th className="text-left py-3 px-4 w-16">Rank</th>
-                  <th className="text-left py-3 px-4">Player</th>
+                  <th className="text-left py-3 px-4 w-16">Pos.</th>
+                  <th className="text-left py-3 px-4">Jugador</th>
                   <th className="text-right py-3 px-4">{currentCat.label}</th>
                 </tr>
               </thead>

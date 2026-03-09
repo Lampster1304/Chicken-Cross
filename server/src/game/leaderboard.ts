@@ -94,6 +94,6 @@ leaderboardRouter.get('/', async (req: Request, res: Response) => {
       })),
     });
   } catch (error: any) {
-    res.status(500).json({ error: 'Failed to fetch leaderboard' });
+    res.status(500).json({ error: 'Error al obtener la clasificación' });
   }
 });
