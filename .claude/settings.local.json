@@ -35,7 +35,13 @@
       "Bash(git checkout:*)",
       "WebFetch(domain:dribbble.com)",
       "Bash(where:*)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "WebFetch(domain:localhost)",
+      "WebFetch(domain:127.0.0.1)",
+      "Bash(tasklist:*)",
+      "Bash(wmic:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ]
   }
 }
