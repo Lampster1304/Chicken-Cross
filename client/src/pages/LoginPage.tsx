@@ -36,52 +36,52 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4" style={{ background: 'linear-gradient(180deg, #1a1b3a 0%, rgba(139,92,246,0.1) 50%, #1a1b3a 100%)' }}>
-      <div className="w-full max-w-sm">
+      <div className="w-full max-w-xl">
         {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 mx-auto mb-4 animate-bounce-slow">
+        <div className="text-center mb-12">
+          <div className="w-32 h-32 mx-auto mb-6 animate-bounce-slow">
             <ChickenSvg />
           </div>
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-brand to-action-primary bg-clip-text text-transparent">Chicken Cross</h1>
-          <p className="text-sm text-txt-muted mt-1">Inicia sesión en tu cuenta</p>
+          <h1 className="text-5xl font-bold bg-gradient-to-r from-brand to-action-primary bg-clip-text text-transparent">Chicken Cross</h1>
+          <p className="text-lg text-txt-muted mt-3">Inicia sesión en tu cuenta</p>
         </div>
 
         {/* Card */}
-        <div className="game-panel p-6">
+        <div className="game-panel p-10">
           {error && (
-            <div className="flex items-center gap-2 bg-danger/10 border border-danger/20 rounded-xl px-3 py-2.5 mb-4">
-              <AlertCircle size={14} className="text-danger shrink-0" />
-              <p className="text-danger text-xs font-medium">{error}</p>
+            <div className="flex items-center gap-3 bg-danger/10 border border-danger/20 rounded-xl px-5 py-4 mb-6">
+              <AlertCircle size={22} className="text-danger shrink-0" />
+              <p className="text-danger text-base font-medium">{error}</p>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="text-xs font-medium text-txt-muted mb-1.5 block">Email</label>
+              <label className="text-base font-medium text-txt-muted mb-2.5 block">Email</label>
               <input
                 type="email" value={email} onChange={e => setEmail(e.target.value)}
-                className="w-full bg-[#2f3070] border border-[#3d3f7a]/50 focus:border-action-primary/50 rounded-xl px-3.5 py-3 text-white text-sm outline-none transition-colors placeholder:text-txt-dim/40 focus:shadow-[0_0_12px_rgba(163,230,53,0.15)]"
+                className="w-full bg-[#2f3070] border-2 border-[#3d3f7a]/50 focus:border-action-primary/50 rounded-xl px-5 py-4 text-white text-lg outline-none transition-colors placeholder:text-txt-dim/40 focus:shadow-[0_0_12px_rgba(163,230,53,0.15)]"
                 placeholder="you@email.com" required
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-txt-muted mb-1.5 block">Contraseña</label>
+              <label className="text-base font-medium text-txt-muted mb-2.5 block">Contraseña</label>
               <input
                 type="password" value={password} onChange={e => setPassword(e.target.value)}
-                className="w-full bg-[#2f3070] border border-[#3d3f7a]/50 focus:border-action-primary/50 rounded-xl px-3.5 py-3 text-white text-sm outline-none transition-colors placeholder:text-txt-dim/40 focus:shadow-[0_0_12px_rgba(163,230,53,0.15)]"
+                className="w-full bg-[#2f3070] border-2 border-[#3d3f7a]/50 focus:border-action-primary/50 rounded-xl px-5 py-4 text-white text-lg outline-none transition-colors placeholder:text-txt-dim/40 focus:shadow-[0_0_12px_rgba(163,230,53,0.15)]"
                 placeholder="••••••••" required
               />
             </div>
             <button
               type="submit" disabled={loading}
-              className="w-full py-3 rounded-2xl btn-3d-primary text-sm flex items-center justify-center gap-2"
+              className="w-full py-5 rounded-2xl btn-3d-primary text-xl font-bold flex items-center justify-center gap-3"
             >
-              <LogIn size={15} />
+              <LogIn size={22} />
               {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
             </button>
           </form>
 
-          <p className="text-center text-txt-muted text-xs mt-4 pt-4 border-t border-[#3d3f7a]/30">
+          <p className="text-center text-txt-muted text-base mt-6 pt-6 border-t border-[#3d3f7a]/30">
             ¿No tienes una cuenta?{' '}
             <Link to="/register" className="text-brand hover:text-brand-light font-semibold transition-colors">
               Registrarse
