@@ -34,7 +34,8 @@ export function isLaneDangerous(
     .digest('hex');
 
   const roll = parseInt(hmac.substring(0, 8), 16) % 100;
-  const threshold = difficulty * 20; // 20%, 40%, 60%, 80%
+  const thresholds: Record<number, number> = { 1: 15, 2: 40, 3: 60, 4: 80 };
+  const threshold = thresholds[difficulty] ?? difficulty * 20;
 
   return roll < threshold;
 }
