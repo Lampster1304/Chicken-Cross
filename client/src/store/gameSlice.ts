@@ -82,6 +82,7 @@ interface GameState {
   error: string | null;
   autobetConfig: AutobetConfig;
   autobetState: AutobetState | null;
+  isMuted: boolean;
 }
 
 const defaultAutobetConfig: AutobetConfig = {
@@ -105,6 +106,7 @@ const initialState: GameState = {
   error: null,
   autobetConfig: defaultAutobetConfig,
   autobetState: null,
+  isMuted: false,
 };
 
 let feedIdCounter = 0;
@@ -271,18 +273,18 @@ const gameSlice = createSlice({
       state.status = p.status === 'active' ? 'active' : 'idle';
       state.activeGame = p.status === 'active'
         ? {
-            gameId: p.gameId,
-            difficulty: p.difficulty,
-            betAmount: p.betAmount,
-            currentLane: p.currentLane,
-            riskyLanesCrossed: p.riskyLanesCrossed,
-            currentMultiplier: p.currentMultiplier,
-            nextMultiplier: p.nextMultiplier,
-            laneMultiplier: p.laneMultiplier,
-            hashedServerSeed: p.hashedServerSeed,
-            revealedLanes: p.revealedLanes || [],
-            autoCashOutAt: p.autoCashOutAt ?? null,
-          }
+          gameId: p.gameId,
+          difficulty: p.difficulty,
+          betAmount: p.betAmount,
+          currentLane: p.currentLane,
+          riskyLanesCrossed: p.riskyLanesCrossed,
+          currentMultiplier: p.currentMultiplier,
+          nextMultiplier: p.nextMultiplier,
+          laneMultiplier: p.laneMultiplier,
+          hashedServerSeed: p.hashedServerSeed,
+          revealedLanes: p.revealedLanes || [],
+          autoCashOutAt: p.autoCashOutAt ?? null,
+        }
         : null;
     },
 
@@ -371,6 +373,10 @@ const gameSlice = createSlice({
         config.enabled = false;
       }
     },
+
+    toggleMute(state) {
+      state.isMuted = !state.isMuted;
+    },
   },
 });
 
@@ -390,5 +396,6 @@ export const {
   startAutobet,
   stopAutobet,
   autobetRoundComplete,
+  toggleMute,
 } = gameSlice.actions;
 export default gameSlice.reducer;
