@@ -1,7 +1,8 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../store';
-import BarrierSvg from './svg/BarrierSvg';
+import { toggleMute } from '../store/gameSlice';
+import { Volume2, VolumeX } from 'lucide-react';
 import CarSvg from './svg/CarSvg';
 import ChickenSvg from './svg/ChickenSvg';
 import ExplosionSvg from './svg/ExplosionSvg';
@@ -31,9 +32,11 @@ function seededRandom(seed: number): number {
 
 /** Single animated car with random pause (0.3–4.0s) between each pass.
  *  When `rushing` is true, the car accelerates (3x) and doesn't start new cycles. */
-function AnimatedCar({ goingDown, carColor, speed, initialDelay, variant, rushing }: {
-  goingDown: boolean; carColor: string; speed: number; initialDelay: number; variant?: 'sedan' | 'pickup' | 'taxi' | 'sports'; rushing?: boolean;
+function AnimatedCar({ goingDown, carColor, speed, initialDelay, variant, rushing, laneNum }: {
+  goingDown: boolean; carColor: string; speed: number; initialDelay: number; variant?: 'sedan' | 'pickup' | 'taxi' | 'sports'; rushing?: boolean; laneNum: number;
 }) {
+  const { activeGame, isMuted } = useSelector((state: RootState) => state.game);
+  const currentLane = activeGame?.currentLane ?? 0;
   const [cycle, setCycle] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
   const carRef = useRef<HTMLDivElement>(null);
@@ -44,9 +47,41 @@ function AnimatedCar({ goingDown, carColor, speed, initialDelay, variant, rushin
   useEffect(() => {
     if (rushing && carRef.current) {
       const anims = carRef.current.getAnimations();
-      anims.forEach(a => { a.playbackRate = 3; });
+      anims.forEach((a: any) => { a.playbackRate = 3; });
     }
   }, [rushing]);
+
+  // Car passing sound logic
+  useEffect(() => {
+    // Only play sound if lane is within the next 2 lanes and NOT muted
+    const isNextTwo = laneNum > currentLane && laneNum <= currentLane + 2;
+
+    if (isVisible && isNextTwo && !isMuted) {
+      const audio = new Audio('/assets/freesoundsxx-car-drive-by-268509.mp3');
+      audio.currentTime = 3.2;
+      audio.volume = 0.012; // 92% reduction from original
+
+      // Adjust based on "rushing" state (when player is crossing)
+      if (rushing) {
+        audio.playbackRate = 1.4;
+        audio.volume = 0.02; // 92% reduction from original
+      }
+
+      audio.play().catch(() => { });
+
+      // Calculate how long to play based on the 1.8s segment and playback rate
+      const segmentDuration = 1.8; // from 3.2 to 5.0
+      const playTimeMs = (segmentDuration / audio.playbackRate) * 1000;
+
+      const stopTimer = setTimeout(() => {
+        audio.pause();
+      }, playTimeMs);
+
+      return () => {
+        clearTimeout(stopTimer);
+      };
+    }
+  }, [isVisible, cycle, rushing, currentLane, laneNum, isMuted]);
 
   const handleAnimationEnd = useCallback(() => {
     setIsVisible(false);
@@ -86,8 +121,8 @@ function AnimatedCars({ laneNum, difficulty, rushing }: { laneNum: number; diffi
   const variant = CAR_VARIANTS[Math.floor(seededRandom(laneNum * 31) * 4)];
 
   const rand = seededRandom(laneNum * 100);
-  // Synchronized with the 0.4s crash animation speed
-  const speed = 0.4;
+  // Random speed between 0.3s and 0.8s per lane (seeded so it's stable)
+  const speed = 0.3 + seededRandom(laneNum * 77) * 0.5;
   const delay = -rand * speed;
 
   return (
@@ -99,6 +134,7 @@ function AnimatedCars({ laneNum, difficulty, rushing }: { laneNum: number; diffi
         initialDelay={delay}
         variant={variant}
         rushing={rushing}
+        laneNum={laneNum}
       />
     </div>
   );
@@ -106,11 +142,13 @@ function AnimatedCars({ laneNum, difficulty, rushing }: { laneNum: number; diffi
 
 /** Road barrier + optional half-visible stopped car (railroad crossing style). */
 function AnimatedBarrier({ laneNum, showCar, isJustCrossed }: { laneNum: number; showCar: boolean; isJustCrossed?: boolean }) {
+  const isMuted = useSelector((state: RootState) => state.game.isMuted);
+
   useEffect(() => {
-    if (showCar && isJustCrossed) {
+    if (showCar && isJustCrossed && !isMuted) {
       const audio = new Audio('/assets/olenchic--110065.mp3');
       audio.currentTime = 4.0;
-      audio.volume = 0.5;
+      audio.volume = 0.04; // 92% reduction from 0.5
       audio.play().catch(e => console.log('Audio error:', e));
 
       // Stop the audio after 2.0 seconds (so it stops at 6.0s)
@@ -118,12 +156,11 @@ function AnimatedBarrier({ laneNum, showCar, isJustCrossed }: { laneNum: number;
         audio.pause();
       }, 2000);
     }
-  }, [showCar, isJustCrossed]);
+  }, [showCar, isJustCrossed, isMuted]);
 
   const goingDown = laneNum % 2 === 0;
   const carColor = CAR_COLORS[laneNum % 4];
   const carVariant = CAR_VARIANTS[Math.floor(seededRandom(laneNum * 31) * 4)];
-  const side = goingDown ? 'left' as const : 'right' as const;
 
   return (
     <div className="absolute inset-0 pointer-events-none z-[58] overflow-hidden">
@@ -142,14 +179,17 @@ function AnimatedBarrier({ laneNum, showCar, isJustCrossed }: { laneNum: number;
 
       {/* Barrier always drops */}
       <div
-        className="absolute left-[30%] -translate-x-1/2 animate-barrier-drop-down"
+        className="absolute left-[29%] -translate-x-1/2 animate-barrier-drop-down"
         style={goingDown
-          ? { top: '20%' }
-          : { bottom: '20%' }
+          ? { top: '15%' }
+          : { bottom: '15%' }
         }
       >
-        <div className="w-20 h-24 lg:w-16 lg:h-20 drop-shadow-lg">
-          <BarrierSvg side={side} />
+        <div className="relative w-[82px] h-[98px] lg:w-[68px] lg:h-[84px] drop-shadow-xl transform-gpu">
+          <img src="/assets/tl.png" alt="Barrera" className="w-full h-full object-contain brightness-110 contrast-110" />
+          <div className="absolute inset-x-0 top-[18%] bottom-[42%] flex items-center justify-center pointer-events-none">
+            <img src="/assets/MiLotería.png" alt="Mi Lotería" className="w-[70%] h-auto object-contain" />
+          </div>
         </div>
       </div>
     </div>
@@ -157,14 +197,59 @@ function AnimatedBarrier({ laneNum, showCar, isJustCrossed }: { laneNum: number;
 }
 
 export default function ChickenRoad() {
+  const dispatch = useDispatch();
   const { status, activeGame, crossingLane } = useSelector((state: RootState) => state.game);
   const [visibleLanes, setVisibleLanes] = useState(6);
   const brakingCarCache = useRef<Map<number, boolean>>(new Map());
+  const hasPlayedDeathSound = useRef(false);
 
-  // Reset braking car cache on new game
+  // Reset flags on new game
   useEffect(() => {
-    if (status === 'idle') brakingCarCache.current.clear();
+    if (status === 'idle' || status === 'active') {
+      brakingCarCache.current.clear();
+      hasPlayedDeathSound.current = false;
+    }
   }, [status]);
+
+  // Chicken jump sound
+  const { isMuted } = useSelector((state: RootState) => state.game);
+  const currentLane = activeGame?.currentLane ?? 0;
+  useEffect(() => {
+    if (currentLane > 0 && status === 'active' && !isMuted) {
+      const jumpSound = new Audio('/assets/freesound_community-female-hurt-2-94301.mp3');
+      jumpSound.currentTime = 0;
+      jumpSound.volume = 0.04; // 90% reduction from original
+      jumpSound.play().catch(() => { });
+
+      const timer = setTimeout(() => {
+        jumpSound.pause();
+      }, 500); // Stop at 0.5 seconds
+
+      return () => clearTimeout(timer);
+    }
+  }, [currentLane, status, isMuted]);
+
+  // Chicken death sound (Triggered on justHit for immediate feedback)
+  const lastRevealed = activeGame?.revealedLanes && activeGame.revealedLanes.length > 0
+    ? activeGame.revealedLanes[activeGame.revealedLanes.length - 1]
+    : null;
+  const justHit = (crossingLane !== null && !crossingLane.safe) || (lastRevealed?.hasCar === true);
+
+  useEffect(() => {
+    if (justHit && !hasPlayedDeathSound.current && !isMuted) {
+      hasPlayedDeathSound.current = true;
+      const deathSound = new Audio('/assets/alex_jauk-chicken-noise-228106.mp3');
+      deathSound.currentTime = 0;
+      deathSound.volume = 0.07; // 90% reduction from original
+      deathSound.play().catch(() => { });
+
+      const timer = setTimeout(() => {
+        deathSound.pause();
+      }, 800); // Stop at 0.8 seconds
+
+      return () => clearTimeout(timer);
+    }
+  }, [justHit, isMuted]);
 
   // Dynamic lanes based on width
   useEffect(() => {
@@ -180,17 +265,9 @@ export default function ChickenRoad() {
   }, []);
 
   const difficulty = activeGame?.difficulty ?? 1;
-  const currentLane = activeGame?.currentLane ?? 0;
   const revealedLanes = activeGame?.revealedLanes ?? [];
   const isGameOver = status === 'hit' || status === 'cashed_out';
   const isActive = status === 'active';
-
-  // Detect "just hit" state
-  const lastRevealed = revealedLanes.length > 0 ? revealedLanes[revealedLanes.length - 1] : null;
-  const justHit = isActive && (
-    (crossingLane !== null && !crossingLane.safe) ||
-    lastRevealed?.hasCar === true
-  );
 
   // Streak glow intensity based on risky lanes crossed
   const streakIntensity = Math.min((activeGame?.riskyLanesCrossed ?? 0) / 8, 1);
@@ -237,6 +314,18 @@ export default function ChickenRoad() {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Mute Toggle */}
+          <button
+            onClick={() => dispatch(toggleMute())}
+            className={`p-2 lg:p-1.5 rounded-xl border-2 transition-all flex items-center justify-center shadow-lg transform active:scale-90 ${isMuted
+              ? 'border-danger/50 text-danger bg-danger/10 hover:bg-danger/20'
+              : 'border-action-primary/50 text-action-primary bg-action-primary/10 hover:bg-action-primary/20 shadow-[0_0_15px_rgba(45,212,191,0.15)]'
+              }`}
+            title={isMuted ? 'Activar sonido' : 'Silenciar'}
+          >
+            {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
+          </button>
+
           <div className={`hidden sm:block px-2.5 py-1 lg:px-2 lg:py-0.5 rounded-full border text-[11px] lg:text-[9px] font-bold ${difficultyColors[difficulty]}`}>
             {difficultyLabels[difficulty]}
           </div>
