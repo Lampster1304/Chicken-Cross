@@ -67,8 +67,9 @@ export default function BetPanel() {
     if (amount < betLimits.minBet) { dispatch(gameError(`La apuesta mínima es $${betLimits.minBet.toFixed(2)}`)); return; }
     if (amount > betLimits.maxBet) { dispatch(gameError(`La apuesta máxima es $${betLimits.maxBet.toFixed(2)}`)); return; }
     if (user && amount > user.balance) { dispatch(gameError('Saldo insuficiente')); return; }
-    const autoCashOutAt = autoCashOut ? parseFloat(autoCashOut) : undefined;
-    if (autoCashOutAt !== undefined && autoCashOutAt <= 1) { dispatch(gameError('Auto cobro debe ser > 1.00')); return; }
+    const cashOutTarget = autoCashOut ? parseFloat(autoCashOut) : undefined;
+    if (cashOutTarget !== undefined && cashOutTarget <= amount) { dispatch(gameError(`Auto cobro debe ser mayor a la apuesta ($${amount.toFixed(2)})`)); return; }
+    const autoCashOutAt = cashOutTarget !== undefined ? cashOutTarget / amount : undefined;
     actionLockRef.current = true;
     dispatch(clearError());
     dispatch(setLoading(true));
@@ -212,14 +213,14 @@ export default function BetPanel() {
             ) : null}
 
             <div className={`relative ${!showAutoCashOutMobile ? 'hidden' : 'block'}`}>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-txt-dim text-sm">$</span>
               <input
                 type="number" value={autoCashOut} onChange={e => setAutoCashOut(e.target.value)}
-                placeholder="e.g. 2.50"
-                className="w-full bg-[#2f3070] border border-[#3d3f7a]/50 focus:border-action-primary/50 rounded-xl py-2.5 pl-3 pr-8 text-white text-sm font-medium outline-none transition-colors placeholder:text-txt-dim/50 focus:shadow-[0_0_12px_rgba(163,230,53,0.15)]"
-                min="1.01" step="0.01"
+                placeholder={`e.g. ${(betLimits.minBet * 2).toFixed(2)}`}
+                className="w-full bg-[#2f3070] border border-[#3d3f7a]/50 focus:border-action-primary/50 rounded-xl py-2.5 pl-7 pr-3 text-white text-sm font-medium outline-none transition-colors placeholder:text-txt-dim/50 focus:shadow-[0_0_12px_rgba(163,230,53,0.15)]"
+                min="0.01" step="0.01"
                 autoFocus={showAutoCashOutMobile}
               />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-txt-dim text-xs">x</span>
               {showAutoCashOutMobile && (
                 <button
                   onClick={() => setShowAutoCashOutMobile(false)}
@@ -260,7 +261,7 @@ export default function BetPanel() {
           {activeGame.autoCashOutAt && (
             <div className="flex items-center gap-2 bg-brand/8 border border-brand/20 rounded-xl px-3 py-2.5 lg:py-2">
               <Lock size={14} className="lg:hidden text-brand" /><Lock size={12} className="hidden lg:block text-brand" />
-              <span className="text-sm lg:text-[11px] text-brand font-medium">Auto cobro en {activeGame.autoCashOutAt.toFixed(2)}x</span>
+              <span className="text-sm lg:text-[11px] text-brand font-medium">Auto cobro en ${(activeGame.autoCashOutAt * activeGame.betAmount).toFixed(2)}</span>
               <span className="ml-auto text-xs lg:text-[10px] text-brand font-mono animate-pulse">JUGANDO</span>
             </div>
           )}
