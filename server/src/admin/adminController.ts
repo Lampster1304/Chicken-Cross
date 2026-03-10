@@ -6,6 +6,7 @@ import { adminMiddleware } from '../middleware/adminMiddleware';
 import { authLimiter } from '../middleware/rateLimiter';
 import { validate, loginSchema } from '../middleware/validate';
 import { getAllSettings, updateSetting, getBetLimits, getSiteStats } from './settingsService';
+import { getActiveStats } from '../game/gameEngine';
 
 export const adminRouter = Router();
 
@@ -39,7 +40,11 @@ const updateSettingsSchema = z.object({
   minBet: z.number().positive('El monto mínimo debe ser positivo').optional(),
   maxBet: z.number().positive('El monto máximo debe ser positivo').optional(),
   difficulty: z.number().min(1).max(4).optional(),
-}).refine(data => data.minBet !== undefined || data.maxBet !== undefined || data.difficulty !== undefined, {
+  mult1: z.number().positive().optional(),
+  mult2: z.number().positive().optional(),
+  mult3: z.number().positive().optional(),
+  mult4: z.number().positive().optional(),
+}).refine(data => Object.values(data).some(v => v !== undefined), {
   message: 'Al menos una configuración debe proporcionarse',
 });
 
@@ -52,7 +57,7 @@ adminRouter.put('/settings', authMiddleware, adminMiddleware, async (req: Reques
       return res.status(400).json({ error: msg });
     }
 
-    const { minBet, maxBet, difficulty } = parsed.data;
+    const { minBet, maxBet, difficulty, mult1, mult2, mult3, mult4 } = parsed.data;
 
     // Get current limits to validate cross-constraints
     const current = await getBetLimits();
@@ -72,6 +77,10 @@ adminRouter.put('/settings', authMiddleware, adminMiddleware, async (req: Reques
     if (difficulty !== undefined) {
       await updateSetting('difficulty', difficulty.toString());
     }
+    if (mult1 !== undefined) await updateSetting('mult_1', mult1.toFixed(2));
+    if (mult2 !== undefined) await updateSetting('mult_2', mult2.toFixed(2));
+    if (mult3 !== undefined) await updateSetting('mult_3', mult3.toFixed(2));
+    if (mult4 !== undefined) await updateSetting('mult_4', mult4.toFixed(2));
 
     const settings = await getAllSettings();
     res.json({ settings });
@@ -83,8 +92,9 @@ adminRouter.put('/settings', authMiddleware, adminMiddleware, async (req: Reques
 // GET /api/admin/stats
 adminRouter.get('/stats', authMiddleware, adminMiddleware, async (_req: Request, res: Response) => {
   try {
-    const stats = await getSiteStats();
-    res.json(stats);
+    const dbStats = await getSiteStats();
+    const liveStats = getActiveStats();
+    res.json({ ...dbStats, ...liveStats });
   } catch (error: any) {
     res.status(500).json({ error: 'Error al obtener las estadísticas' });
   }

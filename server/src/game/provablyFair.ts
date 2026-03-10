@@ -43,7 +43,9 @@ export function isLaneDangerous(
  * Get the multiplier earned per lane crossing.
  * Formula: (1 - HOUSE_EDGE) / P(safe)
  */
-export function getLaneMultiplier(difficulty: number): number {
+export function getLaneMultiplier(difficulty: number, customMultiplier?: number): number {
+  if (customMultiplier) return customMultiplier;
+
   if (difficulty === 1) return 1.05;
   if (difficulty === 2) return 1.10;
   if (difficulty === 3) return 1.20;
@@ -59,10 +61,11 @@ export function getLaneMultiplier(difficulty: number): number {
  */
 export function getCumulativeMultiplier(
   difficulty: number,
-  lanesCrossed: number
+  lanesCrossed: number,
+  customMultiplier?: number
 ): number {
   if (lanesCrossed <= 0) return 1.0;
-  const perLane = getLaneMultiplier(difficulty);
+  const perLane = getLaneMultiplier(difficulty, customMultiplier);
   return Math.floor(Math.pow(perLane, lanesCrossed) * 100) / 100;
 }
 
@@ -72,9 +75,10 @@ export function getCumulativeMultiplier(
 export function getNextMultiplier(
   difficulty: number,
   currentLane: number,
-  lanesCrossed: number
+  lanesCrossed: number,
+  customMultiplier?: number
 ): number {
-  return getCumulativeMultiplier(difficulty, lanesCrossed + 1);
+  return getCumulativeMultiplier(difficulty, lanesCrossed + 1, customMultiplier);
 }
 
 /**
