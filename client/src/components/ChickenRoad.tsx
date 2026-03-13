@@ -7,6 +7,8 @@ import { Volume2, VolumeX } from 'lucide-react';
 import CarSvg from './svg/CarSvg';
 import ChickenSvg from './svg/ChickenSvg';
 import ExplosionSvg from './svg/ExplosionSvg';
+import barrierImg from '../assets/tl.png';
+import barrierLogoImg from '../assets/MiLoteria.png';
 
 const CAR_COLORS = ['#ef4444', '#eab308', '#3b82f6', '#8b5cf6'];
 const CAR_VARIANTS: Array<'sedan' | 'pickup' | 'taxi' | 'sports'> = ['sedan', 'pickup', 'taxi', 'sports'];
@@ -187,9 +189,9 @@ function AnimatedBarrier({ laneNum, showCar, isJustCrossed }: { laneNum: number;
         }
       >
         <div className="relative w-[82px] h-[98px] lg:w-[68px] lg:h-[84px] drop-shadow-xl transform-gpu">
-          <img src="/assets/tl.png" alt="Barrera" className="w-full h-full object-contain brightness-110 contrast-110" />
+          <img src={barrierImg} alt="Barrera" className="w-full h-full object-contain brightness-110 contrast-110" />
           <div className="absolute inset-x-0 top-[18%] bottom-[42%] flex items-center justify-center pointer-events-none">
-            <img src="/assets/MiLoteria.png" alt="Mi Lotería" className="w-[70%] h-auto object-contain" />
+            <img src={barrierLogoImg} alt="Mi Lotería" className="w-[70%] h-auto object-contain" />
           </div>
         </div>
       </div>
