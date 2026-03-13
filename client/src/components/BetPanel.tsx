@@ -217,17 +217,17 @@ export default function BetPanel() {
               <input
                 type="number" value={autoCashOut} onChange={e => setAutoCashOut(e.target.value)}
                 placeholder={`e.g. ${(betLimits.minBet * 2).toFixed(2)}`}
-                className="w-full bg-[#2f3070] border border-[#3d3f7a]/50 focus:border-action-primary/50 rounded-xl py-2.5 pl-7 pr-3 text-white text-sm font-medium outline-none transition-colors placeholder:text-txt-dim/50 focus:shadow-[0_0_12px_rgba(163,230,53,0.15)]"
+                className="w-full bg-[#2f3070] border border-[#3d3f7a]/50 focus:border-action-primary/50 rounded-xl py-2.5 pl-7 pr-9 text-white text-sm font-medium outline-none transition-colors placeholder:text-txt-dim/50 focus:shadow-[0_0_12px_rgba(163,230,53,0.15)]"
                 min="0.01" step="0.01"
                 autoFocus={showAutoCashOutMobile}
               />
               {showAutoCashOutMobile && (
                 <button
-                  onClick={() => setShowAutoCashOutMobile(false)}
-                  className="absolute -right-8 top-1/2 -translate-y-1/2 p-2 text-txt-dim hover:text-white transition-colors"
+                  onClick={() => { setAutoCashOut(''); setShowAutoCashOutMobile(false); }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-full bg-[#3d3f7a]/60 hover:bg-danger/30 text-txt-dim hover:text-white transition-colors"
                   title="Cancelar"
                 >
-                  <X size={14} />
+                  <X size={12} />
                 </button>
               )}
             </div>
@@ -252,9 +252,9 @@ export default function BetPanel() {
               <p className="text-sm lg:text-[10px] text-success/70 font-medium mb-0.5">Multiplicador</p>
               <p className="text-3xl lg:text-xl font-bold text-success font-mono">{currentMultiplier.toFixed(2)}x</p>
             </div>
-            <div className="rounded-2xl p-4 lg:p-3 border-2 border-brand/20 text-right" style={{ background: 'linear-gradient(135deg, rgba(251,191,36,0.08) 0%, rgba(251,191,36,0.03) 100%)' }}>
+            <div className="rounded-2xl p-4 lg:p-3 border-2 border-brand/20 text-right overflow-hidden" style={{ background: 'linear-gradient(135deg, rgba(251,191,36,0.08) 0%, rgba(251,191,36,0.03) 100%)' }}>
               <p className="text-sm lg:text-[10px] text-brand/70 font-medium mb-0.5">Pago</p>
-              <p className="text-3xl lg:text-xl font-bold text-brand font-mono">${payout.toFixed(2)}</p>
+              <p className={`${payout >= 1000 ? 'text-xl lg:text-base' : 'text-3xl lg:text-xl'} font-bold text-brand font-mono`}>${payout.toFixed(2)}</p>
             </div>
           </div>
 
