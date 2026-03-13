@@ -153,7 +153,7 @@ export default function BetPanel() {
   const isAutoPlaying = isActive && !!activeGame?.autoCashOutAt;
 
   return (
-    <div className="game-panel p-4 sm:p-5 flex flex-col gap-5 lg:gap-4">
+    <div className="game-panel p-3 sm:p-4 md:p-5 flex flex-col gap-4 sm:gap-5 lg:gap-4">
       {/* Error */}
       {error && (
         <div className="flex items-center gap-2 bg-danger/10 border border-danger/20 rounded-xl px-3 py-2.5">
@@ -236,9 +236,9 @@ export default function BetPanel() {
           {/* Play Button */}
           <button
             onClick={handleStartGame} disabled={isLoading}
-            className="w-full py-5 lg:py-3.5 rounded-2xl btn-3d-primary text-lg lg:text-sm flex items-center justify-center gap-2"
+            className="w-full py-3.5 sm:py-4 lg:py-3.5 rounded-2xl btn-3d-primary text-base sm:text-lg lg:text-sm flex items-center justify-center gap-2"
           >
-            <Zap size={18} className="lg:hidden" /><Zap size={16} className="hidden lg:block" />
+            <Zap size={16} className="lg:hidden" /><Zap size={14} className="hidden lg:block" />
             {isLoading ? 'Iniciando...' : 'Apostar'}
           </button>
         </>
@@ -247,14 +247,14 @@ export default function BetPanel() {
       {/* ── ACTIVE ── */}
       {isActive && activeGame && (
         <>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-2xl p-4 lg:p-3 border-2 border-success/20" style={{ background: 'linear-gradient(135deg, rgba(45,212,191,0.08) 0%, rgba(45,212,191,0.03) 100%)' }}>
-              <p className="text-sm lg:text-[10px] text-success/70 font-medium mb-0.5">Multiplicador</p>
-              <p className="text-3xl lg:text-xl font-bold text-success font-mono">{currentMultiplier.toFixed(2)}x</p>
+          <div className="grid grid-cols-2 gap-2 sm:gap-3">
+            <div className="rounded-2xl p-3 sm:p-4 lg:p-3 border-2 border-success/20" style={{ background: 'linear-gradient(135deg, rgba(45,212,191,0.08) 0%, rgba(45,212,191,0.03) 100%)' }}>
+              <p className="text-xs sm:text-sm lg:text-[10px] text-success/70 font-medium mb-0.5">Multiplicador</p>
+              <p className="text-2xl sm:text-3xl lg:text-xl font-bold text-success font-mono">{currentMultiplier.toFixed(2)}x</p>
             </div>
-            <div className="rounded-2xl p-4 lg:p-3 border-2 border-brand/20 text-right overflow-hidden" style={{ background: 'linear-gradient(135deg, rgba(251,191,36,0.08) 0%, rgba(251,191,36,0.03) 100%)' }}>
-              <p className="text-sm lg:text-[10px] text-brand/70 font-medium mb-0.5">Pago</p>
-              <p className={`${payout >= 1000 ? 'text-xl lg:text-base' : 'text-3xl lg:text-xl'} font-bold text-brand font-mono`}>${payout.toFixed(2)}</p>
+            <div className="rounded-2xl p-3 sm:p-4 lg:p-3 border-2 border-brand/20 text-right overflow-hidden" style={{ background: 'linear-gradient(135deg, rgba(251,191,36,0.08) 0%, rgba(251,191,36,0.03) 100%)' }}>
+              <p className="text-xs sm:text-sm lg:text-[10px] text-brand/70 font-medium mb-0.5">Pago</p>
+              <p className={`${payout >= 1000 ? 'text-lg sm:text-xl lg:text-base' : 'text-2xl sm:text-3xl lg:text-xl'} font-bold text-brand font-mono`}>${payout.toFixed(2)}</p>
             </div>
           </div>
 
@@ -270,21 +270,21 @@ export default function BetPanel() {
             <>
               <button
                 onClick={handleCross} disabled={isLoading}
-                className="w-full py-6 lg:py-4 rounded-2xl text-lg lg:text-sm flex flex-col items-center gap-1 lg:gap-0.5 btn-3d-primary"
+                className="w-full py-4 sm:py-5 lg:py-4 rounded-2xl text-base sm:text-lg lg:text-sm flex flex-col items-center gap-1 lg:gap-0.5 btn-3d-primary"
               >
-                <span className="text-sm lg:text-[10px] opacity-70 flex items-center gap-1">
-                  <ArrowRight size={14} className="lg:hidden" /><ArrowRight size={10} className="hidden lg:block" /> Siguiente carril
+                <span className="text-xs sm:text-sm lg:text-[10px] opacity-70 flex items-center gap-1">
+                  <ArrowRight size={12} className="sm:hidden" /><ArrowRight size={14} className="hidden sm:inline lg:hidden" /><ArrowRight size={10} className="hidden lg:inline" /> Siguiente carril
                 </span>
-                <span className="text-2xl lg:text-lg font-bold">{nextMultiplier?.toFixed(2)}x</span>
+                <span className="text-xl sm:text-2xl lg:text-lg font-bold">{nextMultiplier?.toFixed(2)}x</span>
               </button>
 
               {activeGame.currentLane > 0 && (
                 <button
                   onClick={handleCashOut} disabled={isLoading}
-                  className="w-full py-5 lg:py-3 rounded-2xl btn-3d-success text-lg lg:text-sm flex items-center justify-center gap-2"
+                  className="w-full py-3.5 sm:py-4 lg:py-3 rounded-2xl btn-3d-success text-base sm:text-lg lg:text-sm flex items-center justify-center gap-2"
                   style={{ boxShadow: '0 0 20px rgba(45,212,191,0.3)' }}
                 >
-                  <TrendingUp size={18} className="lg:hidden" /><TrendingUp size={14} className="hidden lg:block" />
+                  <TrendingUp size={16} className="sm:hidden" /><TrendingUp size={18} className="hidden sm:inline lg:hidden" /><TrendingUp size={14} className="hidden lg:inline" />
                   Cobrar ${payout.toFixed(2)}
                 </button>
               )}
@@ -296,7 +296,7 @@ export default function BetPanel() {
       {/* ── GAME OVER ── */}
       {isGameOver && lastResult && (
         <>
-          <div className={`p-5 rounded-2xl text-center border-2 ${lastResult.result === 'hit'
+          <div className={`p-4 sm:p-5 rounded-2xl text-center border-2 ${lastResult.result === 'hit'
             ? 'border-danger/30'
             : 'border-success/30'
             }`}
@@ -308,23 +308,23 @@ export default function BetPanel() {
           >
             {lastResult.result === 'hit' ? (
               <div className="space-y-1">
-                <p className="text-2xl lg:text-lg font-bold text-danger">¡Chocaste!</p>
-                <p className="text-3xl lg:text-xl font-bold text-txt/70 font-mono">-${Math.abs(lastResult.profit).toFixed(2)}</p>
+                <p className="text-xl sm:text-2xl lg:text-lg font-bold text-danger">¡Chocaste!</p>
+                <p className="text-2xl sm:text-3xl lg:text-xl font-bold text-txt/70 font-mono">-${Math.abs(lastResult.profit).toFixed(2)}</p>
               </div>
             ) : (
               <div className="space-y-1">
-                <p className="text-2xl lg:text-lg font-bold text-success">¡Ganaste!</p>
-                <p className="text-4xl lg:text-2xl font-bold text-txt font-mono">{lastResult.multiplier.toFixed(2)}x</p>
-                <p className="text-xl lg:text-base font-semibold text-success font-mono">+${lastResult.profit.toFixed(2)}</p>
+                <p className="text-xl sm:text-2xl lg:text-lg font-bold text-success">¡Ganaste!</p>
+                <p className="text-3xl sm:text-4xl lg:text-2xl font-bold text-txt font-mono">{lastResult.multiplier.toFixed(2)}x</p>
+                <p className="text-lg sm:text-xl lg:text-base font-semibold text-success font-mono">+${lastResult.profit.toFixed(2)}</p>
               </div>
             )}
           </div>
 
           <button
             onClick={handlePlayAgain}
-            className="w-full py-5 lg:py-3.5 rounded-2xl btn-3d-primary text-lg lg:text-sm flex items-center justify-center gap-2"
+            className="w-full py-3.5 sm:py-4 lg:py-3.5 rounded-2xl btn-3d-primary text-base sm:text-lg lg:text-sm flex items-center justify-center gap-2"
           >
-            <RotateCcw size={18} className="lg:hidden" /><RotateCcw size={14} className="hidden lg:block" />
+            <RotateCcw size={16} className="lg:hidden" /><RotateCcw size={14} className="hidden lg:block" />
             Jugar de Nuevo
           </button>
         </>
