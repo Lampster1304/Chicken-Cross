@@ -1,7 +1,8 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../store';
-import { toggleMute } from '../store/gameSlice';
+import { toggleMute, setLoading } from '../store/gameSlice';
+import { getSocket } from '../hooks/useGameSocket';
 import { Volume2, VolumeX } from 'lucide-react';
 import CarSvg from './svg/CarSvg';
 import ChickenSvg from './svg/ChickenSvg';
@@ -198,10 +199,18 @@ function AnimatedBarrier({ laneNum, showCar, isJustCrossed }: { laneNum: number;
 
 export default function ChickenRoad() {
   const dispatch = useDispatch();
-  const { status, activeGame, crossingLane } = useSelector((state: RootState) => state.game);
+  const { status, activeGame, crossingLane, isLoading } = useSelector((state: RootState) => state.game);
   const [visibleLanes, setVisibleLanes] = useState(6);
   const brakingCarCache = useRef<Map<number, boolean>>(new Map());
   const hasPlayedDeathSound = useRef(false);
+
+  const handleLaneCross = useCallback(() => {
+    if (isLoading) return;
+    const socket = getSocket();
+    if (!socket || !socket.connected) return;
+    dispatch(setLoading(true));
+    socket.emit('game:cross');
+  }, [isLoading, dispatch]);
 
   // Reset flags on new game
   useEffect(() => {
@@ -389,7 +398,7 @@ export default function ChickenRoad() {
 
                 {/* Next Multiplier Target (Manhole Cover style) */}
                 {isNextLane && activeGame?.nextMultiplier && !isChickenHere && (
-                  <div className="manhole-cover animate-pop z-40 cursor-pointer hover:scale-105 active:scale-95 group">
+                  <div onClick={handleLaneCross} className="manhole-cover animate-pop z-40 cursor-pointer hover:scale-105 active:scale-95 group">
                     <span className="text-base lg:text-[10px] font-black leading-none text-white drop-shadow-md">{activeGame.nextMultiplier.toFixed(2)}x</span>
                   </div>
                 )}
