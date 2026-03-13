@@ -26,11 +26,11 @@ export default function GamePage() {
 
       <main className="flex-1 p-3 sm:p-5 lg:p-6 max-w-[1600px] mx-auto w-full flex flex-col gap-5">
         {/* Game + Controls */}
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] xl:grid-cols-[1fr_380px] gap-4 items-start">
-          <div className="h-full min-h-[480px] sm:min-h-[500px] lg:min-h-[400px] isolate">
+        <div className="grid grid-cols-1 md:grid-cols-[1fr_280px] lg:grid-cols-[1fr_340px] xl:grid-cols-[1fr_380px] gap-3 sm:gap-4 items-start">
+          <div className="h-full min-h-[280px] sm:min-h-[360px] md:min-h-[420px] lg:min-h-[400px] isolate">
             <GameArea />
           </div>
-          <div className="lg:sticky lg:top-[72px]">
+          <div className="md:sticky md:top-[72px]">
             <BetPanel />
           </div>
         </div>
@@ -38,7 +38,7 @@ export default function GamePage() {
         {/* Bottom Panels */}
         <div>
           {/* Mobile tabs */}
-          <div className="flex bg-bg-surface rounded-2xl p-1 gap-0.5 mb-4 lg:hidden border border-[#3d3f7a]/50">
+          <div className="flex bg-bg-surface rounded-2xl p-1 gap-0.5 mb-4 md:hidden border border-[#3d3f7a]/50">
             {TABS.map(tab => {
               const Icon = tab.icon;
               const active = activeTab === tab.key;
@@ -56,8 +56,8 @@ export default function GamePage() {
             })}
           </div>
 
-          {/* Desktop: first row 2-col (Live, History) */}
-          <div className="hidden lg:grid lg:grid-cols-2 gap-4">
+          {/* Desktop/Tablet: first row 2-col (Live, History) */}
+          <div className="hidden md:grid md:grid-cols-2 gap-3 sm:gap-4">
             <Panel title="En Vivo" icon={Radio} live>
               <BetsList />
             </Panel>
@@ -66,15 +66,15 @@ export default function GamePage() {
             </Panel>
           </div>
 
-          {/* Desktop: second row (Rules) */}
-          <div className="hidden lg:block mt-4">
+          {/* Desktop/Tablet: second row (Rules) */}
+          <div className="hidden md:block mt-3 sm:mt-4">
             <Panel title="Reglas del Juego" icon={Info}>
               <GameDescription />
             </Panel>
           </div>
 
           {/* Mobile content */}
-          <div className="lg:hidden">
+          <div className="md:hidden">
             {activeTab === 'feed' && <Panel title="En Vivo" icon={Radio} live><BetsList /></Panel>}
             {activeTab === 'history' && <Panel title="Tu Historial" icon={History}><GameHistory /></Panel>}
             {activeTab === 'description' && <Panel title="Reglas del Juego" icon={Info}><GameDescription /></Panel>}
@@ -103,7 +103,7 @@ function Panel({
   children: React.ReactNode;
 }) {
   return (
-    <div className="game-panel overflow-hidden flex flex-col min-h-[320px]">
+    <div className="game-panel overflow-hidden flex flex-col min-h-[250px] sm:min-h-[320px]">
       <div className="flex items-center gap-2 px-4 py-3 border-b border-[#3d3f7a]/40" style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.08) 0%, transparent 100%)' }}>
         <Icon size={13} className="text-action-secondary" />
         <span className="text-[13px] font-medium text-txt-muted">{title}</span>

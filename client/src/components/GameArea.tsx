@@ -34,13 +34,13 @@ export default function GameArea() {
         {/* Idle State */}
         {status === 'idle' && (
           <div className="absolute inset-0 flex flex-col items-center justify-center" style={{ background: 'linear-gradient(180deg, rgba(26,27,58,0.95) 0%, rgba(139,92,246,0.15) 100%)' }}>
-            <div className="text-center space-y-4 lg:space-y-3">
-              <div className="relative inline-block w-24 h-24 lg:w-16 lg:h-16 drop-shadow-2xl">
+            <div className="text-center space-y-3 sm:space-y-4 lg:space-y-3">
+              <div className="relative inline-block w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-16 lg:h-16 drop-shadow-2xl">
                 <ChickenSvg />
               </div>
               <div>
-                <h2 className="text-2xl lg:text-lg font-bold bg-gradient-to-r from-brand to-action-primary bg-clip-text text-transparent tracking-tight">Chicken Cross</h2>
-                <p className="text-base lg:text-[11px] text-txt-muted mt-1 lg:mt-0.5">Apuesta para comenzar</p>
+                <h2 className="text-xl sm:text-2xl lg:text-lg font-bold bg-gradient-to-r from-brand to-action-primary bg-clip-text text-transparent tracking-tight">Chicken Cross</h2>
+                <p className="text-sm sm:text-base lg:text-[11px] text-txt-muted mt-1 lg:mt-0.5">Apuesta para comenzar</p>
               </div>
             </div>
           </div>
@@ -49,10 +49,10 @@ export default function GameArea() {
         {/* Hit State */}
         {isHit && (
           <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'linear-gradient(180deg, rgba(255,107,107,0.08) 0%, rgba(255,107,107,0.15) 100%)' }}>
-            <div className="text-center space-y-4 lg:space-y-3">
-              <ExplosionSvg className="w-24 h-24 lg:w-14 lg:h-14 animate-shake mx-auto" />
-              <div className="bg-danger/90 px-8 py-3 lg:px-6 lg:py-2.5 rounded-2xl border-b-4 border-[#b91c1c]">
-                <p className="text-white font-black text-2xl lg:text-lg tracking-wide">¡CHOCASTE!</p>
+            <div className="text-center space-y-3 sm:space-y-4 lg:space-y-3">
+              <ExplosionSvg className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-14 lg:h-14 animate-shake mx-auto" />
+              <div className="bg-danger/90 px-5 py-2 sm:px-8 sm:py-3 lg:px-6 lg:py-2.5 rounded-2xl border-b-4 border-[#b91c1c]">
+                <p className="text-white font-black text-xl sm:text-2xl lg:text-lg tracking-wide">¡CHOCASTE!</p>
               </div>
             </div>
           </div>
@@ -61,14 +61,14 @@ export default function GameArea() {
         {/* Win State */}
         {isWin && lastResult && (
           <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'linear-gradient(180deg, rgba(45,212,191,0.05) 0%, rgba(251,191,36,0.1) 100%)' }}>
-            <div className="text-center space-y-3 lg:space-y-2">
-              <div className="text-6xl lg:text-4xl">🏆</div>
+            <div className="text-center space-y-2 sm:space-y-3 lg:space-y-2">
+              <div className="text-4xl sm:text-5xl md:text-6xl lg:text-4xl">🏆</div>
               <div>
-                <div className="inline-block bg-brand/20 border-2 border-brand/40 px-5 py-2 lg:px-4 lg:py-1 rounded-full mb-2 lg:mb-1">
-                  <p className="text-3xl lg:text-xl font-bold text-brand font-mono">{lastResult.multiplier.toFixed(2)}×</p>
+                <div className="inline-block bg-brand/20 border-2 border-brand/40 px-3 py-1.5 sm:px-5 sm:py-2 lg:px-4 lg:py-1 rounded-full mb-2 lg:mb-1">
+                  <p className="text-2xl sm:text-3xl lg:text-xl font-bold text-brand font-mono">{lastResult.multiplier.toFixed(2)}×</p>
                 </div>
-                <div className="inline-block bg-success/15 border border-success/30 px-5 py-2 lg:px-4 lg:py-1 rounded-full mt-1">
-                  <p className="text-success font-bold text-xl lg:text-sm font-mono">+${lastResult.profit.toFixed(2)}</p>
+                <div className="inline-block bg-success/15 border border-success/30 px-3 py-1.5 sm:px-5 sm:py-2 lg:px-4 lg:py-1 rounded-full mt-1">
+                  <p className="text-success font-bold text-base sm:text-xl lg:text-sm font-mono">+${lastResult.profit.toFixed(2)}</p>
                 </div>
               </div>
             </div>
