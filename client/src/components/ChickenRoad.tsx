@@ -188,7 +188,7 @@ function AnimatedBarrier({ laneNum, showCar, isJustCrossed }: { laneNum: number;
         <div className="relative w-[82px] h-[98px] lg:w-[68px] lg:h-[84px] drop-shadow-xl transform-gpu">
           <img src="/assets/tl.png" alt="Barrera" className="w-full h-full object-contain brightness-110 contrast-110" />
           <div className="absolute inset-x-0 top-[18%] bottom-[42%] flex items-center justify-center pointer-events-none">
-            <img src="/assets/MiLotería.png" alt="Mi Lotería" className="w-[70%] h-auto object-contain" />
+            <img src="/assets/MiLoteria.png" alt="Mi Lotería" className="w-[70%] h-auto object-contain" />
           </div>
         </div>
       </div>
