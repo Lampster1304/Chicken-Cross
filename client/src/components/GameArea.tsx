@@ -25,7 +25,7 @@ export default function GameArea() {
       <ChickenRoad />
 
       {/* Status Overlays */}
-      <div className="absolute inset-0 pointer-events-none z-50">
+      <div className="absolute inset-0 pointer-events-none z-[70]">
         {/* Hit Flash */}
         {isHit && (
           <div className="absolute inset-0 z-[200] pointer-events-none animate-screen-flash-hit" />
