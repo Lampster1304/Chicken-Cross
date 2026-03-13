@@ -105,7 +105,7 @@ function AnimatedCar({ goingDown, carColor, speed, initialDelay, variant, rushin
     <div
       ref={carRef}
       key={cycle}
-      className="absolute left-1/2 -translate-x-1/2 w-28 h-40 lg:w-20 lg:h-32 drop-shadow-lg"
+      className="absolute left-1/2 -translate-x-1/2 w-[55%] max-w-[100px] aspect-[7/10] drop-shadow-lg"
       style={{
         animation: `${animClass} ${speed}s linear ${cycle === 0 ? initialDelay : 0}s forwards`,
       }}
@@ -170,7 +170,7 @@ function AnimatedBarrier({ laneNum, showCar, isJustCrossed }: { laneNum: number;
       {/* Car brakes to a halt, half-visible at the edge (30% chance) */}
       {showCar && (
         <div
-          className={`absolute w-28 h-40 lg:w-20 lg:h-32 drop-shadow-lg ${goingDown ? 'animate-car-brake-top' : 'animate-car-brake-bottom'}`}
+          className={`absolute w-[55%] max-w-[100px] aspect-[7/10] drop-shadow-lg ${goingDown ? 'animate-car-brake-top' : 'animate-car-brake-bottom'}`}
           style={goingDown
             ? { top: 0, left: '50%' }
             : { bottom: 0, left: '50%' }
@@ -188,7 +188,7 @@ function AnimatedBarrier({ laneNum, showCar, isJustCrossed }: { laneNum: number;
           : { bottom: '15%' }
         }
       >
-        <div className="relative w-[82px] h-[98px] lg:w-[68px] lg:h-[84px] drop-shadow-xl transform-gpu">
+        <div className="relative w-[65%] max-w-[82px] aspect-[41/49] drop-shadow-xl transform-gpu">
           <img src={barrierImg} alt="Barrera" className="w-full h-full object-contain brightness-110 contrast-110" />
           <div className="absolute inset-x-0 top-[18%] bottom-[42%] flex items-center justify-center pointer-events-none">
             <img src={barrierLogoImg} alt="Mi Lotería" className="w-[70%] h-auto object-contain" />
@@ -266,8 +266,9 @@ export default function ChickenRoad() {
   useEffect(() => {
     const handleResize = () => {
       const width = window.innerWidth;
-      if (width < 640) setVisibleLanes(3);
-      else if (width < 1024) setVisibleLanes(4);
+      if (width < 480) setVisibleLanes(3);
+      else if (width < 768) setVisibleLanes(4);
+      else if (width < 1024) setVisibleLanes(5);
       else setVisibleLanes(6);
     };
     handleResize();
@@ -317,8 +318,8 @@ export default function ChickenRoad() {
         <div key={activeGame?.currentMultiplier ?? 0} className="flex gap-2 items-center animate-mult-pulse">
           <div className="w-3 h-3 lg:w-2.5 lg:h-2.5 rounded-full bg-success shadow-[0_0_10px_#2dd4bf] animate-pulse" />
           <div className="flex items-center gap-2 bg-success/10 border border-success/20 rounded-full px-3 py-1.5 lg:py-1">
-            <span className="text-[11px] lg:text-[8px] font-black text-success uppercase tracking-widest leading-none">MULT</span>
-            <span className="text-xl lg:text-lg font-black text-success font-mono leading-none">
+            <span className="text-[9px] sm:text-[11px] lg:text-[8px] font-black text-success uppercase tracking-widest leading-none">MULT</span>
+            <span className="text-base sm:text-xl lg:text-lg font-black text-success font-mono leading-none">
               {activeGame?.currentMultiplier?.toFixed(2) ?? '1.00'}x
             </span>
           </div>
@@ -360,8 +361,8 @@ export default function ChickenRoad() {
               <span className="text-[8px] font-black tracking-widest text-white uppercase whitespace-nowrap">ACERA</span>
             </div>
             {currentLane === 0 && isActive && (
-              <div className="relative z-20 animate-idle-bounce">
-                <div className="w-20 h-20 lg:w-16 lg:h-16 drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)]">
+              <div className="relative z-20 animate-idle-bounce w-[65%] max-w-[80px]">
+                <div className="w-full aspect-square drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)]">
                   <ChickenSvg />
                 </div>
               </div>
@@ -401,7 +402,7 @@ export default function ChickenRoad() {
                 {/* Next Multiplier Target (Manhole Cover style) */}
                 {isNextLane && activeGame?.nextMultiplier && !isChickenHere && (
                   <div onClick={handleLaneCross} className="manhole-cover animate-pop z-40 cursor-pointer hover:scale-105 active:scale-95 group">
-                    <span className="text-base lg:text-[10px] font-black leading-none text-white drop-shadow-md">{activeGame.nextMultiplier.toFixed(2)}x</span>
+                    <span className="text-[11px] sm:text-sm font-black leading-none text-white drop-shadow-md">{activeGame.nextMultiplier.toFixed(2)}x</span>
                   </div>
                 )}
 
@@ -409,12 +410,12 @@ export default function ChickenRoad() {
                 {isCrossingThisLane && !crossingLane.safe && (
                   <div className="absolute inset-0 z-50 pointer-events-none overflow-hidden">
                     <div
-                      className={`absolute left-1/2 w-28 h-40 lg:w-20 lg:h-32 drop-shadow-lg ${goingDown ? 'animate-crash-from-left' : 'animate-crash-from-right'}`}
+                      className={`absolute left-1/2 w-[55%] max-w-[100px] aspect-[7/10] drop-shadow-lg ${goingDown ? 'animate-crash-from-left' : 'animate-crash-from-right'}`}
                     >
                       <CarSvg color={carColor} direction={goingDown ? 'up' : 'down'} variant={carVariant} />
                     </div>
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[55] animate-crash-fire">
-                      <ExplosionSvg className="w-24 h-24 lg:w-20 lg:h-20 drop-shadow-[0_4px_0_rgba(255,0,0,0.4)] animate-shake-hard" />
+                      <ExplosionSvg className="w-[45%] max-w-[96px] aspect-square drop-shadow-[0_4px_0_rgba(255,0,0,0.4)] animate-shake-hard" />
                     </div>
                   </div>
                 )}
@@ -422,11 +423,11 @@ export default function ChickenRoad() {
                 {/* ─── PHASE 2: REVEALED STATES ─── */}
                 {isRevealed && revealed.hasCar && !isChickenHere && (
                   <div className="absolute inset-0 z-50 pointer-events-none overflow-hidden">
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-28 h-40 lg:w-20 lg:h-32 drop-shadow-lg">
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[55%] max-w-[100px] aspect-[7/10] drop-shadow-lg">
                       <CarSvg color={carColor} direction={goingDown ? 'up' : 'down'} variant={carVariant} />
                     </div>
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[55]">
-                      <ExplosionSvg className="w-24 h-24 lg:w-20 lg:h-20 drop-shadow-[0_4px_0_rgba(255,0,0,0.4)] animate-shake-hard" />
+                      <ExplosionSvg className="w-[45%] max-w-[96px] aspect-square drop-shadow-[0_4px_0_rgba(255,0,0,0.4)] animate-shake-hard" />
                     </div>
                   </div>
                 )}
@@ -459,14 +460,14 @@ export default function ChickenRoad() {
                   return (
                     <>
                       <div
-                        className={`absolute z-[60] transition-all duration-300 ${isHit ? 'animate-squish' : chickenAnim}`}
+                        className={`absolute z-[60] w-[50%] max-w-[80px] transition-all duration-300 ${isHit ? 'animate-squish' : chickenAnim}`}
                         style={{
                           filter: !isHit && streakIntensity > 0
                             ? `drop-shadow(0 0 ${8 + streakIntensity * 16}px rgba(16, 185, 129, ${0.3 + streakIntensity * 0.5}))`
                             : undefined,
                         }}
                       >
-                        <div className="w-20 h-20 lg:w-16 lg:h-16 drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)]">
+                        <div className="w-full aspect-square drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)]">
                           <ChickenSvg hit={isHit} />
                         </div>
                       </div>
