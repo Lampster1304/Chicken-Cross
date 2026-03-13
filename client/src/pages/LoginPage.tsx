@@ -38,16 +38,16 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center px-4" style={{ background: 'linear-gradient(180deg, #1a1b3a 0%, rgba(139,92,246,0.1) 50%, #1a1b3a 100%)' }}>
       <div className="w-full max-w-xl">
         {/* Logo */}
-        <div className="text-center mb-12">
-          <div className="w-32 h-32 mx-auto mb-6 animate-bounce-slow">
+        <div className="text-center mb-6 sm:mb-8 md:mb-12">
+          <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 mx-auto mb-4 sm:mb-6 animate-bounce-slow">
             <ChickenSvg />
           </div>
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-brand to-action-primary bg-clip-text text-transparent">Chicken Cross</h1>
-          <p className="text-lg text-txt-muted mt-3">Inicia sesión en tu cuenta</p>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-brand to-action-primary bg-clip-text text-transparent">Chicken Cross</h1>
+          <p className="text-sm sm:text-base md:text-lg text-txt-muted mt-2 sm:mt-3">Inicia sesión en tu cuenta</p>
         </div>
 
         {/* Card */}
-        <div className="game-panel p-10">
+        <div className="game-panel p-5 sm:p-7 md:p-10">
           {error && (
             <div className="flex items-center gap-3 bg-danger/10 border border-danger/20 rounded-xl px-5 py-4 mb-6">
               <AlertCircle size={22} className="text-danger shrink-0" />
@@ -57,26 +57,26 @@ export default function LoginPage() {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="text-base font-medium text-txt-muted mb-2.5 block">Email</label>
+              <label className="text-sm sm:text-base font-medium text-txt-muted mb-2 sm:mb-2.5 block">Email</label>
               <input
                 type="email" value={email} onChange={e => setEmail(e.target.value)}
-                className="w-full bg-[#2f3070] border-2 border-[#3d3f7a]/50 focus:border-action-primary/50 rounded-xl px-5 py-4 text-white text-lg outline-none transition-colors placeholder:text-txt-dim/40 focus:shadow-[0_0_12px_rgba(163,230,53,0.15)]"
+                className="w-full bg-[#2f3070] border-2 border-[#3d3f7a]/50 focus:border-action-primary/50 rounded-xl px-4 py-3 sm:px-5 sm:py-4 text-white text-base sm:text-lg outline-none transition-colors placeholder:text-txt-dim/40 focus:shadow-[0_0_12px_rgba(163,230,53,0.15)]"
                 placeholder="you@email.com" required
               />
             </div>
             <div>
-              <label className="text-base font-medium text-txt-muted mb-2.5 block">Contraseña</label>
+              <label className="text-sm sm:text-base font-medium text-txt-muted mb-2 sm:mb-2.5 block">Contraseña</label>
               <input
                 type="password" value={password} onChange={e => setPassword(e.target.value)}
-                className="w-full bg-[#2f3070] border-2 border-[#3d3f7a]/50 focus:border-action-primary/50 rounded-xl px-5 py-4 text-white text-lg outline-none transition-colors placeholder:text-txt-dim/40 focus:shadow-[0_0_12px_rgba(163,230,53,0.15)]"
+                className="w-full bg-[#2f3070] border-2 border-[#3d3f7a]/50 focus:border-action-primary/50 rounded-xl px-4 py-3 sm:px-5 sm:py-4 text-white text-base sm:text-lg outline-none transition-colors placeholder:text-txt-dim/40 focus:shadow-[0_0_12px_rgba(163,230,53,0.15)]"
                 placeholder="••••••••" required
               />
             </div>
             <button
               type="submit" disabled={loading}
-              className="w-full py-5 rounded-2xl btn-3d-primary text-xl font-bold flex items-center justify-center gap-3"
+              className="w-full py-3.5 sm:py-4 md:py-5 rounded-2xl btn-3d-primary text-base sm:text-lg md:text-xl font-bold flex items-center justify-center gap-2 sm:gap-3"
             >
-              <LogIn size={22} />
+              <LogIn size={20} />
               {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
             </button>
           </form>
