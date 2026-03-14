@@ -22,7 +22,9 @@ export default function GameArea() {
         } ${isHit ? 'shadow-[0_0_50px_rgba(255,107,107,0.2)]' : ''} ${isWin ? 'shadow-[0_0_50px_rgba(251,191,36,0.2)]' : ''
         }`}
     >
-      <ChickenRoad />
+      <div className="relative z-0">
+        <ChickenRoad />
+      </div>
 
       {/* Status Overlays */}
       <div className="absolute inset-0 pointer-events-none z-[70]">

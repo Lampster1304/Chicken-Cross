@@ -14,7 +14,7 @@ export default function BetPanel() {
   const [betLimits, setBetLimits] = useState({ minBet: 1, maxBet: 500, difficulty: 1 });
 
   const dispatch = useDispatch();
-  const { status, activeGame, lastResult, isLoading, error } = useSelector((state: RootState) => state.game);
+  const { status, activeGame, lastResult, isLoading, error, crossingLane } = useSelector((state: RootState) => state.game);
   const user = useSelector((state: RootState) => state.auth.user);
 
   const isIdle = status === 'idle';
@@ -30,7 +30,7 @@ export default function BetPanel() {
       const timer = setTimeout(() => {
         actionLockRef.current = false;
         dispatch(setLoading(false));
-      }, 3000);
+      }, 1500);
       return () => clearTimeout(timer);
     }
   }, [isLoading, dispatch]);
@@ -38,6 +38,15 @@ export default function BetPanel() {
   useEffect(() => {
     if (status !== 'active') actionLockRef.current = false;
   }, [status]);
+
+  // Safety: release lock when crossing animation finishes
+  const prevCrossingRef = useRef(crossingLane);
+  useEffect(() => {
+    if (prevCrossingRef.current && !crossingLane) {
+      actionLockRef.current = false;
+    }
+    prevCrossingRef.current = crossingLane;
+  }, [crossingLane]);
 
   useEffect(() => {
     if (!error) return;
@@ -224,10 +233,10 @@ export default function BetPanel() {
               {showAutoCashOutMobile && (
                 <button
                   onClick={() => { setAutoCashOut(''); setShowAutoCashOutMobile(false); }}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-full bg-[#3d3f7a]/60 hover:bg-danger/30 text-txt-dim hover:text-white transition-colors"
+                  className="absolute right-1.5 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full bg-[#3d3f7a]/60 hover:bg-danger/30 text-txt-dim hover:text-white transition-colors"
                   title="Cancelar"
                 >
-                  <X size={12} />
+                  <X size={16} />
                 </button>
               )}
             </div>
@@ -252,9 +261,9 @@ export default function BetPanel() {
               <p className="text-xs sm:text-sm lg:text-[10px] text-success/70 font-medium mb-0.5">Multiplicador</p>
               <p className="text-2xl sm:text-3xl lg:text-xl font-bold text-success font-mono">{currentMultiplier.toFixed(2)}x</p>
             </div>
-            <div className="rounded-2xl p-3 sm:p-4 lg:p-3 border-2 border-brand/20 text-right overflow-hidden" style={{ background: 'linear-gradient(135deg, rgba(251,191,36,0.08) 0%, rgba(251,191,36,0.03) 100%)' }}>
+            <div className="rounded-2xl p-3 sm:p-4 lg:p-3 border-2 border-brand/20 text-right" style={{ background: 'linear-gradient(135deg, rgba(251,191,36,0.08) 0%, rgba(251,191,36,0.03) 100%)' }}>
               <p className="text-xs sm:text-sm lg:text-[10px] text-brand/70 font-medium mb-0.5">Pago</p>
-              <p className={`${payout >= 1000 ? 'text-lg sm:text-xl lg:text-base' : 'text-2xl sm:text-3xl lg:text-xl'} font-bold text-brand font-mono`}>${payout.toFixed(2)}</p>
+              <p className={`${payout >= 10000 ? 'text-sm sm:text-base lg:text-xs' : payout >= 1000 ? 'text-base sm:text-lg lg:text-sm' : 'text-2xl sm:text-3xl lg:text-xl'} font-bold text-brand font-mono truncate`}>${payout.toFixed(2)}</p>
             </div>
           </div>
 

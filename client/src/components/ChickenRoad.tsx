@@ -182,13 +182,13 @@ function AnimatedBarrier({ laneNum, showCar, isJustCrossed }: { laneNum: number;
 
       {/* Barrier always drops */}
       <div
-        className="absolute left-[29%] -translate-x-1/2 animate-barrier-drop-down"
+        className="absolute left-[29%] -translate-x-1/2 w-[65%] max-w-[82px] animate-barrier-drop-down"
         style={goingDown
           ? { top: '15%' }
           : { bottom: '15%' }
         }
       >
-        <div className="relative w-[65%] max-w-[82px] aspect-[41/49] drop-shadow-xl transform-gpu">
+        <div className="relative w-full aspect-[41/49] drop-shadow-xl transform-gpu">
           <img src={barrierImg} alt="Barrera" className="w-full h-full object-contain brightness-110 contrast-110" />
           <div className="absolute inset-x-0 top-[18%] bottom-[42%] flex items-center justify-center pointer-events-none">
             <img src={barrierLogoImg} alt="Mi Lotería" className="w-[70%] h-auto object-contain" />
@@ -460,7 +460,7 @@ export default function ChickenRoad() {
                   return (
                     <>
                       <div
-                        className={`absolute z-[60] w-[50%] max-w-[80px] transition-all duration-300 ${isHit ? 'animate-squish' : chickenAnim}`}
+                        className={`absolute z-[45] w-[50%] max-w-[80px] transition-all duration-300 ${isHit ? 'animate-squish' : chickenAnim}`}
                         style={{
                           filter: !isHit && streakIntensity > 0
                             ? `drop-shadow(0 0 ${8 + streakIntensity * 16}px rgba(16, 185, 129, ${0.3 + streakIntensity * 0.5}))`
@@ -473,7 +473,7 @@ export default function ChickenRoad() {
                       </div>
                       {/* Feather particles on hit */}
                       {isHit && (
-                        <div className="absolute z-[61] pointer-events-none">
+                        <div className="absolute z-[46] pointer-events-none">
                           {[1, 2, 3, 4].map((n) => (
                             <svg
                               key={n}
