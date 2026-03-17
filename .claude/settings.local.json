@@ -50,7 +50,8 @@
       "Bash(powershell -File - <<'PSEOF'\n$bytes = Get-Content -Path \"C:\\\\Users\\\\User\\\\Documents\\\\Proyectos de José\\\\Chicken-Cross\\\\client\\\\public\\\\assets\\\\tl.png\" -Encoding Byte -TotalCount 16\n\\($bytes | ForEach-Object { '{0:X2}' -f $_ }\\) -join ' '\nPSEOF)",
       "Bash(powershell -File -:*)",
       "Bash(xxd:*)",
-      "Bash(npx vite build)"
+      "Bash(npx vite build)",
+      "Bash(npx mammoth:*)"
     ]
   }
 }
