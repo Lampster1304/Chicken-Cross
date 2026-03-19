@@ -62,12 +62,12 @@ function AnimatedCar({ goingDown, carColor, speed, initialDelay, variant, rushin
     if (isVisible && isNextTwo && !isMuted) {
       const audio = new Audio('/assets/freesoundsxx-car-drive-by-268509.mp3');
       audio.currentTime = 3.2;
-      audio.volume = 0.012; // 92% reduction from original
+      audio.volume = 0.015; // Increased by 25% (was 0.012)
 
       // Adjust based on "rushing" state (when player is crossing)
       if (rushing) {
         audio.playbackRate = 1.4;
-        audio.volume = 0.02; // 92% reduction from original
+        audio.volume = 0.025; // Increased by 25% (was 0.02)
       }
 
       audio.play().catch(() => { });
@@ -151,7 +151,7 @@ function AnimatedBarrier({ laneNum, showCar, isJustCrossed }: { laneNum: number;
     if (showCar && isJustCrossed && !isMuted) {
       const audio = new Audio('/assets/olenchic--110065.mp3');
       audio.currentTime = 4.0;
-      audio.volume = 0.04; // 92% reduction from 0.5
+      audio.volume = 0.05; // Increased by 25% (was 0.04)
       audio.play().catch(e => console.log('Audio error:', e));
 
       // Stop the audio after 2.0 seconds (so it stops at 6.0s)
@@ -182,16 +182,18 @@ function AnimatedBarrier({ laneNum, showCar, isJustCrossed }: { laneNum: number;
 
       {/* Barrier always drops */}
       <div
-        className="absolute left-[29%] -translate-x-1/2 w-[65%] max-w-[82px] animate-barrier-drop-down"
+        className="absolute left-[calc(27%+22px)] -translate-x-1/2 w-[65%] max-w-[82px]"
         style={goingDown
           ? { top: '15%' }
           : { bottom: '15%' }
         }
       >
-        <div className="relative w-full aspect-[41/49] drop-shadow-xl transform-gpu">
-          <img src={barrierImg} alt="Barrera" className="w-full h-full object-contain brightness-110 contrast-110" />
-          <div className="absolute inset-x-0 top-[18%] bottom-[42%] flex items-center justify-center pointer-events-none">
-            <img src={barrierLogoImg} alt="Mi Lotería" className="w-[70%] h-auto object-contain" />
+        <div className="w-full h-full animate-barrier-drop-down">
+          <div className="relative w-full aspect-[41/49] drop-shadow-xl transform-gpu">
+            <img src={barrierImg} alt="Barrera" className="w-full h-full object-contain brightness-110 contrast-110" />
+            <div className="absolute inset-x-0 top-[18%] bottom-[42%] flex items-center justify-center pointer-events-none">
+              <img src={barrierLogoImg} alt="Mi Lotería" className="w-[70%] h-auto object-contain" />
+            </div>
           </div>
         </div>
       </div>
@@ -229,7 +231,7 @@ export default function ChickenRoad() {
     if (currentLane > 0 && status === 'active' && !isMuted) {
       const jumpSound = new Audio('/assets/freesound_community-female-hurt-2-94301.mp3');
       jumpSound.currentTime = 0;
-      jumpSound.volume = 0.04; // 90% reduction from original
+      jumpSound.volume = 0.05; // Increased by 25% (was 0.04)
       jumpSound.play().catch(() => { });
 
       const timer = setTimeout(() => {
@@ -251,7 +253,7 @@ export default function ChickenRoad() {
       hasPlayedDeathSound.current = true;
       const deathSound = new Audio('/assets/alex_jauk-chicken-noise-228106.mp3');
       deathSound.currentTime = 0;
-      deathSound.volume = 0.07; // 90% reduction from original
+      deathSound.volume = 0.0875; // Increased by 25% (was 0.07)
       deathSound.play().catch(() => { });
 
       const timer = setTimeout(() => {

@@ -1,51 +1,20 @@
-import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
-
-type FeedFilter = 'all' | 'big_wins' | 'lucky_wins';
 
 const BIG_WIN_THRESHOLD = 100;
 
 export default function BetsList() {
   const feed = useSelector((state: RootState) => state.game.feed);
-  const [filter, setFilter] = useState<FeedFilter>('all');
-
-  const filteredFeed = feed.filter(entry => {
-    if (filter === 'all') return true;
-    if (filter === 'big_wins') return entry.type === 'win' && (entry.profit ?? 0) >= BIG_WIN_THRESHOLD;
-    if (filter === 'lucky_wins') return entry.type === 'win' && entry.difficulty >= 3;
-    return true;
-  });
 
   return (
     <div>
-      {/* Filter tabs */}
-      <div className="flex gap-1 mb-3 px-1">
-        {([
-          { key: 'all' as FeedFilter, label: 'Todos' },
-          { key: 'big_wins' as FeedFilter, label: 'Grandes' },
-          { key: 'lucky_wins' as FeedFilter, label: 'Suerte' },
-        ]).map(tab => (
-          <button
-            key={tab.key}
-            onClick={() => setFilter(tab.key)}
-            className={`px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all ${filter === tab.key
-              ? 'bg-action-primary/20 text-action-primary border border-action-primary/30'
-              : 'text-txt-dim hover:text-txt-muted hover:bg-bg-surfaceHover border border-transparent'
-              }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
-      {filteredFeed.length === 0 ? (
+      {feed.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-txt-dim">
-          <p className="text-xs">{filter === 'all' ? 'Esperando apuestas...' : 'Sin resultados'}</p>
+          <p className="text-xs">Esperando apuestas...</p>
         </div>
       ) : (
         <div className="space-y-1 max-h-[320px] overflow-y-auto">
-          {filteredFeed.map((entry, i) => {
+          {feed.map((entry, i) => {
             const isWin = entry.type === 'win';
             const isBigWin = isWin && (entry.profit ?? 0) >= BIG_WIN_THRESHOLD;
             return (
