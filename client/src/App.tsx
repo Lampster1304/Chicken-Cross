@@ -1,6 +1,8 @@
+import { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from './store';
+import audioManager from './utils/audioManager';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import GamePage from './pages/GamePage';
@@ -25,6 +27,21 @@ function AdminProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 function App() {
+  // Unlock Web Audio API on first user gesture (required by Android Chrome)
+  useEffect(() => {
+    const handler = () => {
+      audioManager.unlock();
+      window.removeEventListener('click', handler);
+      window.removeEventListener('touchstart', handler);
+    };
+    window.addEventListener('click', handler);
+    window.addEventListener('touchstart', handler);
+    return () => {
+      window.removeEventListener('click', handler);
+      window.removeEventListener('touchstart', handler);
+    };
+  }, []);
+
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />

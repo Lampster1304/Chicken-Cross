@@ -9,6 +9,7 @@ import ChickenSvg from './svg/ChickenSvg';
 import ExplosionSvg from './svg/ExplosionSvg';
 import barrierImg from '../assets/tl.png';
 import barrierLogoImg from '../assets/MiLoteria.png';
+import audioManager from '../utils/audioManager';
 
 const CAR_COLORS = ['#ef4444', '#eab308', '#3b82f6', '#8b5cf6'];
 const CAR_VARIANTS: Array<'sedan' | 'pickup' | 'taxi' | 'sports'> = ['sedan', 'pickup', 'taxi', 'sports'];
@@ -56,33 +57,13 @@ function AnimatedCar({ goingDown, carColor, speed, initialDelay, variant, rushin
 
   // Car passing sound logic
   useEffect(() => {
-    // Only play sound if lane is within the next 2 lanes and NOT muted
     const isNextTwo = laneNum > currentLane && laneNum <= currentLane + 2;
 
     if (isVisible && isNextTwo && !isMuted) {
-      const audio = new Audio('/assets/freesoundsxx-car-drive-by-268509.mp3');
-      audio.currentTime = 3.2;
-      audio.volume = 0.015; // Increased by 25% (was 0.012)
-
-      // Adjust based on "rushing" state (when player is crossing)
-      if (rushing) {
-        audio.playbackRate = 1.4;
-        audio.volume = 0.025; // Increased by 25% (was 0.02)
-      }
-
-      audio.play().catch(() => { });
-
-      // Calculate how long to play based on the 1.8s segment and playback rate
-      const segmentDuration = 1.8; // from 3.2 to 5.0
-      const playTimeMs = (segmentDuration / audio.playbackRate) * 1000;
-
-      const stopTimer = setTimeout(() => {
-        audio.pause();
-      }, playTimeMs);
-
-      return () => {
-        clearTimeout(stopTimer);
-      };
+      audioManager.play('car', rushing
+        ? { volume: 0.025, playbackRate: 1.4 }
+        : undefined,
+      );
     }
   }, [isVisible, cycle, rushing, currentLane, laneNum, isMuted]);
 
@@ -149,15 +130,7 @@ function AnimatedBarrier({ laneNum, showCar, isJustCrossed }: { laneNum: number;
 
   useEffect(() => {
     if (showCar && isJustCrossed && !isMuted) {
-      const audio = new Audio('/assets/olenchic--110065.mp3');
-      audio.currentTime = 4.0;
-      audio.volume = 0.05; // Increased by 25% (was 0.04)
-      audio.play().catch(e => console.log('Audio error:', e));
-
-      // Stop the audio after 2.0 seconds (so it stops at 6.0s)
-      setTimeout(() => {
-        audio.pause();
-      }, 2000);
+      audioManager.play('barrier');
     }
   }, [showCar, isJustCrossed, isMuted]);
 
@@ -229,16 +202,7 @@ export default function ChickenRoad() {
   const currentLane = activeGame?.currentLane ?? 0;
   useEffect(() => {
     if (currentLane > 0 && status === 'active' && !isMuted) {
-      const jumpSound = new Audio('/assets/freesound_community-female-hurt-2-94301.mp3');
-      jumpSound.currentTime = 0;
-      jumpSound.volume = 0.05; // Increased by 25% (was 0.04)
-      jumpSound.play().catch(() => { });
-
-      const timer = setTimeout(() => {
-        jumpSound.pause();
-      }, 500); // Stop at 0.5 seconds
-
-      return () => clearTimeout(timer);
+      audioManager.play('jump');
     }
   }, [currentLane, status, isMuted]);
 
@@ -251,16 +215,7 @@ export default function ChickenRoad() {
   useEffect(() => {
     if (justHit && !hasPlayedDeathSound.current && !isMuted) {
       hasPlayedDeathSound.current = true;
-      const deathSound = new Audio('/assets/alex_jauk-chicken-noise-228106.mp3');
-      deathSound.currentTime = 0;
-      deathSound.volume = 0.0875; // Increased by 25% (was 0.07)
-      deathSound.play().catch(() => { });
-
-      const timer = setTimeout(() => {
-        deathSound.pause();
-      }, 800); // Stop at 0.8 seconds
-
-      return () => clearTimeout(timer);
+      audioManager.play('death');
     }
   }, [justHit, isMuted]);
 
@@ -330,7 +285,7 @@ export default function ChickenRoad() {
         <div className="flex items-center gap-2">
           {/* Mute Toggle */}
           <button
-            onClick={() => dispatch(toggleMute())}
+            onClick={() => { dispatch(toggleMute()); audioManager.setMuted(!isMuted); }}
             className={`p-2 lg:p-1.5 rounded-xl border-2 transition-all flex items-center justify-center shadow-lg transform active:scale-90 ${isMuted
               ? 'border-danger/50 text-danger bg-danger/10 hover:bg-danger/20'
               : 'border-action-primary/50 text-action-primary bg-action-primary/10 hover:bg-action-primary/20 shadow-[0_0_15px_rgba(45,212,191,0.15)]'
