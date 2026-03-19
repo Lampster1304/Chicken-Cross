@@ -24,25 +24,25 @@ const SOUNDS: Record<SoundName, SoundDef> = {
     url: '/assets/freesoundsxx-car-drive-by-268509.mp3',
     offset: 3.2,
     duration: 1.8,
-    volume: 0.015,
+    volume: 0.04, // Increased after user request (was 0.015)
   },
   barrier: {
     url: '/assets/olenchic--110065.mp3',
     offset: 4.0,
     duration: 2.0,
-    volume: 0.05,
+    volume: 0.1, // Increased after user request (was 0.05)
   },
   jump: {
     url: '/assets/freesound_community-female-hurt-2-94301.mp3',
     offset: 0,
     duration: 0.5,
-    volume: 0.05,
+    volume: 0.1, // Increased after user request (was 0.05)
   },
   death: {
     url: '/assets/alex_jauk-chicken-noise-228106.mp3',
     offset: 0,
     duration: 0.8,
-    volume: 0.0875,
+    volume: 0.17, // Increased after user request (was 0.0875)
   },
 };
 
@@ -52,59 +52,80 @@ class AudioManager {
   private buffers: Map<SoundName, AudioBuffer> = new Map();
   private unlocked = false;
   private loading = false;
+  private muted = false;
 
   /** Create (or resume) the AudioContext and preload all buffers. */
   async unlock(): Promise<void> {
     if (this.unlocked && this.ctx?.state === 'running') return;
 
-    if (!this.ctx) {
-      const AC = window.AudioContext || (window as any).webkitAudioContext;
-      this.ctx = new AC();
-      this.masterGain = this.ctx.createGain();
-      this.masterGain.connect(this.ctx.destination);
-    }
+    try {
+      if (!this.ctx) {
+        const AC = (window as any).AudioContext || (window as any).webkitAudioContext;
+        if (!AC) {
+          console.error('[AudioManager] Web Audio API not supported');
+          return;
+        }
+        const ctx = new AC();
+        this.ctx = ctx;
+        const masterGain = ctx.createGain();
+        this.masterGain = masterGain;
+        masterGain.gain.value = this.muted ? 0 : 1;
+        masterGain.connect(ctx.destination);
+        console.log('[AudioManager] Context created');
+      }
 
-    // Resume if suspended (Android Chrome starts suspended)
-    if (this.ctx.state === 'suspended') {
-      await this.ctx.resume();
-    }
+      const ctx = this.ctx;
+      if (ctx && ctx.state === 'suspended') {
+        await ctx.resume();
+        console.log('[AudioManager] Context resumed');
+      }
 
-    this.unlocked = true;
+      this.unlocked = true;
 
-    // Preload buffers (only once)
-    if (!this.loading && this.buffers.size === 0) {
-      this.loading = true;
-      await this.preload();
+      if (!this.loading && this.buffers.size === 0) {
+        this.loading = true;
+        this.preload(); // Start loading in background
+      }
+    } catch (err) {
+      console.error('[AudioManager] Unlock failed:', err);
     }
   }
 
   private async preload(): Promise<void> {
     if (!this.ctx) return;
+    console.log('[AudioManager] Preloading sounds...');
 
     const entries = Object.entries(SOUNDS) as [SoundName, SoundDef][];
-    const results = await Promise.allSettled(
+    await Promise.allSettled(
       entries.map(async ([name, def]) => {
-        const res = await fetch(def.url);
-        const arrayBuf = await res.arrayBuffer();
-        const audioBuf = await this.ctx!.decodeAudioData(arrayBuf);
-        this.buffers.set(name, audioBuf);
+        try {
+          const res = await fetch(def.url);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const arrayBuf = await res.arrayBuffer();
+          const audioBuf = await this.ctx!.decodeAudioData(arrayBuf);
+          this.buffers.set(name, audioBuf);
+        } catch (err) {
+          console.warn(`[AudioManager] Failed to load "${name}":`, err);
+        }
       }),
     );
-
-    // Log failures but don't crash
-    results.forEach((r, i) => {
-      if (r.status === 'rejected') {
-        console.warn(`[AudioManager] Failed to load "${entries[i][0]}":`, r.reason);
-      }
-    });
+    this.loading = false;
+    console.log(`[AudioManager] Preload complete. Loaded ${this.buffers.size}/${entries.length} sounds.`);
   }
 
   /** Play a named sound.  Options override the default offset/duration/volume. */
   play(name: SoundName, options?: PlayOptions): void {
-    if (!this.ctx || !this.masterGain) return;
+    if (!this.ctx || !this.masterGain) {
+      // Try to unlock if context is missing (might fail if not called from gesture)
+      this.unlock();
+      return;
+    }
 
     const buffer = this.buffers.get(name);
-    if (!buffer) return; // not loaded yet — fail silently
+    if (!buffer) {
+      console.warn(`[AudioManager] Sound "${name}" requested but not loaded yet.`);
+      return;
+    }
 
     const def = SOUNDS[name];
     const volume = options?.volume ?? def.volume;
@@ -112,9 +133,8 @@ class AudioManager {
     const duration = options?.duration ?? def.duration;
     const rate = options?.playbackRate ?? 1.0;
 
-    // Per-sound gain node (for individual volume control)
     const gainNode = this.ctx.createGain();
-    gainNode.gain.value = volume;
+    gainNode.gain.setValueAtTime(volume, this.ctx.currentTime);
     gainNode.connect(this.masterGain);
 
     const source = this.ctx.createBufferSource();
@@ -124,7 +144,6 @@ class AudioManager {
 
     source.start(0, offset, duration);
 
-    // Clean up nodes after playback finishes (avoids leaks)
     source.onended = () => {
       source.disconnect();
       gainNode.disconnect();
@@ -133,8 +152,9 @@ class AudioManager {
 
   /** Toggle master mute.  true = muted (gain 0), false = unmuted (gain 1). */
   setMuted(muted: boolean): void {
-    if (this.masterGain) {
-      this.masterGain.gain.value = muted ? 0 : 1;
+    this.muted = muted;
+    if (this.masterGain && this.ctx) {
+      this.masterGain.gain.setTargetAtTime(muted ? 0 : 1, this.ctx.currentTime, 0.01);
     }
   }
 }

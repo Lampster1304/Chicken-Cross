@@ -61,7 +61,7 @@ function AnimatedCar({ goingDown, carColor, speed, initialDelay, variant, rushin
 
     if (isVisible && isNextTwo && !isMuted) {
       audioManager.play('car', rushing
-        ? { volume: 0.025, playbackRate: 1.4 }
+        ? { volume: 0.06, playbackRate: 1.4 } // Increased after user request (was 0.025)
         : undefined,
       );
     }
@@ -183,6 +183,7 @@ export default function ChickenRoad() {
 
   const handleLaneCross = useCallback(() => {
     if (isLoading) return;
+    audioManager.unlock();
     const socket = getSocket();
     if (!socket || !socket.connected) return;
     dispatch(setLoading(true));
@@ -197,8 +198,13 @@ export default function ChickenRoad() {
     }
   }, [status]);
 
-  // Chicken jump sound
+  // Sync mute state with audioManager
   const { isMuted } = useSelector((state: RootState) => state.game);
+  useEffect(() => {
+    audioManager.setMuted(isMuted);
+  }, [isMuted]);
+
+  // Chicken jump sound
   const currentLane = activeGame?.currentLane ?? 0;
   useEffect(() => {
     if (currentLane > 0 && status === 'active' && !isMuted) {
@@ -285,7 +291,11 @@ export default function ChickenRoad() {
         <div className="flex items-center gap-2">
           {/* Mute Toggle */}
           <button
-            onClick={() => { dispatch(toggleMute()); audioManager.setMuted(!isMuted); }}
+            onClick={() => {
+              dispatch(toggleMute());
+              audioManager.unlock();
+              audioManager.setMuted(!isMuted);
+            }}
             className={`p-2 lg:p-1.5 rounded-xl border-2 transition-all flex items-center justify-center shadow-lg transform active:scale-90 ${isMuted
               ? 'border-danger/50 text-danger bg-danger/10 hover:bg-danger/20'
               : 'border-action-primary/50 text-action-primary bg-action-primary/10 hover:bg-action-primary/20 shadow-[0_0_15px_rgba(45,212,191,0.15)]'
@@ -358,7 +368,10 @@ export default function ChickenRoad() {
 
                 {/* Next Multiplier Target (Manhole Cover style) */}
                 {isNextLane && activeGame?.nextMultiplier && !isChickenHere && (
-                  <div onClick={handleLaneCross} className="manhole-cover animate-pop z-40 cursor-pointer hover:scale-105 active:scale-95 group">
+                  <div
+                    onClick={() => { audioManager.unlock(); handleLaneCross(); }}
+                    className="manhole-cover animate-pop z-40 cursor-pointer hover:scale-105 active:scale-95 group"
+                  >
                     <span className="text-[11px] sm:text-sm font-black leading-none text-white drop-shadow-md">{activeGame.nextMultiplier.toFixed(2)}x</span>
                   </div>
                 )}

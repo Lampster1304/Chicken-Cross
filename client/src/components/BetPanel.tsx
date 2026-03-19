@@ -6,6 +6,7 @@ import {
   resetGame, setLoading, gameError, clearError,
 } from '../store/gameSlice';
 import { Zap, TrendingUp, ArrowRight, RotateCcw, AlertCircle, Lock, X } from 'lucide-react';
+import audioManager from '../utils/audioManager';
 
 export default function BetPanel() {
   const [betAmount, setBetAmount] = useState('10.00');
@@ -87,12 +88,14 @@ export default function BetPanel() {
 
   const handleStartGame = useCallback(() => {
     if (actionLockRef.current) return;
+    audioManager.unlock();
     const amount = parseFloat(betAmount);
     emitStartGame(amount);
   }, [betAmount, emitStartGame]);
 
   const handleCross = useCallback(() => {
     if (actionLockRef.current) return;
+    audioManager.unlock();
     const socket = getSocket();
     if (!socket || !socket.connected) { dispatch(gameError('Sin conexión')); return; }
     actionLockRef.current = true;
@@ -102,6 +105,7 @@ export default function BetPanel() {
 
   const handleCashOut = useCallback(() => {
     if (actionLockRef.current) return;
+    audioManager.unlock();
     const socket = getSocket();
     if (!socket || !socket.connected) { dispatch(gameError('Sin conexión')); return; }
     actionLockRef.current = true;
@@ -110,6 +114,7 @@ export default function BetPanel() {
   }, [dispatch]);
 
   const handlePlayAgain = useCallback(() => {
+    audioManager.unlock();
     dispatch(resetGame());
   }, [dispatch]);
 
