@@ -225,6 +225,18 @@ export default function ChickenRoad() {
     }
   }, [justHit, isMuted]);
 
+  // Win sound on cashout
+  const hasPlayedWinSound = useRef(false);
+  useEffect(() => {
+    if (status === 'cashed_out' && !hasPlayedWinSound.current && !isMuted) {
+      hasPlayedWinSound.current = true;
+      audioManager.play('win');
+    }
+    if (status === 'idle' || status === 'active') {
+      hasPlayedWinSound.current = false;
+    }
+  }, [status, isMuted]);
+
   // Dynamic lanes based on width
   useEffect(() => {
     const handleResize = () => {
@@ -248,11 +260,13 @@ export default function ChickenRoad() {
   const streakIntensity = Math.min((activeGame?.riskyLanesCrossed ?? 0) / 8, 1);
 
   // Determine which lanes to show in viewport using dynamic visibleLanes
+  // Page-based scrolling: chicken alternates between position 1 and 2,
+  // then the viewport jumps forward. The remaining lanes show what's ahead.
   let viewStart: number;
-  if (currentLane <= Math.floor(visibleLanes / 2)) {
+  if (currentLane <= 0) {
     viewStart = 0;
   } else {
-    viewStart = currentLane - Math.floor(visibleLanes / 2);
+    viewStart = Math.floor((currentLane - 1) / 2) * 2;
   }
   const viewEnd = viewStart + visibleLanes;
 

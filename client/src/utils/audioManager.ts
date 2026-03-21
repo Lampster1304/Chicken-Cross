@@ -3,7 +3,7 @@
 // non-gesture contexts) because buffers are decoded once, and each play() just
 // creates a lightweight source node.
 
-type SoundName = 'car' | 'barrier' | 'jump' | 'death';
+type SoundName = 'car' | 'barrier' | 'jump' | 'death' | 'win';
 
 interface SoundDef {
   url: string;
@@ -43,6 +43,12 @@ const SOUNDS: Record<SoundName, SoundDef> = {
     offset: 0,
     duration: 0.8,
     volume: 0.17, // Increased after user request (was 0.0875)
+  },
+  win: {
+    url: '/assets/WinSound.mp3',
+    offset: 0,
+    duration: 3.0,
+    volume: 0.15,
   },
 };
 
