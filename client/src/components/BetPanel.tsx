@@ -307,7 +307,7 @@ export default function BetPanel() {
               <>
                 <button
                   onClick={handleCross} disabled={isLoading}
-                  className="w-full py-4 sm:py-5 lg:py-4 rounded-2xl text-base sm:text-lg lg:text-sm flex flex-col items-center gap-1 lg:gap-0.5 btn-3d-primary"
+                  className="hidden lg:flex w-full py-4 sm:py-5 lg:py-4 rounded-2xl text-base sm:text-lg lg:text-sm flex-col items-center gap-1 lg:gap-0.5 btn-3d-primary"
                 >
                   <span className="text-xs sm:text-sm lg:text-[10px] opacity-70 flex items-center gap-1">
                     <ArrowRight size={12} className="sm:hidden" /><ArrowRight size={14} className="hidden sm:inline lg:hidden" /><ArrowRight size={10} className="hidden lg:inline" /> Siguiente carril
