@@ -132,6 +132,22 @@ export default function BetPanel() {
     return () => window.removeEventListener('keydown', handler);
   }, [isIdle, isActive, handleStartGame, handleCross]);
 
+  // Lock scroll when game is active
+  useEffect(() => {
+    if (isActive) {
+      document.body.style.overflow = 'hidden';
+      // On some mobile browsers, overflow: hidden on body isn't enough
+      document.documentElement.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    };
+  }, [isActive]);
+
   // Auto-cross: when autoCashOutAt is set, automatically cross lanes
   const autoCrossTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -167,7 +183,7 @@ export default function BetPanel() {
   const isAutoPlaying = isActive && !!activeGame?.autoCashOutAt;
 
   return (
-    <div className="game-panel p-3 sm:p-4 md:p-5 flex flex-col gap-4 sm:gap-5 lg:gap-4">
+    <div className={`game-panel p-3 sm:p-4 md:p-5 flex flex-col gap-4 sm:gap-5 lg:gap-4 transition-all ${isActive && !isAutoPlaying ? 'pb-32 lg:pb-4' : ''}`}>
       {/* Error */}
       {error && (
         <div className="flex items-center gap-2 bg-danger/10 border border-danger/20 rounded-xl px-3 py-2.5">
@@ -280,30 +296,33 @@ export default function BetPanel() {
             </div>
           )}
 
-          {!isAutoPlaying && (
-            <>
-              <button
-                onClick={handleCross} disabled={isLoading}
-                className="w-full py-4 sm:py-5 lg:py-4 rounded-2xl text-base sm:text-lg lg:text-sm flex flex-col items-center gap-1 lg:gap-0.5 btn-3d-primary"
-              >
-                <span className="text-xs sm:text-sm lg:text-[10px] opacity-70 flex items-center gap-1">
-                  <ArrowRight size={12} className="sm:hidden" /><ArrowRight size={14} className="hidden sm:inline lg:hidden" /><ArrowRight size={10} className="hidden lg:inline" /> Siguiente carril
-                </span>
-                <span className="text-xl sm:text-2xl lg:text-lg font-bold">{nextMultiplier?.toFixed(2)}x</span>
-              </button>
-
-              {activeGame.currentLane > 0 && (
+          {/* Mobile Footer for Active Game Controls */}
+          <div className={`${!isAutoPlaying ? 'fixed inset-x-0 bottom-0 z-[110] p-4 pb-4 sm:pb-6 md:pb-4 bg-[#1a1b3a]/95 backdrop-blur-md border-t border-[#3d3f7a]/50 flex flex-col gap-3 lg:static lg:bg-transparent lg:p-0 lg:border-none lg:z-0 safe-area-bottom' : 'contents'}`}>
+            {!isAutoPlaying && (
+              <>
                 <button
-                  onClick={handleCashOut} disabled={isLoading}
-                  className="w-full py-3.5 sm:py-4 lg:py-3 rounded-2xl btn-3d-success text-base sm:text-lg lg:text-sm flex items-center justify-center gap-2"
-                  style={{ boxShadow: '0 0 20px rgba(45,212,191,0.3)' }}
+                  onClick={handleCross} disabled={isLoading}
+                  className="w-full py-4 sm:py-5 lg:py-4 rounded-2xl text-base sm:text-lg lg:text-sm flex flex-col items-center gap-1 lg:gap-0.5 btn-3d-primary"
                 >
-                  <TrendingUp size={16} className="sm:hidden" /><TrendingUp size={18} className="hidden sm:inline lg:hidden" /><TrendingUp size={14} className="hidden lg:inline" />
-                  Cobrar ${payout.toFixed(2)}
+                  <span className="text-xs sm:text-sm lg:text-[10px] opacity-70 flex items-center gap-1">
+                    <ArrowRight size={12} className="sm:hidden" /><ArrowRight size={14} className="hidden sm:inline lg:hidden" /><ArrowRight size={10} className="hidden lg:inline" /> Siguiente carril
+                  </span>
+                  <span className="text-xl sm:text-2xl lg:text-lg font-bold">{nextMultiplier?.toFixed(2)}x</span>
                 </button>
-              )}
-            </>
-          )}
+
+                {activeGame.currentLane > 0 && (
+                  <button
+                    onClick={handleCashOut} disabled={isLoading}
+                    className="w-full py-3.5 sm:py-4 lg:py-3 rounded-2xl btn-3d-success text-base sm:text-lg lg:text-sm flex items-center justify-center gap-2"
+                    style={{ boxShadow: '0 0 20px rgba(45,212,191,0.3)' }}
+                  >
+                    <TrendingUp size={16} className="sm:hidden" /><TrendingUp size={18} className="hidden sm:inline lg:hidden" /><TrendingUp size={14} className="hidden lg:inline" />
+                    Cobrar ${payout.toFixed(2)}
+                  </button>
+                )}
+              </>
+            )}
+          </div>
         </>
       )}
 
