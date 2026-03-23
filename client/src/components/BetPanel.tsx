@@ -90,6 +90,8 @@ export default function BetPanel() {
     if (actionLockRef.current) return;
     audioManager.unlock();
     const amount = parseFloat(betAmount);
+    // Instant scroll to top (game area) when starting
+    window.scrollTo({ top: 0, behavior: 'instant' as any });
     emitStartGame(amount);
   }, [betAmount, emitStartGame]);
 
@@ -135,8 +137,11 @@ export default function BetPanel() {
   // Lock scroll when game is active
   useEffect(() => {
     if (isActive) {
+      // Immediate scroll check to ensure we are at the top when starting
+      if (document.body.style.overflow !== 'hidden') {
+        window.scrollTo({ top: 0, behavior: 'auto' });
+      }
       document.body.style.overflow = 'hidden';
-      // On some mobile browsers, overflow: hidden on body isn't enough
       document.documentElement.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
