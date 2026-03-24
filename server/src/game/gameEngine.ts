@@ -16,6 +16,7 @@ import { logger } from '../config/logger';
 import { gameStartSchema, chatSchema } from '../middleware/validate';
 
 const CHAT_COOLDOWN = 3000;
+const DISCONNECT_TIMEOUT = 3 * 60 * 1000; // 3 minutes to reconnect before game is resolved as loss
 
 interface RevealedLane {
   lane: number;
@@ -55,6 +56,9 @@ let chatMessageId = 0;
 // Nonce tracking per user
 const userNonces = new Map<number, number>();
 
+// Disconnect timers: if a player doesn't reconnect within DISCONNECT_TIMEOUT, their game resolves as loss
+const disconnectTimers = new Map<number, ReturnType<typeof setTimeout>>();
+
 export function getActiveStats() {
   return {
     connectedUsers: userSockets.size,
@@ -73,6 +77,30 @@ async function getUserNonce(userId: number): Promise<number> {
   const nonce = parseInt(result.rows[0].count) || 0;
   userNonces.set(userId, nonce);
   return nonce;
+}
+
+/**
+ * Resolve an abandoned game as a loss after disconnect timeout.
+ */
+async function resolveAbandonedGame(userId: number) {
+  const session = activeSessions.get(userId);
+  if (!session || session.status !== 'active') {
+    activeSessions.delete(userId);
+    return;
+  }
+
+  try {
+    await resolveBetLoss(session.gameId, session.currentLane);
+    logger.info(
+      { userId, gameId: session.gameId, lane: session.currentLane },
+      'Abandoned game resolved as loss after disconnect timeout'
+    );
+  } catch (error) {
+    logger.error({ userId, gameId: session.gameId, error }, 'Failed to resolve abandoned game');
+  } finally {
+    activeSessions.delete(userId);
+    disconnectTimers.delete(userId);
+  }
 }
 
 export function initGameEngine(io: SocketIOServer) {
@@ -100,6 +128,14 @@ export function initGameEngine(io: SocketIOServer) {
 
     logger.info({ userId, username }, 'Player connected');
     userSockets.set(userId, socket);
+
+    // Cancel disconnect timer if player reconnected
+    const existingTimer = disconnectTimers.get(userId);
+    if (existingTimer) {
+      clearTimeout(existingTimer);
+      disconnectTimers.delete(userId);
+      logger.info({ userId }, 'Player reconnected, disconnect timer cancelled');
+    }
 
     // Send current state on connect (reconnect support)
     const activeGame = activeSessions.get(userId);
@@ -426,6 +462,17 @@ export function initGameEngine(io: SocketIOServer) {
       logger.info({ userId, username }, 'Player disconnected');
       userSockets.delete(userId);
       chatCooldowns.delete(userId);
+
+      // If player has an active game, start a timeout to resolve it as loss
+      const session = activeSessions.get(userId);
+      if (session && session.status === 'active') {
+        logger.info(
+          { userId, gameId: session.gameId },
+          `Player disconnected with active game, will resolve as loss in ${DISCONNECT_TIMEOUT / 1000}s`
+        );
+        const timer = setTimeout(() => resolveAbandonedGame(userId), DISCONNECT_TIMEOUT);
+        disconnectTimers.set(userId, timer);
+      }
     });
   });
 }

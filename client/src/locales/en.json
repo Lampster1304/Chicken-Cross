@@ -1,0 +1,84 @@
+{
+  "common": {
+    "language": "Language",
+    "changeLanguage": "Change Language",
+    "english": "English",
+    "spanish": "Español",
+    "back": "Back",
+    "save": "Save",
+    "cancel": "Cancel",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success"
+  },
+  "auth": {
+    "login": "Login",
+    "register": "Register",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "username": "Username",
+    "loginTitle": "Welcome Back",
+    "registerTitle": "Create Account",
+    "forgotPassword": "Forgot Password?",
+    "noAccount": "Don't have an account?",
+    "haveAccount": "Already have an account?",
+    "loginButton": "Sign In",
+    "registerButton": "Create Account",
+    "invalidEmail": "Invalid email address",
+    "passwordMismatch": "Passwords do not match",
+    "loginSuccess": "Logged in successfully",
+    "registerSuccess": "Account created successfully"
+  },
+  "game": {
+    "title": "Chicken Cross",
+    "score": "Score",
+    "level": "Level",
+    "gameOver": "Game Over",
+    "playAgain": "Play Again",
+    "highScore": "High Score",
+    "totalPoints": "Total Points",
+    "startGame": "Start Game",
+    "pause": "Pause",
+    "resume": "Resume"
+  },
+  "leaderboard": {
+    "title": "Leaderboard",
+    "rank": "Rank",
+    "player": "Player",
+    "score": "Score",
+    "date": "Date",
+    "noData": "No data available"
+  },
+  "vip": {
+    "title": "VIP",
+    "description": "Become a VIP member",
+    "benefits": "Benefits",
+    "upgrade": "Upgrade to VIP",
+    "cancel": "Cancel Subscription"
+  },
+  "affiliate": {
+    "title": "Affiliate",
+    "referralLink": "Referral Link",
+    "earnings": "Earnings",
+    "copyLink": "Copy Link",
+    "copied": "Copied to clipboard"
+  },
+  "tournaments": {
+    "title": "Tournaments",
+    "upcoming": "Upcoming",
+    "active": "Active",
+    "completed": "Completed",
+    "joinTournament": "Join Tournament",
+    "leaveTournament": "Leave Tournament",
+    "prize": "Prize"
+  },
+  "admin": {
+    "login": "Admin Login",
+    "dashboard": "Admin Dashboard",
+    "users": "Users",
+    "tournaments": "Tournaments",
+    "analytics": "Analytics",
+    "settings": "Settings"
+  }
+}

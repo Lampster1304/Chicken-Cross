@@ -1,0 +1,84 @@
+{
+  "common": {
+    "language": "Idioma",
+    "changeLanguage": "Cambiar Idioma",
+    "english": "English",
+    "spanish": "Español",
+    "back": "Atrás",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito"
+  },
+  "auth": {
+    "login": "Iniciar Sesión",
+    "register": "Registrarse",
+    "email": "Correo",
+    "password": "Contraseña",
+    "confirmPassword": "Confirmar Contraseña",
+    "username": "Usuario",
+    "loginTitle": "Bienvenido",
+    "registerTitle": "Crear Cuenta",
+    "forgotPassword": "¿Olvidaste tu Contraseña?",
+    "noAccount": "¿No tienes una cuenta?",
+    "haveAccount": "¿Ya tienes una cuenta?",
+    "loginButton": "Iniciar Sesión",
+    "registerButton": "Crear Cuenta",
+    "invalidEmail": "Correo inválido",
+    "passwordMismatch": "Las contraseñas no coinciden",
+    "loginSuccess": "Sesión iniciada exitosamente",
+    "registerSuccess": "Cuenta creada exitosamente"
+  },
+  "game": {
+    "title": "Chicken Cross",
+    "score": "Puntuación",
+    "level": "Nivel",
+    "gameOver": "Juego Terminado",
+    "playAgain": "Jugar de Nuevo",
+    "highScore": "Mejor Puntuación",
+    "totalPoints": "Puntos Totales",
+    "startGame": "Iniciar Juego",
+    "pause": "Pausar",
+    "resume": "Reanudar"
+  },
+  "leaderboard": {
+    "title": "Tabla de Posiciones",
+    "rank": "Rango",
+    "player": "Jugador",
+    "score": "Puntuación",
+    "date": "Fecha",
+    "noData": "Sin datos disponibles"
+  },
+  "vip": {
+    "title": "VIP",
+    "description": "Conviértete en miembro VIP",
+    "benefits": "Beneficios",
+    "upgrade": "Actualizar a VIP",
+    "cancel": "Cancelar Suscripción"
+  },
+  "affiliate": {
+    "title": "Afiliado",
+    "referralLink": "Enlace de Referencia",
+    "earnings": "Ganancias",
+    "copyLink": "Copiar Enlace",
+    "copied": "Copiado al portapapeles"
+  },
+  "tournaments": {
+    "title": "Torneos",
+    "upcoming": "Próximos",
+    "active": "Activos",
+    "completed": "Completados",
+    "joinTournament": "Unirse al Torneo",
+    "leaveTournament": "Salir del Torneo",
+    "prize": "Premio"
+  },
+  "admin": {
+    "login": "Inicio de Sesión Admin",
+    "dashboard": "Panel de Admin",
+    "users": "Usuarios",
+    "tournaments": "Torneos",
+    "analytics": "Analítica",
+    "settings": "Configuración"
+  }
+}

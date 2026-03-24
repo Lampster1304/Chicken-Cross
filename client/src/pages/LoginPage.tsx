@@ -4,6 +4,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { setCredentials } from '../store/authSlice';
 import { LogIn, AlertCircle } from 'lucide-react';
 import ChickenSvg from '../components/svg/ChickenSvg';
+import { LanguageSwitcher } from '../components/LanguageSwitcher';
+import { useTranslation } from 'react-i18next';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -12,6 +14,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,6 +39,11 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4" style={{ background: 'linear-gradient(180deg, #1a1b3a 0%, rgba(139,92,246,0.1) 50%, #1a1b3a 100%)' }}>
+      {/* Language Switcher */}
+      <div className="absolute top-6 right-6">
+        <LanguageSwitcher />
+      </div>
+
       <div className="w-full max-w-xl">
         {/* Logo */}
         <div className="text-center mb-6 sm:mb-8 md:mb-12">
@@ -43,7 +51,7 @@ export default function LoginPage() {
             <ChickenSvg />
           </div>
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-brand to-action-primary bg-clip-text text-transparent">Chicken Cross</h1>
-          <p className="text-sm sm:text-base md:text-lg text-txt-muted mt-2 sm:mt-3">Inicia sesión en tu cuenta</p>
+          <p className="text-sm sm:text-base md:text-lg text-txt-muted mt-2 sm:mt-3">{t('auth.loginTitle')}</p>
         </div>
 
         {/* Card */}
@@ -57,7 +65,7 @@ export default function LoginPage() {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="text-sm sm:text-base font-medium text-txt-muted mb-2 sm:mb-2.5 block">Email</label>
+              <label className="text-sm sm:text-base font-medium text-txt-muted mb-2 sm:mb-2.5 block">{t('auth.email')}</label>
               <input
                 type="email" value={email} onChange={e => setEmail(e.target.value)}
                 className="w-full bg-[#2f3070] border-2 border-[#3d3f7a]/50 focus:border-action-primary/50 rounded-xl px-4 py-3 sm:px-5 sm:py-4 text-white text-base sm:text-lg outline-none transition-colors placeholder:text-txt-dim/40 focus:shadow-[0_0_12px_rgba(163,230,53,0.15)]"
@@ -65,7 +73,7 @@ export default function LoginPage() {
               />
             </div>
             <div>
-              <label className="text-sm sm:text-base font-medium text-txt-muted mb-2 sm:mb-2.5 block">Contraseña</label>
+              <label className="text-sm sm:text-base font-medium text-txt-muted mb-2 sm:mb-2.5 block">{t('auth.password')}</label>
               <input
                 type="password" value={password} onChange={e => setPassword(e.target.value)}
                 className="w-full bg-[#2f3070] border-2 border-[#3d3f7a]/50 focus:border-action-primary/50 rounded-xl px-4 py-3 sm:px-5 sm:py-4 text-white text-base sm:text-lg outline-none transition-colors placeholder:text-txt-dim/40 focus:shadow-[0_0_12px_rgba(163,230,53,0.15)]"
@@ -77,14 +85,14 @@ export default function LoginPage() {
               className="w-full py-3.5 sm:py-4 md:py-5 rounded-2xl btn-3d-primary text-base sm:text-lg md:text-xl font-bold flex items-center justify-center gap-2 sm:gap-3"
             >
               <LogIn size={20} />
-              {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
+              {loading ? t('common.loading') : t('auth.loginButton')}
             </button>
           </form>
 
           <p className="text-center text-txt-muted text-base mt-6 pt-6 border-t border-[#3d3f7a]/30">
-            ¿No tienes una cuenta?{' '}
+            {t('auth.noAccount')}{' '}
             <Link to="/register" className="text-brand hover:text-brand-light font-semibold transition-colors">
-              Registrarse
+              {t('auth.registerButton')}
             </Link>
           </p>
         </div>

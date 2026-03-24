@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from './store';
 import audioManager from './utils/audioManager';
+import { useLanguageSync } from './hooks/useLanguageSync';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import GamePage from './pages/GamePage';
@@ -27,6 +28,9 @@ function AdminProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 function App() {
+  // Sincronizar idioma entre Redux e i18n
+  useLanguageSync();
+
   // Unlock Web Audio API on first user gesture (required by Android Chrome)
   useEffect(() => {
     const handler = () => {

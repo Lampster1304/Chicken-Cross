@@ -4,6 +4,7 @@ import { RootState } from '../store';
 import { logout, updateBalance } from '../store/authSlice';
 import { Wallet, LogOut } from 'lucide-react';
 import ChickenSvg from './svg/ChickenSvg';
+import { LanguageSwitcher } from './LanguageSwitcher';
 
 export default function Navbar() {
   const user = useSelector((state: RootState) => state.auth.user);
@@ -49,8 +50,9 @@ export default function Navbar() {
 
           </div>
 
-          {/* Right: Balance + User + Logout */}
-          <div className="flex items-center gap-2">
+          {/* Right: Language Switcher + Balance + User + Logout */}
+          <div className="flex items-center gap-3">
+            <LanguageSwitcher />
             {user && (
               <>
                 <button

@@ -114,12 +114,13 @@ affiliateRouter.get('/stats', authMiddleware, async (req: Request, res: Response
   }
 });
 
-// POST /api/affiliate/apply-code - Apply referral code during registration
-affiliateRouter.post('/apply-code', async (req: Request, res: Response) => {
-  const { userId, referralCode } = req.body;
+// POST /api/affiliate/apply-code - Apply referral code (authenticated)
+affiliateRouter.post('/apply-code', authMiddleware, async (req: Request, res: Response) => {
+  const userId = (req as any).userId;
+  const { referralCode } = req.body;
 
-  if (!userId || !referralCode) {
-    return res.status(400).json({ error: 'User ID and referral code required' });
+  if (!referralCode) {
+    return res.status(400).json({ error: 'Referral code required' });
   }
 
   try {
