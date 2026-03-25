@@ -1,7 +1,14 @@
 -- Admin panel: role column + site_settings table
 
 ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(10) NOT NULL DEFAULT 'user';
-ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('user', 'admin'));
+
+-- Add constraint only if it doesn't exist (using DO block)
+DO $$
+BEGIN
+    ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('user', 'admin'));
+EXCEPTION WHEN duplicate_object THEN
+    -- Constraint already exists, do nothing
+END $$;
 
 CREATE TABLE IF NOT EXISTS site_settings (
   key VARCHAR(50) PRIMARY KEY,

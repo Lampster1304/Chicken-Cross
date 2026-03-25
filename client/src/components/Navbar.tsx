@@ -1,5 +1,6 @@
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { RootState } from '../store';
 import { logout, updateBalance } from '../store/authSlice';
 import { Wallet, LogOut } from 'lucide-react';
@@ -7,6 +8,7 @@ import ChickenSvg from './svg/ChickenSvg';
 import { LanguageSwitcher } from './LanguageSwitcher';
 
 export default function Navbar() {
+  const { t } = useTranslation();
   const user = useSelector((state: RootState) => state.auth.user);
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -57,7 +59,7 @@ export default function Navbar() {
               <>
                 <button
                   onClick={handleResetBalance}
-                  title="Click para resetear balance"
+                  title={t('nav.resetBalance')}
                   className="flex items-center gap-2 border border-brand/40 bg-brand/10 hover:bg-brand/20 rounded-full px-3 py-1.5 transition-colors"
                 >
                   <Wallet size={14} className="text-brand" />
@@ -76,7 +78,7 @@ export default function Navbar() {
                 <button
                   onClick={handleLogout}
                   className="p-2 rounded-full text-txt-dim hover:text-danger hover:bg-danger/10 transition-colors"
-                  title="Cerrar Sesión"
+                  title={t('nav.logout')}
                 >
                   <LogOut size={16} />
                 </button>

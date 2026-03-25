@@ -1,44 +1,33 @@
 import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { RootState } from '../store';
-import { setLanguage } from '../store/languageSlice';
+import { toggleLanguage } from '../store/languageSlice';
+import flagEn from '../assets/flag-en.png';
+import flagEs from '../assets/flag-es.png';
 
 export const LanguageSwitcher = () => {
   const dispatch = useDispatch();
-  const { t, i18n } = useTranslation();
+  const { i18n } = useTranslation();
   const currentLanguage = useSelector((state: RootState) => state.language.currentLanguage);
 
-  const handleLanguageChange = (language: 'en' | 'es') => {
-    dispatch(setLanguage(language));
-    i18n.changeLanguage(language);
+  const handleToggle = () => {
+    const newLang = currentLanguage === 'en' ? 'es' : 'en';
+    dispatch(toggleLanguage());
+    i18n.changeLanguage(newLang);
   };
 
   return (
-    <div className="flex items-center gap-2">
-      <button
-        onClick={() => handleLanguageChange('en')}
-        className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
-          currentLanguage === 'en'
-            ? 'bg-blue-600 text-white'
-            : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
-        }`}
-        aria-label={t('common.english')}
-        title={t('common.english')}
-      >
-        EN
-      </button>
-      <button
-        onClick={() => handleLanguageChange('es')}
-        className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
-          currentLanguage === 'es'
-            ? 'bg-blue-600 text-white'
-            : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
-        }`}
-        aria-label={t('common.spanish')}
-        title={t('common.spanish')}
-      >
-        ES
-      </button>
-    </div>
+    <button
+      onClick={handleToggle}
+      className="flex items-center justify-center w-8 h-8 rounded-full overflow-hidden hover:ring-2 hover:ring-yellow-400 transition-all"
+      aria-label={currentLanguage === 'en' ? 'Switch to Spanish' : 'Cambiar a Inglés'}
+      title={currentLanguage === 'en' ? 'Switch to Spanish' : 'Cambiar a Inglés'}
+    >
+      <img
+        src={currentLanguage === 'en' ? flagEn : flagEs}
+        alt={currentLanguage === 'en' ? 'English' : 'Español'}
+        className="w-full h-full object-cover"
+      />
+    </button>
   );
 };

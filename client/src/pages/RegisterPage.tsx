@@ -70,7 +70,7 @@ export default function RegisterPage() {
               <input
                 type="text" value={username} onChange={e => setUsername(e.target.value)}
                 className="w-full bg-[#2f3070] border-2 border-[#3d3f7a]/50 focus:border-action-primary/50 rounded-xl px-4 py-3 sm:px-5 sm:py-4 text-white text-base sm:text-lg outline-none transition-colors placeholder:text-txt-dim/40 focus:shadow-[0_0_12px_rgba(163,230,53,0.15)]"
-                placeholder="Elige un nombre de usuario" required minLength={3}
+                placeholder={t('auth.usernamePlaceholder')} required minLength={3}
               />
             </div>
             <div>
@@ -86,7 +86,7 @@ export default function RegisterPage() {
               <input
                 type="password" value={password} onChange={e => setPassword(e.target.value)}
                 className="w-full bg-[#2f3070] border-2 border-[#3d3f7a]/50 focus:border-action-primary/50 rounded-xl px-4 py-3 sm:px-5 sm:py-4 text-white text-base sm:text-lg outline-none transition-colors placeholder:text-txt-dim/40 focus:shadow-[0_0_12px_rgba(163,230,53,0.15)]"
-                placeholder="Mín. 6 caracteres" required minLength={6}
+                placeholder={t('auth.passwordPlaceholder')} required minLength={6}
               />
             </div>
             <button

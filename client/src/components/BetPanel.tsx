@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import { RootState } from '../store';
 import { getSocket } from '../hooks/useGameSocket';
 import {
@@ -9,6 +10,7 @@ import { Zap, TrendingUp, ArrowRight, RotateCcw, AlertCircle, Lock, X } from 'lu
 import audioManager from '../utils/audioManager';
 
 export default function BetPanel() {
+  const { t } = useTranslation();
   const [betAmount, setBetAmount] = useState('10.00');
   const [autoCashOut, setAutoCashOut] = useState('');
   const [showAutoCashOutMobile, setShowAutoCashOutMobile] = useState(false);
@@ -72,19 +74,19 @@ export default function BetPanel() {
 
   const emitStartGame = useCallback((amount: number) => {
     const socket = getSocket();
-    if (!socket || !socket.connected) { dispatch(gameError('Sin conexión')); return; }
-    if (isNaN(amount) || amount <= 0) { dispatch(gameError('Apuesta inválida')); return; }
-    if (amount < betLimits.minBet) { dispatch(gameError(`La apuesta mínima es $${betLimits.minBet.toFixed(2)}`)); return; }
-    if (amount > betLimits.maxBet) { dispatch(gameError(`La apuesta máxima es $${betLimits.maxBet.toFixed(2)}`)); return; }
-    if (user && amount > user.balance) { dispatch(gameError('Saldo insuficiente')); return; }
+    if (!socket || !socket.connected) { dispatch(gameError(t('game.noConnection'))); return; }
+    if (isNaN(amount) || amount <= 0) { dispatch(gameError(t('game.invalidBet'))); return; }
+    if (amount < betLimits.minBet) { dispatch(gameError(t('game.minBetError', { amount: betLimits.minBet.toFixed(2) }))); return; }
+    if (amount > betLimits.maxBet) { dispatch(gameError(t('game.maxBetError', { amount: betLimits.maxBet.toFixed(2) }))); return; }
+    if (user && amount > user.balance) { dispatch(gameError(t('game.insufficientBalance'))); return; }
     const cashOutTarget = autoCashOut ? parseFloat(autoCashOut) : undefined;
-    if (cashOutTarget !== undefined && cashOutTarget <= amount) { dispatch(gameError(`Auto cobro debe ser mayor a la apuesta ($${amount.toFixed(2)})`)); return; }
+    if (cashOutTarget !== undefined && cashOutTarget <= amount) { dispatch(gameError(t('game.autoCashoutError', { amount: amount.toFixed(2) }))); return; }
     const autoCashOutAt = cashOutTarget !== undefined ? cashOutTarget / amount : undefined;
     actionLockRef.current = true;
     dispatch(clearError());
     dispatch(setLoading(true));
     socket.emit('game:start', { amount, difficulty: betLimits.difficulty, autoCashOutAt });
-  }, [autoCashOut, user, betLimits, dispatch]);
+  }, [autoCashOut, user, betLimits, dispatch, t]);
 
   const handleStartGame = useCallback(() => {
     if (actionLockRef.current) return;
@@ -99,21 +101,21 @@ export default function BetPanel() {
     if (actionLockRef.current) return;
     audioManager.unlock();
     const socket = getSocket();
-    if (!socket || !socket.connected) { dispatch(gameError('Sin conexión')); return; }
+    if (!socket || !socket.connected) { dispatch(gameError(t('game.noConnection'))); return; }
     actionLockRef.current = true;
     dispatch(setLoading(true));
     socket.emit('game:cross');
-  }, [dispatch]);
+  }, [dispatch, t]);
 
   const handleCashOut = useCallback(() => {
     if (actionLockRef.current) return;
     audioManager.unlock();
     const socket = getSocket();
-    if (!socket || !socket.connected) { dispatch(gameError('Sin conexión')); return; }
+    if (!socket || !socket.connected) { dispatch(gameError(t('game.noConnection'))); return; }
     actionLockRef.current = true;
     dispatch(setLoading(true));
     socket.emit('game:cashout');
-  }, [dispatch]);
+  }, [dispatch, t]);
 
   const handlePlayAgain = useCallback(() => {
     audioManager.unlock();
@@ -188,7 +190,7 @@ export default function BetPanel() {
   const isAutoPlaying = isActive && !!activeGame?.autoCashOutAt;
 
   return (
-    <div className={`game-panel p-3 sm:p-4 md:p-5 flex flex-col gap-4 sm:gap-5 lg:gap-4 transition-all ${isActive && !isAutoPlaying ? 'pb-32 lg:pb-4' : ''}`}>
+    <div className={`game-panel p-3 sm:p-4 md:p-5 flex flex-col gap-4 sm:gap-5 lg:gap-4 transition-all ${isActive && !isAutoPlaying ? 'pb-6 sm:pb-4 md:pb-5' : ''}`}>
       {/* Error */}
       {error && (
         <div className="flex items-center gap-2 bg-danger/10 border border-danger/20 rounded-xl px-3 py-2.5">
@@ -203,7 +205,7 @@ export default function BetPanel() {
           {/* Bet Input */}
           <div>
             <div className="flex justify-between items-center mb-2">
-              <span className="text-sm lg:text-xs font-medium text-txt-muted">Monto de Apuesta</span>
+              <span className="text-sm lg:text-xs font-medium text-txt-muted">{t('game.betAmount')}</span>
               <span className="text-xs lg:text-[11px] text-txt-dim font-mono">${user?.balance.toFixed(2) ?? '0.00'}</span>
             </div>
             <div className="relative mb-2">
@@ -220,8 +222,8 @@ export default function BetPanel() {
               {[
                 { label: '½', fn: () => adjustBet(0.5) },
                 { label: '2x', fn: () => adjustBet(2) },
-                { label: 'Mín', fn: () => setBetAmount(betLimits.minBet.toFixed(2)) },
-                { label: 'Max', fn: () => setBetAmount(Math.min(user?.balance ?? betLimits.maxBet, betLimits.maxBet).toFixed(2)) },
+                { label: t('game.min'), fn: () => setBetAmount(betLimits.minBet.toFixed(2)) },
+                { label: t('game.max'), fn: () => setBetAmount(Math.min(user?.balance ?? betLimits.maxBet, betLimits.maxBet).toFixed(2)) },
               ].map(b => (
                 <button key={b.label} onClick={b.fn} className="py-2 lg:py-1.5 bg-bg-surfaceHover hover:bg-bg-surfaceLight border border-[#3d3f7a]/40 rounded-full text-sm lg:text-[11px] font-semibold text-txt-muted hover:text-action-primary transition-colors">
                   {b.label}
@@ -233,8 +235,8 @@ export default function BetPanel() {
           {/* Auto Cash-Out */}
           <div>
             <span className="text-xs font-medium text-txt-muted mb-1.5 block">
-              Auto Cobro
-              <span className="text-[10px] text-txt-dim ml-1">opcional</span>
+              {t('game.autoCashout')}
+              <span className="text-[10px] text-txt-dim ml-1">{t('game.optional')}</span>
             </span>
 
             {!showAutoCashOutMobile ? (
@@ -243,7 +245,7 @@ export default function BetPanel() {
                 className="w-full py-2.5 bg-orange-500 hover:bg-orange-600 border border-orange-400/50 rounded-xl text-white text-sm font-bold flex items-center justify-center gap-2 transition-all shadow-[0_0_15px_rgba(249,115,22,0.2)] active:scale-95"
               >
                 <TrendingUp size={14} />
-                Establecer Auto Cobro
+                {t('game.setAutoCashout')}
               </button>
             ) : null}
 
@@ -260,7 +262,7 @@ export default function BetPanel() {
                 <button
                   onClick={() => { setAutoCashOut(''); setShowAutoCashOutMobile(false); }}
                   className="absolute right-1.5 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full bg-[#3d3f7a]/60 hover:bg-danger/30 text-txt-dim hover:text-white transition-colors"
-                  title="Cancelar"
+                  title={t('common.cancel')}
                 >
                   <X size={16} />
                 </button>
@@ -274,7 +276,7 @@ export default function BetPanel() {
             className="w-full py-3.5 sm:py-4 lg:py-3.5 rounded-2xl btn-3d-primary text-base sm:text-lg lg:text-sm flex items-center justify-center gap-2"
           >
             <Zap size={16} className="lg:hidden" /><Zap size={14} className="hidden lg:block" />
-            {isLoading ? 'Iniciando...' : 'Apostar'}
+            {isLoading ? t('game.starting') : t('game.bet')}
           </button>
         </>
       )}
@@ -282,52 +284,97 @@ export default function BetPanel() {
       {/* ── ACTIVE ── */}
       {isActive && activeGame && (
         <>
-          <div className="grid grid-cols-2 gap-2 sm:gap-3">
-            <div className="rounded-2xl p-3 sm:p-4 lg:p-3 border-2 border-success/20" style={{ background: 'linear-gradient(135deg, rgba(45,212,191,0.08) 0%, rgba(45,212,191,0.03) 100%)' }}>
-              <p className="text-xs sm:text-sm lg:text-[10px] text-success/70 font-medium mb-0.5">Multiplicador</p>
-              <p className="text-2xl sm:text-3xl lg:text-xl font-bold text-success font-mono">{currentMultiplier.toFixed(2)}x</p>
+          {/* Desktop: multiplier + payout cards (always visible in sidebar) */}
+          <div className="hidden lg:grid grid-cols-2 gap-2">
+            <div className="rounded-2xl p-3 border-2 border-success/20" style={{ background: 'linear-gradient(135deg, rgba(45,212,191,0.08) 0%, rgba(45,212,191,0.03) 100%)' }}>
+              <p className="text-[10px] text-success/70 font-medium mb-0.5">{t('game.multiplier')}</p>
+              <p className="text-xl font-bold text-success font-mono">{currentMultiplier.toFixed(2)}x</p>
             </div>
-            <div className="rounded-2xl p-3 sm:p-4 lg:p-3 border-2 border-brand/20 text-right" style={{ background: 'linear-gradient(135deg, rgba(251,191,36,0.08) 0%, rgba(251,191,36,0.03) 100%)' }}>
-              <p className="text-xs sm:text-sm lg:text-[10px] text-brand/70 font-medium mb-0.5">Pago</p>
-              <p className={`${payout >= 10000 ? 'text-sm sm:text-base lg:text-xs' : payout >= 1000 ? 'text-base sm:text-lg lg:text-sm' : 'text-2xl sm:text-3xl lg:text-xl'} font-bold text-brand font-mono truncate`}>${payout.toFixed(2)}</p>
+            <div className="rounded-2xl p-3 border-2 border-brand/20 text-right" style={{ background: 'linear-gradient(135deg, rgba(251,191,36,0.08) 0%, rgba(251,191,36,0.03) 100%)' }}>
+              <p className="text-[10px] text-brand/70 font-medium mb-0.5">{t('game.payout')}</p>
+              <p className={`${payout >= 10000 ? 'text-xs' : payout >= 1000 ? 'text-sm' : 'text-xl'} font-bold text-brand font-mono truncate`}>${payout.toFixed(2)}</p>
             </div>
           </div>
 
+          {/* Desktop: auto-cashout indicator */}
           {activeGame.autoCashOutAt && (
-            <div className="flex items-center gap-2 bg-brand/8 border border-brand/20 rounded-xl px-3 py-2.5 lg:py-2">
-              <Lock size={14} className="lg:hidden text-brand" /><Lock size={12} className="hidden lg:block text-brand" />
-              <span className="text-sm lg:text-[11px] text-brand font-medium">Auto cobro en ${(activeGame.autoCashOutAt * activeGame.betAmount).toFixed(2)}</span>
-              <span className="ml-auto text-xs lg:text-[10px] text-brand font-mono animate-pulse">JUGANDO</span>
+            <div className="hidden lg:flex items-center gap-2 bg-brand/8 border border-brand/20 rounded-xl px-3 py-2">
+              <Lock size={12} className="text-brand" />
+              <span className="text-[11px] text-brand font-medium">{t('game.autoCashoutAt', { amount: (activeGame.autoCashOutAt * activeGame.betAmount).toFixed(2) })}</span>
+              <span className="ml-auto text-[10px] text-brand font-mono animate-pulse">{t('game.playing')}</span>
             </div>
           )}
 
-          {/* Mobile Footer for Active Game Controls */}
-          <div className={`${!isAutoPlaying ? 'fixed inset-x-0 bottom-0 z-[110] p-4 pb-4 sm:pb-6 md:pb-4 bg-[#1a1b3a]/95 backdrop-blur-md border-t border-[#3d3f7a]/50 flex flex-col gap-3 lg:static lg:bg-transparent lg:p-0 lg:border-none lg:z-0 safe-area-bottom' : 'contents'}`}>
-            {!isAutoPlaying && (
-              <>
-                <button
-                  onClick={handleCross} disabled={isLoading}
-                  className="hidden lg:flex w-full py-4 sm:py-5 lg:py-4 rounded-2xl text-base sm:text-lg lg:text-sm flex-col items-center gap-1 lg:gap-0.5 btn-3d-primary"
-                >
-                  <span className="text-xs sm:text-sm lg:text-[10px] opacity-70 flex items-center gap-1">
-                    <ArrowRight size={12} className="sm:hidden" /><ArrowRight size={14} className="hidden sm:inline lg:hidden" /><ArrowRight size={10} className="hidden lg:inline" /> Siguiente carril
-                  </span>
-                  <span className="text-xl sm:text-2xl lg:text-lg font-bold">{nextMultiplier?.toFixed(2)}x</span>
-                </button>
+          {/* Desktop: next lane + cashout buttons */}
+          {!isAutoPlaying && (
+            <div className="hidden lg:flex flex-col gap-3">
+              <button
+                onClick={handleCross} disabled={isLoading}
+                className="w-full py-4 rounded-2xl text-sm flex flex-col items-center gap-0.5 btn-3d-primary"
+              >
+                <span className="text-[10px] opacity-70 flex items-center gap-1">
+                  <ArrowRight size={10} /> {t('game.nextLane')}
+                </span>
+                <span className="text-lg font-bold">{nextMultiplier?.toFixed(2)}x</span>
+              </button>
 
-                {activeGame.currentLane > 0 && (
-                  <button
-                    onClick={handleCashOut} disabled={isLoading}
-                    className="w-full py-3.5 sm:py-4 lg:py-3 rounded-2xl btn-3d-success text-base sm:text-lg lg:text-sm flex items-center justify-center gap-2"
-                    style={{ boxShadow: '0 0 20px rgba(45,212,191,0.3)' }}
-                  >
-                    <TrendingUp size={16} className="sm:hidden" /><TrendingUp size={18} className="hidden sm:inline lg:hidden" /><TrendingUp size={14} className="hidden lg:inline" />
-                    Cobrar ${payout.toFixed(2)}
-                  </button>
+              <button
+                onClick={handleCashOut} disabled={isLoading || activeGame.currentLane === 0}
+                className="w-full py-3 rounded-2xl btn-3d-success text-sm flex items-center justify-center gap-2 disabled:opacity-40"
+                style={{ boxShadow: activeGame.currentLane > 0 ? '0 0 20px rgba(45,212,191,0.3)' : 'none' }}
+              >
+                <TrendingUp size={14} />
+                {t('game.cashout', { amount: payout.toFixed(2) })}
+              </button>
+            </div>
+          )}
+
+          {/* ── MOBILE: Fixed bottom bar with EVERYTHING ── */}
+          {!isAutoPlaying && (
+            <div className="fixed inset-x-0 bottom-0 z-[110] bg-[#1a1b3a]/95 backdrop-blur-md border-t border-[#3d3f7a]/50 lg:hidden safe-area-bottom">
+              <div className="p-3 pb-4 flex flex-col gap-2.5">
+                {/* Multiplier + Payout row */}
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="rounded-xl px-3 py-2 border border-success/20 bg-success/5">
+                    <p className="text-[9px] text-success/60 font-medium">{t('game.multiplier')}</p>
+                    <p className="text-lg font-bold text-success font-mono leading-tight">{currentMultiplier.toFixed(2)}x</p>
+                  </div>
+                  <div className="rounded-xl px-3 py-2 border border-brand/20 bg-brand/5 text-right">
+                    <p className="text-[9px] text-brand/60 font-medium">{t('game.payout')}</p>
+                    <p className={`${payout >= 10000 ? 'text-sm' : 'text-lg'} font-bold text-brand font-mono leading-tight`}>${payout.toFixed(2)}</p>
+                  </div>
+                </div>
+
+                {/* Auto-cashout indicator (mobile) */}
+                {activeGame.autoCashOutAt && (
+                  <div className="flex items-center gap-2 bg-brand/8 border border-brand/20 rounded-lg px-2.5 py-1.5">
+                    <Lock size={12} className="text-brand shrink-0" />
+                    <span className="text-[11px] text-brand font-medium">{t('game.autoCashoutAt', { amount: (activeGame.autoCashOutAt * activeGame.betAmount).toFixed(2) })}</span>
+                    <span className="ml-auto text-[10px] text-brand font-mono animate-pulse">{t('game.playing')}</span>
+                  </div>
                 )}
-              </>
-            )}
-          </div>
+
+                {/* Cashout button - ALWAYS visible */}
+                <button
+                  onClick={handleCashOut} disabled={isLoading || activeGame.currentLane === 0}
+                  className="w-full py-3.5 rounded-2xl btn-3d-success text-base font-bold flex items-center justify-center gap-2 disabled:opacity-40"
+                  style={{ boxShadow: activeGame.currentLane > 0 ? '0 0 20px rgba(45,212,191,0.3)' : 'none' }}
+                >
+                  <TrendingUp size={16} />
+                  {t('game.cashout', { amount: payout.toFixed(2) })}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Auto-playing: show compact info (both mobile & desktop) */}
+          {isAutoPlaying && (
+            <div className="flex items-center gap-2 bg-brand/8 border border-brand/20 rounded-xl px-3 py-2.5 lg:py-2">
+              <Lock size={14} className="lg:hidden text-brand" /><Lock size={12} className="hidden lg:block text-brand" />
+              <span className="text-sm lg:text-[11px] text-brand font-medium">{t('game.autoCashoutAt', { amount: (activeGame.autoCashOutAt! * activeGame.betAmount).toFixed(2) })}</span>
+              <span className="ml-auto text-xs lg:text-[10px] text-brand font-mono animate-pulse">{t('game.playing')}</span>
+            </div>
+          )}
         </>
       )}
 
@@ -346,12 +393,12 @@ export default function BetPanel() {
           >
             {lastResult.result === 'hit' ? (
               <div className="space-y-1">
-                <p className="text-xl sm:text-2xl lg:text-lg font-bold text-danger">¡Chocaste!</p>
+                <p className="text-xl sm:text-2xl lg:text-lg font-bold text-danger">{t('game.youCrashed')}</p>
                 <p className="text-2xl sm:text-3xl lg:text-xl font-bold text-txt/70 font-mono">-${Math.abs(lastResult.profit).toFixed(2)}</p>
               </div>
             ) : (
               <div className="space-y-1">
-                <p className="text-xl sm:text-2xl lg:text-lg font-bold text-success">¡Ganaste!</p>
+                <p className="text-xl sm:text-2xl lg:text-lg font-bold text-success">{t('game.youWon')}</p>
                 <p className="text-3xl sm:text-4xl lg:text-2xl font-bold text-txt font-mono">{lastResult.multiplier.toFixed(2)}x</p>
                 <p className="text-lg sm:text-xl lg:text-base font-semibold text-success font-mono">+${lastResult.profit.toFixed(2)}</p>
               </div>
@@ -363,7 +410,7 @@ export default function BetPanel() {
             className="w-full py-3.5 sm:py-4 lg:py-3.5 rounded-2xl btn-3d-primary text-base sm:text-lg lg:text-sm flex items-center justify-center gap-2"
           >
             <RotateCcw size={16} className="lg:hidden" /><RotateCcw size={14} className="hidden lg:block" />
-            Jugar de Nuevo
+            {t('game.playAgain')}
           </button>
         </>
       )}

@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import { RootState } from '../store';
 import { toggleMute, setLoading } from '../store/gameSlice';
 import { getSocket } from '../hooks/useGameSocket';
@@ -13,13 +14,6 @@ import audioManager from '../utils/audioManager';
 
 const CAR_COLORS = ['#ef4444', '#eab308', '#3b82f6', '#8b5cf6'];
 const CAR_VARIANTS: Array<'sedan' | 'pickup' | 'taxi' | 'sports'> = ['sedan', 'pickup', 'taxi', 'sports'];
-
-const difficultyLabels: Record<number, string> = {
-  1: 'Seguro',
-  2: 'Clásico',
-  3: 'Arriesgado',
-  4: 'Extremo',
-};
 
 const difficultyColors: Record<number, string> = {
   1: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
@@ -175,6 +169,7 @@ function AnimatedBarrier({ laneNum, showCar, isJustCrossed }: { laneNum: number;
 }
 
 export default function ChickenRoad() {
+  const { t } = useTranslation();
   const dispatch = useDispatch();
   const { status, activeGame, crossingLane, isLoading } = useSelector((state: RootState) => state.game);
   const [visibleLanes, setVisibleLanes] = useState(6);
@@ -314,13 +309,13 @@ export default function ChickenRoad() {
               ? 'border-danger/50 text-danger bg-danger/10 hover:bg-danger/20'
               : 'border-action-primary/50 text-action-primary bg-action-primary/10 hover:bg-action-primary/20 shadow-[0_0_15px_rgba(45,212,191,0.15)]'
               }`}
-            title={isMuted ? 'Activar sonido' : 'Silenciar'}
+            title={isMuted ? t('game.unmute') : t('game.mute')}
           >
             {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
           </button>
 
           <div className={`hidden sm:block px-2.5 py-1 lg:px-2 lg:py-0.5 rounded-full border text-[11px] lg:text-[9px] font-bold ${difficultyColors[difficulty]}`}>
-            {difficultyLabels[difficulty]}
+            {t(`game.difficulty${difficulty}`)}
           </div>
           <div className={`px-3 py-1.5 lg:py-1 rounded-full border-2 text-xs lg:text-[10px] font-black uppercase tracking-widest transition-all ${isActive
             ? 'border-action-primary/50 text-action-primary bg-action-primary/10'
@@ -339,7 +334,7 @@ export default function ChickenRoad() {
           <div className="sidewalk-station">
             <div className="absolute inset-0 opacity-[0.05] pattern-dots" />
             <div className="absolute right-[-24px] top-1/2 -translate-y-1/2 z-10 opacity-20 transform rotate-[-90deg]">
-              <span className="text-[8px] font-black tracking-widest text-white uppercase whitespace-nowrap">ACERA</span>
+              <span className="text-[8px] font-black tracking-widest text-white uppercase whitespace-nowrap">{t('game.sidewalk')}</span>
             </div>
             {currentLane === 0 && isActive && (
               <div className="relative z-20 animate-idle-bounce w-[65%] max-w-[80px]">

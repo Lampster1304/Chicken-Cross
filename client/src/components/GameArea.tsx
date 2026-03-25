@@ -1,4 +1,5 @@
 import { useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import { RootState } from '../store';
 import ChickenRoad from './ChickenRoad';
 import ChickenSvg from './svg/ChickenSvg';
@@ -6,6 +7,7 @@ import ExplosionSvg from './svg/ExplosionSvg';
 import { Trophy } from 'lucide-react';
 
 export default function GameArea() {
+  const { t } = useTranslation();
   const { status, activeGame, lastResult } = useSelector(
     (state: RootState) => state.game
   );
@@ -41,7 +43,7 @@ export default function GameArea() {
               </div>
               <div>
                 <h2 className="text-2xl lg:text-lg font-bold bg-gradient-to-r from-brand to-action-primary bg-clip-text text-transparent tracking-tight">Chicken Cross</h2>
-                <p className="text-base lg:text-[11px] text-txt-muted mt-1 lg:mt-0.5">Apuesta para comenzar</p>
+                <p className="text-base lg:text-[11px] text-txt-muted mt-1 lg:mt-0.5">{t('game.betToStart')}</p>
               </div>
             </div>
           </div>
@@ -53,7 +55,7 @@ export default function GameArea() {
             <div className="text-center space-y-4 lg:space-y-3">
               <ExplosionSvg className="w-24 h-24 lg:w-14 lg:h-14 animate-shake mx-auto" />
               <div className="bg-danger/90 px-8 py-3 lg:px-6 lg:py-2.5 rounded-2xl border-b-4 border-[#b91c1c]">
-                <p className="text-white font-black text-2xl lg:text-lg tracking-wide">¡CHOCASTE!</p>
+                <p className="text-white font-black text-2xl lg:text-lg tracking-wide">{t('game.crashed')}</p>
               </div>
             </div>
           </div>

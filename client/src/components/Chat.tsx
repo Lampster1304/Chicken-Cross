@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import { RootState } from '../store';
 import { getSocket } from '../hooks/useGameSocket';
 import { Send } from 'lucide-react';
@@ -13,6 +14,7 @@ interface ChatMessage {
 }
 
 export default function Chat() {
+  const { t } = useTranslation();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [canSend, setCanSend] = useState(true);
@@ -33,7 +35,7 @@ export default function Chat() {
         {
           id: Date.now(),
           username: 'System',
-          message: `¡${data.username} ganó $${data.profit.toFixed(2)} con ${data.multiplier.toFixed(2)}×!`,
+          message: t('chat.bigWin', { username: data.username, profit: data.profit.toFixed(2), multiplier: data.multiplier.toFixed(2) }),
           timestamp: Date.now(),
           type: 'win',
         },
@@ -46,7 +48,7 @@ export default function Chat() {
       socket.off('chat:message', handleMessage);
       socket.off('chat:bigwin', handleBigWin);
     };
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -74,7 +76,7 @@ export default function Chat() {
       <div className="flex-1 overflow-y-auto space-y-1.5 mb-3 pr-1">
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center py-16 text-txt-dim">
-            <p className="text-xs">Sin mensajes</p>
+            <p className="text-xs">{t('chat.noMessages')}</p>
           </div>
         )}
         {messages.map(msg => (
@@ -103,7 +105,7 @@ export default function Chat() {
           type="text" value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Mensaje..."
+          placeholder={t('chat.placeholder')}
           maxLength={200}
           className="flex-1 bg-[#2f3070] border border-[#3d3f7a]/50 rounded-xl px-3 py-2.5 text-white text-sm outline-none focus:border-action-primary/40 transition-colors placeholder:text-txt-dim/40 min-h-[40px] focus:shadow-[0_0_12px_rgba(163,230,53,0.1)]"
         />
